@@ -74,22 +74,26 @@ flutter:
   default-flavor: dev
   uses-material-design: true
   assets:
-    - assets/images/
+    # アプリ内で表示する画像はスプラッシュのロゴだけ（他はアイコン生成の元画像なので同梱しない）
+    - assets/images/android/android_icon_foreground_1024.png
 
 flutter_native_splash:
-  color: "#F0F0F5"
-  color_dark: "#1C1C1E"
+  color: "#15203B"
+  color_dark: "#15203B"
+  image: assets/images/android/android_icon_foreground_1024.png
   ios: true
   android: true
   web: false
   android_12:
-    color: "#F0F0F5"
-    color_dark: "#1C1C1E"
+    color: "#15203B"
+    color_dark: "#15203B"
+    image: assets/images/android/android_icon_foreground_1024.png
 
 flutter_launcher_icons:
   ios: true
   android: true
-  image_path: "assets/images/app_icon.png"
+  image_path: "assets/images/ios/ios_app_icon_1024.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#4CAF50"
-  adaptive_icon_foreground: "assets/images/app_icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#15203B"
+  adaptive_icon_foreground: "assets/images/android/android_icon_foreground_1024.png"
