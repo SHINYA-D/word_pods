@@ -16,7 +16,7 @@ class ResultPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('成績表'),
-        centerTitle: false,
+        centerTitle: true,
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
