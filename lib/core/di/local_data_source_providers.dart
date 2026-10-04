@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:word_stock/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_stock/infrastructure/data_sources/local/folder_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/settings_local_data_source.dart';
@@ -40,3 +41,7 @@ SettingsLocalDataSource settingsLocalDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 SyncLocalDataSource syncLocalDataSource(Ref ref) =>
     SyncLocalDataSource(ref.watch(databaseHelperProvider));
+
+@Riverpod(keepAlive: true)
+AccountDeletionLocalDataSource accountDeletionLocalDataSource(Ref ref) =>
+    AccountDeletionLocalDataSource(ref.watch(databaseHelperProvider));

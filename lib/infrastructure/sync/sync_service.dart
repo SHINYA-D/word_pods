@@ -22,12 +22,14 @@ class SyncService implements SyncRepository {
     required SyncRemoteDataSource remoteDataSource,
     required ConnectivityMonitor connectivityMonitor,
     required String? Function() getCurrentUserId,
+    Future<bool> Function(String userId)? isAccountDeletionPending,
     DateTime Function()? clock,
   })  : _local = localDataSource,
         _queue = syncQueueDataSource,
         _remote = remoteDataSource,
         _connectivity = connectivityMonitor,
         _getCurrentUserId = getCurrentUserId,
+        _isAccountDeletionPending = isAccountDeletionPending,
         _now = clock ?? DateTime.now;
 
   final SyncLocalDataSource _local;
@@ -35,6 +37,9 @@ class SyncService implements SyncRepository {
   final SyncRemoteDataSource _remote;
   final ConnectivityMonitor _connectivity;
   final String? Function() _getCurrentUserId;
+
+  /// そのユーザーの退会処理が途中か。途中の間は同期しない（削除したデータを送り返さないため）
+  final Future<bool> Function(String userId)? _isAccountDeletionPending;
   final DateTime Function() _now;
 
   /// resumed 時に取得するまでの間隔
@@ -93,6 +98,9 @@ class SyncService implements SyncRepository {
     return _queue.countByUser(userId);
   }
 
+  @override
+  Future<void> waitUntilIdle() => _tail;
+
   // ---------------------------------------------------------------
   // 実行の直列化
   // ---------------------------------------------------------------
@@ -117,7 +125,20 @@ class SyncService implements SyncRepository {
     final userId = _getCurrentUserId();
     if (userId == null) return null;
     if (!await _connectivity.isOnline()) return null;
+    if (await _deletionPending(userId)) return null;
     return userId;
+  }
+
+  /// 記録を読めないときも、途中かもしれないので同期しない
+  Future<bool> _deletionPending(String userId) async {
+    final check = _isAccountDeletionPending;
+    if (check == null) return false;
+    try {
+      return await check(userId);
+    } catch (e) {
+      debugPrint('Sync skipped: account deletion check failed: $e');
+      return true;
+    }
   }
 
   /// 同期の失敗は画面に出さず、ログに残して false を返す。

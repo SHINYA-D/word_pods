@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_stock/infrastructure/data_sources/firebase_auth_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/firestore_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
 
@@ -20,6 +22,11 @@ FirebaseFirestore firestore(Ref ref) {
   firestore.settings = const Settings(persistenceEnabled: false);
   return firestore;
 }
+
+/// 関数は東京リージョンに置く（functions/src/index.ts の region と合わせる）
+@Riverpod(keepAlive: true)
+FirebaseFunctions firebaseFunctions(Ref ref) =>
+    FirebaseFunctions.instanceFor(region: 'asia-northeast1');
 
 @Riverpod(keepAlive: true)
 GoogleSignIn googleSignIn(Ref ref) => GoogleSignIn();
@@ -38,3 +45,7 @@ FirestoreDataSource firestoreDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 SyncRemoteDataSource syncRemoteDataSource(Ref ref) =>
     FirestoreSyncRemoteDataSource(firestore: ref.watch(firestoreProvider));
+
+@Riverpod(keepAlive: true)
+AccountDeletionRemoteDataSource accountDeletionRemoteDataSource(Ref ref) =>
+    AccountDeletionRemoteDataSource(ref.watch(firebaseFunctionsProvider));

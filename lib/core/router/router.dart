@@ -12,6 +12,8 @@ import 'package:word_stock/presentation/auth/splash/splash_page.dart';
 import 'package:word_stock/presentation/home/home_page.dart';
 import 'package:word_stock/presentation/result/result_page.dart';
 import 'package:word_stock/presentation/sample/sample_page.dart';
+import 'package:word_stock/presentation/settings/account_deletion_state.dart';
+import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_page.dart';
 import 'package:word_stock/presentation/shell/shell_page.dart';
 import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_page.dart';
@@ -38,10 +40,13 @@ GoRouter router(Ref ref) {
       final isSyncing = ref.read(authSyncInProgressProvider);
       final loc = state.matchedLocation;
       final isAuthRoute = loc == '/login' || loc == '/sign-up' || loc == '/password-reset';
+      // 退会が完了したら、ログアウトに失敗してログイン状態が残っていてもログイン画面に置く
+      final withdrawn = ref.read(accountDeletionViewModelProvider).phase ==
+          AccountDeletionPhase.completed;
 
       if (!isLoggedIn && !isAuthRoute && loc != '/') return '/login';
       // ログイン直後の初回同期が終わるまではホームに遷移させない
-      if (isLoggedIn && isAuthRoute && !isSyncing) return '/home';
+      if (isLoggedIn && isAuthRoute && !isSyncing && !withdrawn) return '/home';
       return null;
     },
     routes: $appRoutes,

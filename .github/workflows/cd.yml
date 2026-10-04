@@ -40,7 +40,7 @@ jobs:
   deploy-prod:
     needs: deploy-dev
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     environment: prod
 
     steps:
@@ -61,3 +61,11 @@ jobs:
 
       - name: Deploy Firestore Security Rules
         run: firebase deploy --only firestore:rules --project "${{ secrets.FIREBASE_PROJECT_ID }}"
+
+      # 退会（deleteAccount）の関数。Cloud Functions は Blaze プランが必要なため、
+      # Blaze にしている prod にだけデプロイする（dev は Spark プランのまま）
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project "${{ secrets.FIREBASE_PROJECT_ID }}"

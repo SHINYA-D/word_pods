@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:word_stock/presentation/auth/auth_state.dart';
 import 'package:word_stock/presentation/auth/login/login_view_model.dart';
+import 'package:word_stock/presentation/settings/account_deletion_state.dart';
+import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_stock/presentation/settings/widgets/account_deletion_dialogs.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +21,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // 退会処理の完了でこの画面に移ってきた場合は、完了ダイアログを出す
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showWithdrawCompleted());
+  }
+
+  void _showWithdrawCompleted() {
+    if (!mounted) return;
+    final phase = ref.read(accountDeletionViewModelProvider).phase;
+    if (phase != AccountDeletionPhase.completed) return;
+    // 先に完了を受け取っておき、同じダイアログを2回出さない
+    ref.read(accountDeletionViewModelProvider.notifier).acknowledgeCompleted();
+    showAccountDeletionCompletedDialog(context);
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -28,6 +47,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(loginViewModelProvider);
     final vm = ref.read(loginViewModelProvider.notifier);
+
+    ref.listen(accountDeletionViewModelProvider, (_, next) {
+      if (next.phase == AccountDeletionPhase.completed) _showWithdrawCompleted();
+    });
 
     ref.listen<AuthState>(loginViewModelProvider, (_, next) {
       if (next.isSuccess) {

@@ -99,4 +99,11 @@ class FakeSyncServiceForLogin implements SyncRepository {
     pushBeforeSignOutCallCount++;
     return pendingCountAfterPush;
   }
+
+  int waitUntilIdleCallCount = 0;
+
+  @override
+  Future<void> waitUntilIdle() async {
+    waitUntilIdleCallCount++;
+  }
 }

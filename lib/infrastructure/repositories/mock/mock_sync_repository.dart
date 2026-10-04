@@ -7,4 +7,7 @@ class MockSyncRepository implements SyncRepository {
 
   @override
   Future<int> pushBeforeSignOut() async => 0;
+
+  @override
+  Future<void> waitUntilIdle() async {}
 }

@@ -1,5 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'tables/account_deletion_table.dart';
 import 'tables/folder_table.dart';
 import 'tables/word_table.dart';
 import 'tables/flashcard_result_table.dart';
@@ -14,7 +15,7 @@ class DatabaseHelper {
 
   static Database? _database;
   static const String _dbName = 'wordstock.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -42,11 +43,18 @@ class DatabaseHelper {
       await SettingsTable.onCreate(txn);
       await SyncQueueTable.onCreate(txn);
       await SyncMetaTable.onCreate(txn);
+      await AccountDeletionTable.onCreate(txn);
     });
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) await migrateToV2(db);
+    if (oldVersion < 3) await migrateToV3(db);
+  }
+
+  /// バージョン2 → 3 の移行：退会処理の記録のテーブルを追加する。
+  static Future<void> migrateToV3(DatabaseExecutor db) async {
+    await AccountDeletionTable.onCreate(db);
   }
 
   /// バージョン1 → 2 の移行。既存のデータは消さない。
