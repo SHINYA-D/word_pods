@@ -21,4 +21,7 @@ class FirestorePath {
 
   // --- settings ---
   static String settings(String userId) => 'users/$userId/settings/config';
+
+  // --- accounts（本人は読み取りのみ。書き込みは Cloud Functions / コンソール） ---
+  static String account(String userId) => 'accounts/$userId';
 }

@@ -62,7 +62,8 @@ final _testRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/sample',
     routes: [
       ShellRoute(
-        builder: (context, state, child) => ShellPage(child: child),
+        builder: (context, state, child) =>
+            ShellPage(showSampleTab: true, child: child),
         routes: [
           GoRoute(path: '/sample', builder: (c, s) => const SamplePage()),
           GoRoute(

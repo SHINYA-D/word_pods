@@ -113,6 +113,23 @@ final accountDeletionRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AccountDeletionRepositoryRef = ProviderRef<AccountDeletionRepository>;
+String _$accountRepositoryHash() => r'4cac53b40f7596c77a707f79eb948207d7b32dcf';
+
+/// See also [accountRepository].
+@ProviderFor(accountRepository)
+final accountRepositoryProvider = Provider<AccountRepository>.internal(
+  accountRepository,
+  name: r'accountRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$accountRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AccountRepositoryRef = ProviderRef<AccountRepository>;
 String _$sampleRepositoryHash() => r'1eaa2384e7d4b9e1df4d546e2134f63ca7a39e2b';
 
 /// See also [sampleRepository].
