@@ -15,6 +15,7 @@ async function seed(uid: string): Promise<void> {
   await db.doc(`users/${uid}/folders/f2/words/w2`).set({ front: "banana" });
   await db.doc(`users/${uid}/flashcard_results/r1`).set({ correct: 1 });
   await db.doc(`users/${uid}/settings/config`).set({ darkMode: true });
+  await db.doc(`accounts/${uid}`).set({ isDeveloper: true });
 }
 
 async function countDocs(uid: string): Promise<number> {
@@ -26,11 +27,13 @@ async function countDocs(uid: string): Promise<number> {
   ]);
   const [folders, words, results, settings] = snapshots;
   const ownWords = words.docs.filter((d) => d.ref.path.startsWith(`users/${uid}/`));
-  return folders.size + ownWords.length + results.size + settings.size;
+  const account = (await db.doc(`accounts/${uid}`).get()).exists ? 1 : 0;
+  return folders.size + ownWords.length + results.size + settings.size + account;
 }
 
 beforeEach(async () => {
   await db.recursiveDelete(db.collection("users"));
+  await db.recursiveDelete(db.collection("accounts"));
   const { users } = await auth.listUsers();
   await Promise.all(users.map((u) => auth.deleteUser(u.uid)));
 });
@@ -40,7 +43,7 @@ afterAll(async () => {
 });
 
 describe("deleteUserAccount", () => {
-  test("データとユーザーがある場合、users/{uid} 配下のすべてのデータとユーザーが削除される", async () => {
+  test("データとユーザーがある場合、users/{uid} 配下のすべてのデータと accounts/{uid} とユーザーが削除される", async () => {
     await auth.createUser({ uid: "A" });
     await seed("A");
 
@@ -58,7 +61,7 @@ describe("deleteUserAccount", () => {
 
     await deleteUserAccount("A", db, auth);
 
-    expect(await countDocs("B")).toBe(6);
+    expect(await countDocs("B")).toBe(7);
     await expect(auth.getUser("B")).resolves.toMatchObject({ uid: "B" });
   });
 
@@ -75,5 +78,15 @@ describe("deleteUserAccount", () => {
 
     await expect(deleteUserAccount("A", db, auth)).resolves.toBeUndefined();
     expect(await countDocs("A")).toBe(0);
+  });
+
+  test("accounts/{uid} が無い場合でも、users/{uid} 配下とユーザーが削除されエラーにならない", async () => {
+    await auth.createUser({ uid: "A" });
+    await seed("A");
+    await db.doc("accounts/A").delete();
+
+    await expect(deleteUserAccount("A", db, auth)).resolves.toBeUndefined();
+    expect(await countDocs("A")).toBe(0);
+    await expect(auth.getUser("A")).rejects.toMatchObject({ code: "auth/user-not-found" });
   });
 });

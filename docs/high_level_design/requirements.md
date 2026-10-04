@@ -718,6 +718,44 @@ users/
 
 > **カスケード削除について:** Firestoreはカスケード削除を自動では行わない。フォルダ削除時はアプリ側（infrastructure層 `firestore_data_source.dart`）で配下の words / サブフォルダ / flashcardResults を再帰的に削除する処理を実装すること。
 
+### accounts / app_config（クライアントは読み取り専用）
+
+開発者フラグ・サブスク・利用規約/プライバシーポリシーへの同意は、`users` と同じ階層の `accounts/{userId}` に置く。
+ドキュメント ID は Firebase Auth の uid（`users/{userId}` と同じ）。
+
+`users/{userId}` 配下は本人が書き込めるルールで、Firestore のルールは「どれか1つでも allow に当てはまれば許可」のため、`users` の下には本人が書き込めない場所を作れない。
+本人に書き換えられては困る値（開発者フラグ・サブスク）と、サーバー時刻で証跡を残したい値（同意）を置くために、別のトップレベルコレクションにしている。
+
+```
+accounts/
+  {userId}/                        // 本人は読むだけ。書き込みは Admin SDK（Cloud Functions・コンソール）だけ
+    isDeveloper: boolean           // 開発者フラグ。新規登録時に false で作る。開発者はコンソールで true にする
+    createdAt: timestamp           // 新規登録時にドキュメントを作った時刻
+    subscription: map              // 将来。無ければ無料プランとして扱う（docs/high_level_design/subscription.md）
+      plan: string                 // 'free' | 'premium'
+      status: string               // 'active' | 'expired' | 'canceled'
+      platform: string             // 'ios' | 'android'
+      expiresAt: timestamp
+      updatedAt: timestamp
+    consents: map                  // 将来。無ければ未同意として扱う（docs/high_level_design/legal_consent.md）
+      terms:   { version: string, agreedAt: timestamp }
+      privacy: { version: string, agreedAt: timestamp }
+
+app_config/
+  legal/                           // 将来。誰でも読める。書き込みは Admin SDK だけ
+    termsVersion: string           // 利用規約の現行版数（再同意が必要かの判定に使う）
+    privacyVersion: string         // プライバシーポリシーの現行版数
+    termsUrl: string
+    privacyUrl: string
+```
+
+- **作成:** 新規登録（メール・Google）で Auth にユーザーが作られたとき、Cloud Functions（`onAuthUserCreated`）が `{ isDeveloper: false, createdAt }` で作る。既にあれば上書きしない。トリガー導入前の既存ユーザーには `functions/scripts/backfill_accounts.js` で一度だけ作る
+- **更新:** サブスク・同意は Cloud Functions が `set(..., { merge: true })` で該当フィールドだけを書く。クライアントからは書き込まない
+- **削除:** 退会時に `users/{userId}` と一緒に削除する（`functions/src/delete_account.ts`）
+- **欠損時:** ドキュメントやフィールドが無いとき（トリガーの失敗・遅れ）は、すべてデフォルト（開発者でない・無料・未同意）として扱う
+- **履歴:** ドキュメントには「現在の状態」だけを置く。同意の履歴や購入履歴が必要になったら、サブコレクション（例: `accounts/{userId}/consent_logs`）に分ける
+- **同期:** オフライン同期（SQLite・`sync_queue`）の対象外。アプリは Firestore から直接読む
+
 > **ローカルDB（SQLite）とのミラーリングについて:** 本アプリはオフライン同期対応のため、上記Firestore構造とほぼ同一のスキーマを持つSQLiteテーブル（`folders` / `words` / `flashcard_results` / `settings`）をローカルに保持し、UI層は常にSQLiteを読み取り元とする。加えて未同期の変更操作を記録する `sync_queue` テーブル、最終同期時刻を記録する `sync_meta` テーブルを持つ。SQLite側のテーブル定義・カラム（`syncStatus` 等）の詳細は `docs/high_level_design/online_offline.md` を参照。
 
 ---
@@ -750,6 +788,7 @@ users/
 ## 11. Firebase セキュリティルール
 
 ユーザーは自分のデータのみ読み書き可能とする。他ユーザーのデータへのアクセスは一切禁止。
+`accounts`（開発者フラグ・サブスク・同意）は本人も読むだけで、書き込みはサーバー（Admin SDK）だけに限る。
 
 ```
 rules_version = '2';
@@ -759,6 +798,19 @@ service cloud.firestore {
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null
                          && request.auth.uid == userId;
+    }
+
+    // 開発者フラグ・サブスク・規約同意。本人は読むだけで、書き込みはサーバー（Admin SDK）だけ
+    match /accounts/{userId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // アプリ全体の設定（規約の現行版数など）。誰でも読めて、書き込みはサーバーだけ
+    match /app_config/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }

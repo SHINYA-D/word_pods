@@ -16,6 +16,7 @@ import 'package:word_stock/presentation/settings/account_deletion_state.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_page.dart';
 import 'package:word_stock/presentation/shell/shell_page.dart';
+import 'package:word_stock/presentation/shell/shell_view_model.dart';
 import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_page.dart';
 import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_result_page.dart';
 import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_settings_page.dart';
@@ -47,6 +48,8 @@ GoRouter router(Ref ref) {
       if (!isLoggedIn && !isAuthRoute && loc != '/') return '/login';
       // ログイン直後の初回同期が終わるまではホームに遷移させない
       if (isLoggedIn && isAuthRoute && !isSyncing && !withdrawn) return '/home';
+      // サンプル画面は開発者だけ。判定の読み込み中・失敗時も開発者でないとして扱う
+      if (loc == '/sample' && !ref.read(isDeveloperProvider)) return '/home';
       return null;
     },
     routes: $appRoutes,
@@ -55,6 +58,7 @@ GoRouter router(Ref ref) {
   // 認証状態・同期状態が変わったら redirect を再評価させる
   ref.listen(authStateProvider, (_, __) => goRouter.refresh());
   ref.listen(authSyncInProgressProvider, (_, __) => goRouter.refresh());
+  ref.listen(isDeveloperProvider, (_, __) => goRouter.refresh());
 
   return goRouter;
 }
@@ -211,7 +215,12 @@ class AppShellRoute extends ShellRouteData {
     GoRouterState state,
     Widget navigator,
   ) {
-    return ShellPage(child: navigator);
+    return Consumer(
+      builder: (context, ref, _) => ShellPage(
+        showSampleTab: ref.watch(isDeveloperProvider),
+        child: navigator,
+      ),
+    );
   }
 }
 

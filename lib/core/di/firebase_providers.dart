@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_stock/infrastructure/data_sources/firebase_auth_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/firestore_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
 
@@ -49,3 +50,7 @@ SyncRemoteDataSource syncRemoteDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 AccountDeletionRemoteDataSource accountDeletionRemoteDataSource(Ref ref) =>
     AccountDeletionRemoteDataSource(ref.watch(firebaseFunctionsProvider));
+
+@Riverpod(keepAlive: true)
+AccountRemoteDataSource accountRemoteDataSource(Ref ref) =>
+    AccountRemoteDataSource(ref.watch(firestoreProvider));
