@@ -11,6 +11,7 @@ description: WordStockの設定画面の概要設計書（現時点では退会�
 
 - Firebase Authentication のユーザー
 - Firestore のそのユーザーのデータ（`users/{uid}` 配下のフォルダ・単語・学習結果・設定）
+- Firestore のそのユーザーのアカウント情報（`accounts/{uid}`。開発者フラグ・サブスク・規約同意）
 - 端末内（SQLite）のそのユーザーのデータ（同じ端末で使っている他のアカウントのデータは残す）
 
 ## 削除の方式

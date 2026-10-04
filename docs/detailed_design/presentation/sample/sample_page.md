@@ -9,7 +9,7 @@ targets:
   - lib/infrastructure/repositories/mock/mock_sample_repository.dart
 kinds:
   T: 画面遷移
-updated: 2026-09-22
+updated: 2026-10-04
 ---
 
 # サンプル画面 振る舞い仕様書
@@ -18,6 +18,7 @@ updated: 2026-09-22
 
 テスト専用の画面。サンプル（アイテム）の一覧を表示し、作成・名前の編集・削除と、単語一覧画面への遷移ができる。
 ボトムナビ「テスト」タブ（`/sample`）から開く。
+「テスト」タブは開発者にだけ表示する（表示条件は `docs/detailed_design/presentation/shell/shell_page.md`（SHL）で定める）。
 
 ## 2. データ定義
 
@@ -337,6 +338,7 @@ State の項目は `samples`（`AsyncValue<List<Sample>>`）と `operationFailur
 
 | 概要設計書（§見出し：要点） | 仕様 ID ／ 振り分け |
 |---------------------------|--------------------|
+| §表示条件：開発者だけに「テスト」タブを表示する（節全体） | `docs/detailed_design/presentation/shell/shell_page.md`（SHL）で扱う |
 | §画面構成：AppBar に「サンプル」 | SMP-D01 |
 | §画面構成：ボトムナビを表示し「テスト」タブを選択状態 | SMP-D02 |
 | §画面構成：右下に FAB（add がわかるアイコン） | SMP-D03, SMP-D04。読み込み中・失敗時は 8章（SMP-D12, SMP-D14） |

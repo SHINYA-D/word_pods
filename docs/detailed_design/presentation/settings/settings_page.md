@@ -13,7 +13,7 @@ targets:
   - lib/infrastructure/sync/sync_service.dart
 kinds:
   T: 退会処理の再試行
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # 設定画面（退会） 振る舞い仕様書
@@ -261,7 +261,7 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 
 ## 7. 対象外
 
-- **関数 `deleteAccount` の中の動作**（Firestore の `users/{uid}` 配下の削除、Authentication のユーザーの削除、何度呼んでも成功すること、すでにユーザーがいないときに成功すること）: Cloud Functions 側（`functions/`）のテストで、Firebase Emulator を使って検証する。Flutter のテストの対象外
+- **関数 `deleteAccount` の中の動作**（Firestore の `users/{uid}` 配下と `accounts/{uid}` の削除、Authentication のユーザーの削除、何度呼んでも成功すること、すでにユーザーがいないときに成功すること）: Cloud Functions 側（`functions/`）のテストで、Firebase Emulator を使って検証する。Flutter のテストの対象外
 - **`requestServerDeletion` / `deleteLocalData` の `NotFoundFailure`**: 関数は対象が無くても成功を返し、端末内の削除は対象の行が無くても成功する（ACD-R24）ため、発生しない
 - **`deleteLocalData` の `NetworkFailure` / `AuthFailure`**: 端末内の削除は通信も認証も使わないため、発生しない（ACD-E02・ACD-V10 はこの理由で廃止）
 - **確認ダイアログ・最終確認ダイアログ・完了ダイアログ・「退会できませんでした」ダイアログでの二重操作**: ボタンをタップするとダイアログが閉じるため、同じボタンを2回押せない
@@ -295,6 +295,7 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 |---------------------------|--------------------|
 | §目的：Authentication のユーザーを削除 | 7章（関数の中の動作） |
 | §目的：Firestore のそのユーザーのデータを削除 | 7章（関数の中の動作） |
+| §目的：Firestore のそのユーザーのアカウント情報（`accounts/{uid}`）を削除 | 7章（関数の中の動作。`functions/test/delete_account.test.ts` で検証） |
 | §目的：端末内のそのユーザーのデータを削除、他のアカウントは残す | ACD-R05 |
 | §削除の方式：関数を1回呼ぶだけ | ACD-V05, ACD-R07 |
 | §削除の方式：本人のデータだけ・Firestore → Authentication の順 | 7章（関数の中の動作）, ACD-T10, ACD-V26 |
