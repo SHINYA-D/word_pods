@@ -6,7 +6,7 @@
 |------|-----|
 | ファイルパス | lib/infrastructure/sync/sync_service.dart |
 | クラス名 | SyncService |
-| テスト対象メソッド | syncAll() / pushPending() / syncOnResumed() / syncRemoteToLocalOnLogin() / pushBeforeSignOut() |
+| テスト対象メソッド | syncAll() / pushPending() / syncOnResumed() / syncRemoteToLocalOnLogin() / pushBeforeSignOut() / waitUntilIdle() |
 | 仕様書 | docs/detailed_design/online_offline/online_offline.md |
 
 ## 実行環境について
@@ -20,6 +20,10 @@
 - **ネットワーク接続**: `test/helpers/fake_infrastructure.dart` の `FakeConnectivityMonitor`。
 - **観測**: `FolderRepositoryImpl` 等の取得メソッド、`SyncLocalDataSource.find`、`SyncQueueDataSource`、
   `SyncLocalDataSource.readMeta`（取得の基準）、`FakeSyncRemoteDataSource.calls`（呼び出し順）。
+
+## 他の仕様書の引用
+
+- `ACD-R13`〜`ACD-R30`（5.2）は `docs/detailed_design/presentation/settings/settings_page.md` の項目。ハーネスは「仕様書」行の1ファイルだけで指紋を照合するため、ACD の ID には指紋を書かない（ID の引用のみ）。
 
 ## テストケース一覧
 
@@ -106,6 +110,19 @@
 | 79 | オフラインで、ローカルにUのフォルダFがあり、キューにFの項目が1件ある状態でログアウトした場合、ローカルにFの行が残りキューにFの項目が1件残る [SYN-O05] | 正常系 | ログアウト前の送信（pushBeforeSignOut） | SYN-O05 #225c05 | ✅ |
 | 80 | SYN-O05の状態の後、オンラインでUとして再びログインした場合、リモートにFがありキューにFの項目が0件になる [SYN-O06] | 正常系 | 再ログイン時の同期（syncRemoteToLocalOnLogin） | SYN-O06 #0efa71 | ✅ |
 | 81 | SYN-O05の状態の後、オンラインでユーザーVとしてログインした場合、VのgetFoldersの戻り値にFが含まれず、リモートのVのデータにFがなく、キューにUのFの項目が1件残る [SYN-O07] | 境界値 | 再ログイン時の同期（syncRemoteToLocalOnLogin） | SYN-O07 #f71f85 | ✅ |
+| 82 | ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R13] | 正常系 | 退会処理中の同期の停止（syncAll） | ACD-R13 | ✅ |
+| 83 | ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R14] | 正常系 | 退会処理中の同期の停止（pushPending） | ACD-R14 | ✅ |
+| 84 | ログイン中のuid Uに未送信の変更が1件あり、uid Vの記録だけがある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R15] | 境界値 | 退会処理中の同期の停止（syncAll） | ACD-R15 | ✅ |
+| 85 | 送信の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の送信が終わった後に完了する [ACD-R16] | 正常系 | 退会処理中の同期の停止（waitUntilIdle） | ACD-R16 | ✅ |
+| 86 | 実行中の同期が無い状態でwaitUntilIdleを呼んだ場合、すぐに完了する [ACD-R17] | 境界値 | 退会処理中の同期の停止（waitUntilIdle） | ACD-R17 | ✅ |
+| 87 | Uの記録がrequestedだった状態からclearで記録を消した後に、未送信の変更が1件ある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R18] | 正常系 | 退会処理中の同期の停止（syncAll） | ACD-R18 | ✅ |
+| 88 | 取得の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の取得が終わった後に完了する [ACD-R19] | 正常系 | 退会処理中の同期の停止（waitUntilIdle） | ACD-R19 | ✅ |
+| 89 | 実行中の送信で、リモートへの書き込みが例外を投げて送信が失敗して終わる状態でwaitUntilIdleを呼んだ場合、送信が失敗で終わった後にエラーにならず完了する [ACD-R20] | 異常系 | 退会処理中の同期の停止（waitUntilIdle） | ACD-R20 | ✅ |
+| 90 | ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R21] | 正常系 | 退会処理中の同期の停止（syncAll） | ACD-R21 | ✅ |
+| 91 | ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R22] | 正常系 | 退会処理中の同期の停止（pushPending） | ACD-R22 | ✅ |
+| 92 | ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がrequestedの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R23] | 正常系 | 退会処理中の同期の停止（syncOnResumed） | ACD-R23 | ✅ |
+| 93 | ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がserverDoneの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R28] | 正常系 | 退会処理中の同期の停止（syncOnResumed） | ACD-R28 | ✅ |
+| 94 | ログイン中のuid Uに未送信の変更が1件あり、記録の読み取りが失敗する状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R30] | 異常系 | 退会処理中の同期の停止（syncAll） | ACD-R30 | ✅ |
 
 ## テストケース詳細
 
@@ -595,11 +612,89 @@
 - **仕様ID**: SYN-O07 #f71f85
 - **入力条件・期待結果**: 仕様書 5章「同期の契約」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
 
+### テストケース82: ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R13]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（syncAll）
+- **仕様ID**: ACD-R13
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース83: ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R14]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（pushPending）
+- **仕様ID**: ACD-R14
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース84: ログイン中のuid Uに未送信の変更が1件あり、uid Vの記録だけがある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R15]
+- **カテゴリ**: 境界値
+- **対象メソッド**: 退会処理中の同期の停止（syncAll）
+- **仕様ID**: ACD-R15
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース85: 送信の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の送信が終わった後に完了する [ACD-R16]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（waitUntilIdle）
+- **仕様ID**: ACD-R16
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース86: 実行中の同期が無い状態でwaitUntilIdleを呼んだ場合、すぐに完了する [ACD-R17]
+- **カテゴリ**: 境界値
+- **対象メソッド**: 退会処理中の同期の停止（waitUntilIdle）
+- **仕様ID**: ACD-R17
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース87: Uの記録がrequestedだった状態からclearで記録を消した後に、未送信の変更が1件ある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R18]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（syncAll）
+- **仕様ID**: ACD-R18
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース88: 取得の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の取得が終わった後に完了する [ACD-R19]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（waitUntilIdle）
+- **仕様ID**: ACD-R19
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース89: 実行中の送信で、リモートへの書き込みが例外を投げて送信が失敗して終わる状態でwaitUntilIdleを呼んだ場合、送信が失敗で終わった後にエラーにならず完了する [ACD-R20]
+- **カテゴリ**: 異常系
+- **対象メソッド**: 退会処理中の同期の停止（waitUntilIdle）
+- **仕様ID**: ACD-R20
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース90: ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R21]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（syncAll）
+- **仕様ID**: ACD-R21
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース91: ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R22]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（pushPending）
+- **仕様ID**: ACD-R22
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース92: ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がrequestedの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R23]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（syncOnResumed）
+- **仕様ID**: ACD-R23
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース93: ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がserverDoneの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R28]
+- **カテゴリ**: 正常系
+- **対象メソッド**: 退会処理中の同期の停止（syncOnResumed）
+- **仕様ID**: ACD-R28
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
+### テストケース94: ログイン中のuid Uに未送信の変更が1件あり、記録の読み取りが失敗する状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R30]
+- **カテゴリ**: 異常系
+- **対象メソッド**: 退会処理中の同期の停止（syncAll）
+- **仕様ID**: ACD-R30
+- **入力条件・期待結果**: 仕様書 docs/detailed_design/presentation/settings/settings_page.md 5.2「SyncRepository（退会処理中の同期の停止）」の同IDの行のとおり（条件・期待される結果はテスト名に一致）。
+
 ## 対象外
 
-- L209-212：本ファイルの担当仕様ID（SYN-P/S/T/O）には個別の ID が無いが、テストケース12・53 で実装のコメント・概要設計書の一般原則に基づき検証済み（未カバーではない）。
-- L260, L263：`_legacyTombstone`（バージョン1の物理削除済みキューをリモートの論理削除として送る処理）へ至る分岐。SYN-M系（既存データの移行）はこのタスクの担当外（`database_helper.dart` 側の仕様ID）のため、本ファイルでは検証しない。
-- L294-297, L299-303：同じく `_legacyTombstone` 関数の内部（担当外・理由は上記と同じ）。
-- **SYN-S21**（送信のタイムアウト、30秒）: `remoteTimeout`（L44）と `_remoteCall`（L134）による `Future.timeout` の検証には実時間で30秒待つか `fake_async` が必要だが、本テストは実SQLite（sqflite_common_ffi）を使っており `fake_async` と相性が悪く安定して再現できないため見送った。
-- **SYN-P38**（取得のタイムアウト、30秒）: 上記と同じ理由（`_remoteCall` L134）。
+- L230-233：本ファイルの担当仕様ID（SYN-P/S/T/O）には個別の ID が無いが、テストケース12・53 で実装のコメント・概要設計書の一般原則に基づき検証済み（未カバーではない）。
+- L281, L284：`_legacyTombstone`（バージョン1の物理削除済みキューをリモートの論理削除として送る処理）へ至る分岐。SYN-M系（既存データの移行）はこのタスクの担当外（`database_helper.dart` 側の仕様ID）のため、本ファイルでは検証しない。
+- L315-318, L320-324：同じく `_legacyTombstone` 関数の内部（担当外・理由は上記と同じ）。
+- **SYN-S21**（送信のタイムアウト、30秒）: `remoteTimeout`（L49）と `_remoteCall`（L155）による `Future.timeout` の検証には実時間で30秒待つか `fake_async` が必要だが、本テストは実SQLite（sqflite_common_ffi）を使っており `fake_async` と相性が悪く安定して再現できないため見送った。
+- **SYN-P38**（取得のタイムアウト、30秒）: 上記と同じ理由（`_remoteCall` L155）。
 

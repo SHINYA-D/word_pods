@@ -10,12 +10,14 @@ import 'package:word_stock/domain/entities/flashcard_result.dart';
 import 'package:word_stock/domain/entities/folder.dart';
 import 'package:word_stock/domain/entities/user_settings.dart';
 import 'package:word_stock/domain/entities/word.dart';
+import 'package:word_stock/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_stock/infrastructure/data_sources/local/flashcard_result_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/folder_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/settings_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/sync_local_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/local/tables/account_deletion_table.dart';
 import 'package:word_stock/infrastructure/data_sources/local/tables/flashcard_result_table.dart';
 import 'package:word_stock/infrastructure/data_sources/local/tables/folder_table.dart';
 import 'package:word_stock/infrastructure/data_sources/local/tables/settings_table.dart';
@@ -1627,6 +1629,195 @@ void main() {
       expect(vFolders.map((f) => f.id), isNot(contains('F')));
       expect(fakeRemote.get(SyncEntity.folder, otherUserId, 'F'), isNull);
       expect(await queueCountFor(userId, FolderTable.tableName, 'F'), 1);
+    });
+  });
+
+  // 仕様書: docs/detailed_design/presentation/settings/settings_page.md 5.2（接頭辞 ACD-R13〜R30）
+  group('退会処理中の同期の停止（ACD 5.2）', () {
+    late AccountDeletionLocalDataSource deletionLocal;
+    late SyncService deletionAwareService;
+
+    SyncService buildService(Future<bool> Function(String) check) =>
+        SyncService(
+          localDataSource: syncLocal,
+          syncQueueDataSource: syncQueue,
+          remoteDataSource: fakeRemote,
+          connectivityMonitor: fakeConnectivity,
+          getCurrentUserId: () => currentUserId,
+          isAccountDeletionPending: check,
+          clock: () => fakeNow,
+        );
+
+    setUp(() async {
+      final db = await dbHelper.database;
+      await db.delete(AccountDeletionTable.tableName);
+      deletionLocal = AccountDeletionLocalDataSource(dbHelper);
+      deletionAwareService = buildService(deletionLocal.existsFor);
+    });
+
+    Future<void> expectIdleCompletes(Future<void> idle) =>
+        idle.timeout(const Duration(seconds: 5));
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R13]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markRequested(userId);
+
+      await deletionAwareService.syncAll();
+
+      expect(fakeRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userId), 1);
+    });
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R14]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markServerDone(userId);
+
+      await deletionAwareService.pushPending();
+
+      expect(fakeRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userId), 1);
+    });
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、uid Vの記録だけがある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R15]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markRequested(otherUserId);
+
+      await deletionAwareService.syncAll();
+
+      expect(fakeRemote.calls.where((c) => c == 'write:folder:F'), hasLength(1));
+    });
+
+    test('送信の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の送信が終わった後に完了する [ACD-R16]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      fakeRemote.writeGate = Completer<void>();
+      final push = deletionAwareService.pushPending();
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(fakeRemote.calls, contains('write:folder:F'));
+
+      var idleDone = false;
+      final idle = deletionAwareService.waitUntilIdle().then((_) => idleDone = true);
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(idleDone, isFalse);
+
+      fakeRemote.writeGate!.complete();
+      await push;
+      await expectIdleCompletes(idle);
+      expect(idleDone, isTrue);
+      expect(await syncQueue.countByUser(userId), 0);
+    });
+
+    test('実行中の同期が無い状態でwaitUntilIdleを呼んだ場合、すぐに完了する [ACD-R17]',
+        () async {
+      await expectIdleCompletes(deletionAwareService.waitUntilIdle());
+    });
+
+    test('Uの記録がrequestedだった状態からclearで記録を消した後に、未送信の変更が1件ある状態でsyncAllを呼んだ場合、Uの変更がリモートに1回送信される [ACD-R18]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markRequested(userId);
+      await deletionLocal.clear(userId);
+
+      await deletionAwareService.syncAll();
+
+      expect(fakeRemote.calls.where((c) => c == 'write:folder:F'), hasLength(1));
+    });
+
+    test('取得の処理が実行中の状態でwaitUntilIdleを呼んだ場合、実行中の取得が終わった後に完了する [ACD-R19]',
+        () async {
+      fakeRemote.fetchGate = Completer<void>();
+      final run = deletionAwareService.syncAll();
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(fakeRemote.calls, contains('fetch:folder'));
+
+      var idleDone = false;
+      final idle = deletionAwareService.waitUntilIdle().then((_) => idleDone = true);
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(idleDone, isFalse);
+
+      fakeRemote.fetchGate!.complete();
+      await run;
+      await expectIdleCompletes(idle);
+      expect(idleDone, isTrue);
+    });
+
+    test('実行中の送信で、リモートへの書き込みが例外を投げて送信が失敗して終わる状態でwaitUntilIdleを呼んだ場合、送信が失敗で終わった後にエラーにならず完了する [ACD-R20]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      fakeRemote.writeGate = Completer<void>();
+      fakeRemote.failWriteRecordIdOnce = 'F';
+      final push = deletionAwareService.pushPending();
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      var idleDone = false;
+      final idle = deletionAwareService.waitUntilIdle().then((_) => idleDone = true);
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(idleDone, isFalse);
+
+      fakeRemote.writeGate!.complete();
+      await push;
+      await expectIdleCompletes(idle);
+      expect(idleDone, isTrue);
+      expect(await syncQueue.countByUser(userId), 1);
+    });
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、Uの記録がserverDoneの状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R21]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markServerDone(userId);
+
+      await deletionAwareService.syncAll();
+
+      expect(fakeRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userId), 1);
+    });
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、Uの記録がrequestedの状態でpushPendingを呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R22]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      await deletionLocal.markRequested(userId);
+
+      await deletionAwareService.pushPending();
+
+      expect(fakeRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userId), 1);
+    });
+
+    test('ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がrequestedの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R23]',
+        () async {
+      await syncLocal.writeMetaDate('lastPulledAt:$userId', t(0));
+      fakeNow = t(0).add(SyncService.resumedInterval);
+      await deletionLocal.markRequested(userId);
+
+      await deletionAwareService.syncOnResumed();
+
+      expect(fakeRemote.calls.where((c) => c.startsWith('fetch:')), isEmpty);
+    });
+
+    test('ログイン中のuid Uの前回の取得から5分以上たち、Uの記録がserverDoneの状態でsyncOnResumedを呼んだ場合、リモートからの取得は0回になる [ACD-R28]',
+        () async {
+      await syncLocal.writeMetaDate('lastPulledAt:$userId', t(0));
+      fakeNow = t(0).add(SyncService.resumedInterval);
+      await deletionLocal.markServerDone(userId);
+
+      await deletionAwareService.syncOnResumed();
+
+      expect(fakeRemote.calls.where((c) => c.startsWith('fetch:')), isEmpty);
+    });
+
+    test('ログイン中のuid Uに未送信の変更が1件あり、記録の読み取りが失敗する状態でsyncAllを呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R30]',
+        () async {
+      await setFolder('F', name: 'F', updatedAt: t(1), pending: true);
+      final failingService =
+          buildService((_) async => throw Exception('read failed'));
+
+      await failingService.syncAll();
+
+      expect(fakeRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userId), 1);
     });
   });
 }
