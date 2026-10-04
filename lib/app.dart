@@ -5,6 +5,8 @@ import 'package:word_stock/core/di/auth_providers.dart';
 import 'package:word_stock/core/di/sync_providers.dart';
 import 'package:word_stock/core/router/router.dart';
 import 'package:word_stock/core/theme/app_theme.dart';
+import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
+import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_view_model.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -20,6 +22,9 @@ class _AppState extends ConsumerState<App> {
   @override
   void initState() {
     super.initState();
+    // 退会処理が途中で止まっていないか確認する（途中なら再開ダイアログを出す）
+    ref.read(accountDeletionViewModelProvider.notifier).checkPending();
+
     final autoSync = ref.read(autoSyncServiceProvider);
     // オンライン復帰時に同期する
     autoSync.start();
@@ -62,6 +67,10 @@ class _AppState extends ConsumerState<App> {
       darkTheme: AppTheme.dark(seedColor: seedColor),
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
+      builder: (context, child) => AccountDeletionGate(
+        router: router,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

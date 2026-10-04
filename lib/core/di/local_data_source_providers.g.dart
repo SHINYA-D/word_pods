@@ -152,5 +152,25 @@ final syncLocalDataSourceProvider = Provider<SyncLocalDataSource>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SyncLocalDataSourceRef = ProviderRef<SyncLocalDataSource>;
+String _$accountDeletionLocalDataSourceHash() =>
+    r'1ed13792c707fd8619884d463a819df799ecdd72';
+
+/// See also [accountDeletionLocalDataSource].
+@ProviderFor(accountDeletionLocalDataSource)
+final accountDeletionLocalDataSourceProvider =
+    Provider<AccountDeletionLocalDataSource>.internal(
+  accountDeletionLocalDataSource,
+  name: r'accountDeletionLocalDataSourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$accountDeletionLocalDataSourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AccountDeletionLocalDataSourceRef
+    = ProviderRef<AccountDeletionLocalDataSource>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -8,4 +8,7 @@ abstract class SyncRepository {
   /// ログアウト前に未送信の変更を送信し、送れずに残った件数を返す。
   /// 残った変更は消さず、同じユーザーが次にログインしたときに送信する。
   Future<int> pushBeforeSignOut();
+
+  /// 実行中・実行待ちの同期がすべて終わるまで待つ。同期が失敗で終わっても例外にしない。
+  Future<void> waitUntilIdle();
 }

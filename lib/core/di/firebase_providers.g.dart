@@ -40,6 +40,25 @@ final firestoreProvider = Provider<FirebaseFirestore>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FirestoreRef = ProviderRef<FirebaseFirestore>;
+String _$firebaseFunctionsHash() => r'097fd9df60c1e156f273cabdfd9196deb30b9f18';
+
+/// 関数は東京リージョンに置く（functions/src/index.ts の region と合わせる）
+///
+/// Copied from [firebaseFunctions].
+@ProviderFor(firebaseFunctions)
+final firebaseFunctionsProvider = Provider<FirebaseFunctions>.internal(
+  firebaseFunctions,
+  name: r'firebaseFunctionsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$firebaseFunctionsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FirebaseFunctionsRef = ProviderRef<FirebaseFunctions>;
 String _$googleSignInHash() => r'4df13ef226b172967e2ad6fef31c4648f6d52fd9';
 
 /// See also [googleSignIn].
@@ -111,5 +130,25 @@ final syncRemoteDataSourceProvider = Provider<SyncRemoteDataSource>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SyncRemoteDataSourceRef = ProviderRef<SyncRemoteDataSource>;
+String _$accountDeletionRemoteDataSourceHash() =>
+    r'0cb314246810c2b73e1cae322e34bfac55536588';
+
+/// See also [accountDeletionRemoteDataSource].
+@ProviderFor(accountDeletionRemoteDataSource)
+final accountDeletionRemoteDataSourceProvider =
+    Provider<AccountDeletionRemoteDataSource>.internal(
+  accountDeletionRemoteDataSource,
+  name: r'accountDeletionRemoteDataSourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$accountDeletionRemoteDataSourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AccountDeletionRemoteDataSourceRef
+    = ProviderRef<AccountDeletionRemoteDataSource>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

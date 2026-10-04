@@ -3,14 +3,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_stock/core/di/firebase_providers.dart';
 import 'package:word_stock/core/di/local_data_source_providers.dart';
 import 'package:word_stock/core/di/sync_providers.dart';
+import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
 import 'package:word_stock/domain/repositories/auth_repository.dart';
 import 'package:word_stock/domain/repositories/folder_repository.dart';
 import 'package:word_stock/domain/repositories/sample_repository.dart';
 import 'package:word_stock/domain/repositories/settings_repository.dart';
 import 'package:word_stock/domain/repositories/flashcard_result_repository.dart';
 import 'package:word_stock/domain/repositories/word_repository.dart';
+import 'package:word_stock/infrastructure/repositories/account_deletion_repository_impl.dart';
 import 'package:word_stock/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:word_stock/infrastructure/repositories/folder_repository_impl.dart';
+import 'package:word_stock/infrastructure/repositories/mock/mock_account_deletion_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_auth_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_folder_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_sample_repository.dart';
@@ -83,6 +86,16 @@ SettingsRepository settingsRepository(Ref ref) {
     syncQueueDataSource: ref.watch(syncQueueDataSourceProvider),
     dbHelper: ref.watch(databaseHelperProvider),
     onLocalChanged: _onLocalChanged(ref),
+  );
+}
+
+@Riverpod(keepAlive: true)
+AccountDeletionRepository accountDeletionRepository(Ref ref) {
+  if (kUseMocks) return MockAccountDeletionRepository();
+  return AccountDeletionRepositoryImpl(
+    localDataSource: ref.watch(accountDeletionLocalDataSourceProvider),
+    remoteDataSource: ref.watch(accountDeletionRemoteDataSourceProvider),
+    connectivityMonitor: ref.watch(connectivityMonitorProvider),
   );
 }
 

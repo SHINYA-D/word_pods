@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:word_stock/application/use_cases/auth/delete_account_use_case.dart';
 import 'package:word_stock/application/use_cases/auth/reset_password_use_case.dart';
 import 'package:word_stock/application/use_cases/auth/sign_in_with_email_use_case.dart';
 import 'package:word_stock/application/use_cases/auth/sign_in_with_google_use_case.dart';
@@ -48,3 +49,10 @@ SignOutUseCase signOutUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 ResetPasswordUseCase resetPasswordUseCase(Ref ref) =>
     ResetPasswordUseCase(ref.watch(authRepositoryProvider));
+
+@Riverpod(keepAlive: true)
+DeleteAccountUseCase deleteAccountUseCase(Ref ref) => DeleteAccountUseCase(
+      ref.watch(accountDeletionRepositoryProvider),
+      ref.watch(authRepositoryProvider),
+      ref.watch(syncRepositoryProvider),
+    );

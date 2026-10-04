@@ -128,5 +128,23 @@ final resetPasswordUseCaseProvider = Provider<ResetPasswordUseCase>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ResetPasswordUseCaseRef = ProviderRef<ResetPasswordUseCase>;
+String _$deleteAccountUseCaseHash() =>
+    r'5b05b7e3278afac417acf801bc832c8b6bf58584';
+
+/// See also [deleteAccountUseCase].
+@ProviderFor(deleteAccountUseCase)
+final deleteAccountUseCaseProvider = Provider<DeleteAccountUseCase>.internal(
+  deleteAccountUseCase,
+  name: r'deleteAccountUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$deleteAccountUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DeleteAccountUseCaseRef = ProviderRef<DeleteAccountUseCase>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
