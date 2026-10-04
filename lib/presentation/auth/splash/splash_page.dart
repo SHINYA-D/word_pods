@@ -45,11 +45,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     ref.listen(accountDeletionViewModelProvider, (_, __) => _tryNavigate());
 
     return const Scaffold(
-      backgroundColor: Color(0xFFF0F0F5),
+      backgroundColor: Color(0xFF15203B),
       body: Center(
         child: Image(
-          image: AssetImage('assets/images/splash.png'),
-          width: 240,
+          image: AssetImage('assets/images/android/android_icon_foreground_1024.png'),
+          width: 256,
         ),
       ),
     );
