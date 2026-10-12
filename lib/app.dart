@@ -8,6 +8,8 @@ import 'package:word_stock/core/theme/app_theme.dart';
 import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_view_model.dart';
+import 'package:word_stock/presentation/settings/withdrawn_elsewhere_gate.dart';
+import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -24,6 +26,8 @@ class _AppState extends ConsumerState<App> {
     super.initState();
     // 退会処理が途中で止まっていないか確認する（途中なら再開ダイアログを出す）
     ref.read(accountDeletionViewModelProvider.notifier).checkPending();
+    // 他の端末で退会したアカウントがないか確認する（応答を待たずに起動する）
+    _checkWithdrawnElsewhere(initial: true);
 
     final autoSync = ref.read(autoSyncServiceProvider);
     // オンライン復帰時に同期する
@@ -35,8 +39,23 @@ class _AppState extends ConsumerState<App> {
     }, fireImmediately: true);
 
     // resumed 時に同期する（前回の取得から5分以上たっていれば）
-    _lifecycleObserver = AppLifecycleObserver(onResumed: autoSync.onResumed);
+    _lifecycleObserver = AppLifecycleObserver(onResumed: () {
+      autoSync.onResumed();
+      _checkWithdrawnElsewhere();
+    });
     WidgetsBinding.instance.addObserver(_lifecycleObserver!);
+  }
+
+  Future<void> _checkWithdrawnElsewhere({bool initial = false}) async {
+    final viewModel = ref.read(withdrawnElsewhereViewModelProvider.notifier);
+    if (initial) await viewModel.initialize();
+    try {
+      await ref.read(authStateProvider.future);
+    } catch (_) {
+      // ログイン状態を読めなくても、ログアウト済みのアカウントの確認は行う
+    }
+    if (!mounted) return;
+    await viewModel.check();
   }
 
   @override
@@ -69,7 +88,10 @@ class _AppState extends ConsumerState<App> {
       routerConfig: router,
       builder: (context, child) => AccountDeletionGate(
         router: router,
-        child: child ?? const SizedBox.shrink(),
+        child: WithdrawnElsewhereGate(
+          router: router,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }

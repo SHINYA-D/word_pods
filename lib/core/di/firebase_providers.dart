@@ -10,6 +10,7 @@ import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_r
 import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
 
 part 'firebase_providers.g.dart';
 
@@ -54,3 +55,7 @@ AccountDeletionRemoteDataSource accountDeletionRemoteDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 AccountRemoteDataSource accountRemoteDataSource(Ref ref) =>
     AccountRemoteDataSource(ref.watch(firestoreProvider));
+
+@Riverpod(keepAlive: true)
+WithdrawnAccountRemoteDataSource withdrawnAccountRemoteDataSource(Ref ref) =>
+    WithdrawnAccountRemoteDataSource(ref.watch(firestoreProvider));

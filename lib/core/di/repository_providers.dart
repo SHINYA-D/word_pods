@@ -98,6 +98,7 @@ AccountDeletionRepository accountDeletionRepository(Ref ref) {
   return AccountDeletionRepositoryImpl(
     localDataSource: ref.watch(accountDeletionLocalDataSourceProvider),
     remoteDataSource: ref.watch(accountDeletionRemoteDataSourceProvider),
+    withdrawnRemoteDataSource: ref.watch(withdrawnAccountRemoteDataSourceProvider),
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
   );
 }

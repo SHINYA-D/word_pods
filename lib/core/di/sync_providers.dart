@@ -25,7 +25,7 @@ SyncService syncService(Ref ref) {
         : ref.read(firebaseAuthProvider).currentUser?.uid ??
             ref.read(currentUserProvider)?.id,
     isAccountDeletionPending:
-        ref.watch(accountDeletionLocalDataSourceProvider).existsFor,
+        ref.watch(accountDeletionLocalDataSourceProvider).shouldSkipSync,
   );
 }
 

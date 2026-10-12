@@ -6,6 +6,7 @@ import 'package:word_stock/application/use_cases/auth/sign_in_with_email_use_cas
 import 'package:word_stock/application/use_cases/auth/sign_in_with_google_use_case.dart';
 import 'package:word_stock/application/use_cases/auth/sign_out_use_case.dart';
 import 'package:word_stock/application/use_cases/auth/sign_up_use_case.dart';
+import 'package:word_stock/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
 import 'package:word_stock/core/di/repository_providers.dart';
 import 'package:word_stock/core/di/sync_providers.dart';
 import 'package:word_stock/domain/entities/app_user.dart';
@@ -52,6 +53,14 @@ ResetPasswordUseCase resetPasswordUseCase(Ref ref) =>
 
 @Riverpod(keepAlive: true)
 DeleteAccountUseCase deleteAccountUseCase(Ref ref) => DeleteAccountUseCase(
+      ref.watch(accountDeletionRepositoryProvider),
+      ref.watch(authRepositoryProvider),
+      ref.watch(syncRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+WithdrawnElsewhereUseCase withdrawnElsewhereUseCase(Ref ref) =>
+    WithdrawnElsewhereUseCase(
       ref.watch(accountDeletionRepositoryProvider),
       ref.watch(authRepositoryProvider),
       ref.watch(syncRepositoryProvider),

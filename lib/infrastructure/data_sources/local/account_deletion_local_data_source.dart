@@ -28,6 +28,11 @@ class AccountDeletionLocalDataSource {
     return rows.isEmpty ? null : _fromRow(rows.first);
   }
 
+  /// そのユーザーの同期を止めるか。退会処理の途中と、強制ログアウトした uid
+  /// （アプリではログアウトしたものとして扱う）は同期しない。
+  Future<bool> shouldSkipSync(String userId) async =>
+      await existsFor(userId) || await isForcedSignOut(userId);
+
   /// そのユーザーの記録があるか。
   Future<bool> existsFor(String userId) async {
     final db = await _dbHelper.database;
@@ -57,34 +62,96 @@ class AccountDeletionLocalDataSource {
 
   /// そのユーザーのデータ・キュー・同期の基準と、退会処理の記録を1つのトランザクションで削除する。
   /// 他のユーザーの行は残す。
-  Future<void> deleteUserData(String userId) async {
+  Future<void> deleteUserData(String userId) => deleteUsersData([userId]);
+
+  /// 複数のユーザーのデータ・キュー・同期の基準と、退会処理の記録を1つのトランザクションで削除する。
+  /// 途中で失敗したら、どのユーザーの行も削除されない。強制ログアウトの記録は残す。
+  Future<void> deleteUsersData(List<String> userIds) async {
     final db = await _dbHelper.database;
     await db.transaction((txn) async {
-      for (final table in [
-        WordTable.tableName,
-        FlashcardResultTable.tableName,
-        FolderTable.tableName,
-        SettingsTable.tableName,
-      ]) {
-        await txn.delete(table, where: 'userId = ?', whereArgs: [userId]);
+      for (final userId in userIds) {
+        for (final table in [
+          WordTable.tableName,
+          FlashcardResultTable.tableName,
+          FolderTable.tableName,
+          SettingsTable.tableName,
+        ]) {
+          await txn.delete(table, where: 'userId = ?', whereArgs: [userId]);
+        }
+        await txn.delete(
+          SyncQueueTable.tableName,
+          where: 'user_id = ?',
+          whereArgs: [userId],
+        );
+        await txn.delete(
+          SyncMetaTable.tableName,
+          where: 'key IN (?, ?)',
+          whereArgs: ['pullCursor:$userId', 'lastPulledAt:$userId'],
+        );
+        await txn.delete(
+          AccountDeletionTable.tableName,
+          where: 'user_id = ?',
+          whereArgs: [userId],
+        );
       }
-      await txn.delete(
-        SyncQueueTable.tableName,
-        where: 'user_id = ?',
-        whereArgs: [userId],
-      );
-      await txn.delete(
-        SyncMetaTable.tableName,
-        where: 'key IN (?, ?)',
-        whereArgs: ['pullCursor:$userId', 'lastPulledAt:$userId'],
-      );
-      await txn.delete(
-        AccountDeletionTable.tableName,
-        where: 'user_id = ?',
-        whereArgs: [userId],
-      );
     });
   }
+
+  /// 端末内にデータ（データ・キュー・同期の基準のどれか）がある uid の一覧（重複なし）。
+  Future<List<String>> findUserIds() async {
+    final db = await _dbHelper.database;
+    final rows = await db.rawQuery('''
+      SELECT userId AS uid FROM ${FolderTable.tableName}
+      UNION SELECT userId FROM ${WordTable.tableName}
+      UNION SELECT userId FROM ${FlashcardResultTable.tableName}
+      UNION SELECT userId FROM ${SettingsTable.tableName}
+      UNION SELECT user_id FROM ${SyncQueueTable.tableName}
+      UNION SELECT substr(key, instr(key, ':') + 1) FROM ${SyncMetaTable.tableName}
+        WHERE key LIKE 'pullCursor:%' OR key LIKE 'lastPulledAt:%'
+    ''');
+    return [
+      for (final row in rows)
+        if (row['uid'] case final String uid when uid.isNotEmpty) uid,
+    ];
+  }
+
+  /// ログアウトが失敗したため、アプリではログアウトしたものとして扱う uid を記録する（1つだけ持つ）。
+  Future<void> markForcedSignOut(String userId) async {
+    final db = await _dbHelper.database;
+    await db.insert(
+      SyncMetaTable.tableName,
+      {'key': _forcedSignOutKey, 'value': userId},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// 強制ログアウトの記録の uid。無ければ null。
+  Future<String?> findForcedSignOut() async {
+    final db = await _dbHelper.database;
+    final rows = await db.query(
+      SyncMetaTable.tableName,
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: [_forcedSignOutKey],
+    );
+    return rows.isEmpty ? null : rows.first['value'] as String?;
+  }
+
+  /// その uid の強制ログアウトの記録があるか。
+  Future<bool> isForcedSignOut(String userId) async =>
+      await findForcedSignOut() == userId;
+
+  /// その uid の強制ログアウトの記録を消す。
+  Future<void> clearForcedSignOut(String userId) async {
+    final db = await _dbHelper.database;
+    await db.delete(
+      SyncMetaTable.tableName,
+      where: 'key = ? AND value = ?',
+      whereArgs: [_forcedSignOutKey, userId],
+    );
+  }
+
+  static const _forcedSignOutKey = 'forcedSignOut';
 
   Future<void> _write(String userId, String status) async {
     final db = await _dbHelper.database;
