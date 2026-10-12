@@ -45,6 +45,11 @@ grep -rl "^status: approved" docs/detailed_design | xargs grep -l "<対象ファ
 | 2.2 入力ルール（N） | 「守る層」列の層のテスト（画面 → Widget、ViewModel → ViewModel 単体 …）。境界値1つにつき1件 | 守る層に対応するエージェント | 守る層のファイル |
 
 - 各エージェントには、担当する章の ID だけを渡す。`廃止` の ID は渡さない
+- **1つの章に複数のクラスの仕様がある仕様書**（見出しにクラス名がある。例: `## 4. 状態管理仕様（AccountDeletionViewModel）` と
+  `### 4.2 WithdrawnElsewhereViewModel`）では、ID の直前の見出しのクラス名を「持ち主」とし、対象ファイルのクラス名
+  （`withdrawn_elsewhere_view_model.dart` → `WithdrawnElsewhereViewModel`。Mock の `Mock`・実装の `Impl` は外す）と
+  一致する ID だけを担当にする。見出しにクラス名が無い ID は共通として含め、持ち主が一致する ID が1つも無ければ
+  従来どおり章の ID をすべて担当にする（判定の正は `loop_state.py` の `responsible_spec_ids()`）
 - 仕様書の各 ID は1件以上のテストケースから引用されなければならない（仕様 ID の網羅。行カバレッジとは別の基準）。
   2.2 の ID は**境界値1つにつき1件**のテストケースが必要（境界値の数は仕様書の「境界値」列の値の数）
 - **Repository の実装が `mock/` にしか無い場合**は、その Mock を5章の対象にする

@@ -48,6 +48,7 @@ Tier1〜3（単体テスト）を全ファイル完了してから、Tier4（Wid
 `python3 scripts/loop_state.py show` の `done` に無い、最上位 Tier の対象を1つ選ぶ。
 その対象の承認済み仕様書（`status: approved`、`targets` に対象が載っている）があれば、
 章ごとの振り分け（3章→Widget テスト、4章→ViewModel 単体テスト …）で担当する仕様 ID の一覧を作る。
+1つの章に複数のクラスの仕様がある仕様書では、見出しに書いたクラス名（ID の持ち主）と対象ファイルのクラス名が一致する ID だけを担当にする（`loop_state.py` の `responsible_spec_ids()`）。
 
 既存のテストがある対象は、生成の前に一度ハーネスを回し、`python3 scripts/loop_state.py can-skip <libパス>` で
 「既存のテストだけで基準を満たしているか」を判定する。満たしていれば手順3〜6を飛ばして手順7（記録）へ進む。
