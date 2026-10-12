@@ -24,4 +24,26 @@ abstract class AccountDeletionRepository {
 
   /// 端末内のそのユーザーのデータと退会処理の記録を、1つのトランザクションで削除する。
   Future<Either<Failure, Unit>> deleteLocalData(String userId);
+
+  /// 端末内にデータがある uid の一覧（他の端末での退会の確認の対象）。
+  Future<Either<Failure, List<String>>> findLocalUserIds();
+
+  /// その uid に退会済みの記録（Firestore の `deleted_accounts/{uid}`）があるか。
+  /// オフラインなら `NetworkFailure`。
+  Future<Either<Failure, bool>> isWithdrawnOnServer(String userId);
+
+  /// その uid の退会済みの記録をリアルタイムで監視する。
+  Stream<Either<Failure, bool>> watchWithdrawn(String userId);
+
+  /// 複数の uid の端末内のデータを、まとめて1つのトランザクションで削除する。
+  Future<Either<Failure, Unit>> deleteLocalDataOfUsers(List<String> userIds);
+
+  /// ログアウトが失敗した uid を、アプリではログアウトしたものとして扱うために記録する。
+  Future<Either<Failure, Unit>> markForcedSignOut(String userId);
+
+  /// 強制ログアウトの記録の uid。無ければ `None`。
+  Future<Either<Failure, Option<String>>> findForcedSignOut();
+
+  /// その uid の強制ログアウトの記録を消す。
+  Future<Either<Failure, Unit>> clearForcedSignOut(String userId);
 }

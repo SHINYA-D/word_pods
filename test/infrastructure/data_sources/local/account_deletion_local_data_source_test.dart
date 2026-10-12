@@ -266,4 +266,256 @@ void main() {
       }
     });
   });
+
+  group('deleteUsersData', () {
+    test('2人のユーザーのデータがある状態で2人分をdeleteUsersDataした場合、両方のデータ・キュー・同期の基準・退会記録がすべて消える', () async {
+      await seedUser(userId);
+      await seedUser(otherUser);
+
+      await dataSource.deleteUsersData([userId, otherUser]);
+
+      for (final table in [
+        WordTable.tableName,
+        FolderTable.tableName,
+        FlashcardResultTable.tableName,
+        SettingsTable.tableName,
+        SyncQueueTable.tableName,
+        SyncMetaTable.tableName,
+        AccountDeletionTable.tableName,
+      ]) {
+        expect(await countRows(table), 0, reason: table);
+      }
+    });
+
+    test('3人のユーザーのデータがある状態で2人分をdeleteUsersDataした場合、指定していないユーザーの行は残る', () async {
+      await seedUser(userId);
+      await seedUser(otherUser);
+      await seedUser('user-3');
+
+      await dataSource.deleteUsersData([userId, otherUser]);
+
+      for (final table in [
+        WordTable.tableName,
+        FolderTable.tableName,
+        FlashcardResultTable.tableName,
+        SettingsTable.tableName,
+        SyncQueueTable.tableName,
+        AccountDeletionTable.tableName,
+      ]) {
+        expect(await countRows(table), 1, reason: table);
+      }
+      expect(await dataSource.findUserIds(), ['user-3']);
+    });
+
+    test('複数ユーザーの削除の途中で失敗した場合、先に削除した分も取り消され1つも消えない', () async {
+      await seedUser(userId);
+      await seedUser(otherUser);
+      final db = await dbHelper.database;
+      await db.execute('ALTER TABLE sync_meta RENAME TO sync_meta_x');
+      try {
+        await expectLater(
+          dataSource.deleteUsersData([userId, otherUser]),
+          throwsA(anything),
+        );
+      } finally {
+        await db.execute('ALTER TABLE sync_meta_x RENAME TO sync_meta');
+      }
+
+      for (final table in [
+        WordTable.tableName,
+        FolderTable.tableName,
+        FlashcardResultTable.tableName,
+        SettingsTable.tableName,
+        SyncQueueTable.tableName,
+        AccountDeletionTable.tableName,
+      ]) {
+        expect(await countRows(table), 2, reason: table);
+      }
+    });
+
+    test('端末内にデータが無いユーザーをdeleteUsersDataした場合、例外なく成功する', () async {
+      await dataSource.deleteUsersData([userId]);
+
+      expect(await dataSource.findUserIds(), isEmpty);
+    });
+
+    test('空のリストをdeleteUsersDataした場合、例外なく成功し他のデータは残る', () async {
+      await seedUser(userId);
+
+      await dataSource.deleteUsersData([]);
+
+      expect(await dataSource.findUserIds(), [userId]);
+    });
+
+    test('強制ログアウトの記録がある状態でdeleteUsersDataした場合、その記録は消えずに残る', () async {
+      await seedUser(userId);
+      await dataSource.markForcedSignOut(userId);
+
+      await dataSource.deleteUsersData([userId]);
+
+      expect(await dataSource.findForcedSignOut(), userId);
+    });
+  });
+
+  group('findUserIds', () {
+    test('端末内にデータが1件も無い場合、空のリストが返る', () async {
+      expect(await dataSource.findUserIds(), isEmpty);
+    });
+
+    test('フォルダ・単語・学習結果・設定・sync_queue・sync_metaのどれか1つだけにあるuidを持つ場合、すべてのuidが返る', () async {
+      final db = await dbHelper.database;
+      final ts = DateTime(2024, 1, 1).toUtc().toIso8601String();
+      await db.insert(FolderTable.tableName, {
+        'id': 'f',
+        'name': 'n',
+        'userId': 'u-folder',
+        'createdAt': ts,
+        'updatedAt': ts,
+      });
+      await db.insert(WordTable.tableName, {
+        'id': 'w',
+        'front': 'f',
+        'back': 'b',
+        'folderId': 'x',
+        'userId': 'u-word',
+        'createdAt': ts,
+        'updatedAt': ts,
+      });
+      await db.insert(FlashcardResultTable.tableName, {
+        'id': 'r',
+        'folderId': 'x',
+        'totalCount': 1,
+        'correctCount': 1,
+        'date': ts,
+        'userId': 'u-result',
+        'updatedAt': ts,
+      });
+      await db.insert(SettingsTable.tableName, {
+        'userId': 'u-settings',
+        'updatedAt': ts,
+      });
+      await db.insert(SyncQueueTable.tableName, {
+        'operation': 'upsert',
+        'table_name': 'folders',
+        'record_id': 'x',
+        'created_at': ts,
+        'user_id': 'u-queue',
+      });
+      await db.insert(SyncMetaTable.tableName,
+          {'key': 'pullCursor:u-cursor', 'value': 'c'});
+      await db.insert(SyncMetaTable.tableName,
+          {'key': 'lastPulledAt:u-pulled', 'value': ts});
+
+      final ids = await dataSource.findUserIds();
+
+      expect(ids.toSet(), {
+        'u-folder',
+        'u-word',
+        'u-result',
+        'u-settings',
+        'u-queue',
+        'u-cursor',
+        'u-pulled',
+      });
+    });
+
+    test('1人のユーザーが複数のテーブルにデータを持つ場合、そのuidは重複せず1件だけ返る', () async {
+      await seedUser(userId);
+
+      expect(await dataSource.findUserIds(), [userId]);
+    });
+
+    test('同期の基準以外のsync_metaのキー（lastSyncedAt・強制ログアウトの記録）だけがある場合、uidとして返らない', () async {
+      await dataSource.markForcedSignOut(userId);
+      final db = await dbHelper.database;
+      await db.insert(SyncMetaTable.tableName,
+          {'key': 'lastSyncedAt', 'value': 'other'});
+
+      expect(await dataSource.findUserIds(), isEmpty);
+    });
+
+    test('uidが空文字の行しか無い場合、空文字は返らない', () async {
+      final db = await dbHelper.database;
+      final ts = DateTime(2024, 1, 1).toUtc().toIso8601String();
+      await db.insert(FolderTable.tableName, {
+        'id': 'f',
+        'name': 'n',
+        'userId': '',
+        'createdAt': ts,
+        'updatedAt': ts,
+      });
+
+      expect(await dataSource.findUserIds(), isEmpty);
+    });
+  });
+
+  group('強制ログアウトの記録', () {
+    test('記録が無い場合、findForcedSignOutはnullを返しisForcedSignOutはfalseを返す', () async {
+      expect(await dataSource.findForcedSignOut(), isNull);
+      expect(await dataSource.isForcedSignOut(userId), isFalse);
+    });
+
+    test('markForcedSignOutした場合、findForcedSignOutでそのuidが読み戻せ、isForcedSignOutはtrueを返す', () async {
+      await dataSource.markForcedSignOut(userId);
+
+      expect(await dataSource.findForcedSignOut(), userId);
+      expect(await dataSource.isForcedSignOut(userId), isTrue);
+    });
+
+    test('別のuidの記録がある場合、isForcedSignOutはfalseを返す', () async {
+      await dataSource.markForcedSignOut(otherUser);
+
+      expect(await dataSource.isForcedSignOut(userId), isFalse);
+    });
+
+    test('記録がある状態で別のuidをmarkForcedSignOutした場合、記録は1つのまま新しいuidに置き換わる', () async {
+      await dataSource.markForcedSignOut(userId);
+
+      await dataSource.markForcedSignOut(otherUser);
+
+      expect(await dataSource.findForcedSignOut(), otherUser);
+      expect(await dataSource.isForcedSignOut(userId), isFalse);
+    });
+
+    test('同じuidでclearForcedSignOutした場合、記録が消える', () async {
+      await dataSource.markForcedSignOut(userId);
+
+      await dataSource.clearForcedSignOut(userId);
+
+      expect(await dataSource.findForcedSignOut(), isNull);
+    });
+
+    test('別のuidでclearForcedSignOutした場合、記録は消えない', () async {
+      await dataSource.markForcedSignOut(userId);
+
+      await dataSource.clearForcedSignOut(otherUser);
+
+      expect(await dataSource.findForcedSignOut(), userId);
+    });
+  });
+
+  group('shouldSkipSync', () {
+    test('退会処理の記録があるuidの場合、trueが返る', () async {
+      await dataSource.markRequested(userId);
+
+      expect(await dataSource.shouldSkipSync(userId), isTrue);
+    });
+
+    test('強制ログアウトの記録があるuidの場合、trueが返る', () async {
+      await dataSource.markForcedSignOut(userId);
+
+      expect(await dataSource.shouldSkipSync(userId), isTrue);
+    });
+
+    test('どちらの記録も無いuidの場合、falseが返る', () async {
+      expect(await dataSource.shouldSkipSync(userId), isFalse);
+    });
+
+    test('別のuidの退会処理の記録と強制ログアウトの記録だけがある場合、falseが返る', () async {
+      await dataSource.markRequested(otherUser);
+      await dataSource.markForcedSignOut(otherUser);
+
+      expect(await dataSource.shouldSkipSync(userId), isFalse);
+    });
+  });
 }

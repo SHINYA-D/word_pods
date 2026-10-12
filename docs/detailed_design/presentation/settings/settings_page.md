@@ -11,9 +11,14 @@ targets:
   - lib/application/use_cases/auth/delete_account_use_case.dart
   - lib/infrastructure/repositories/account_deletion_repository_impl.dart
   - lib/infrastructure/sync/sync_service.dart
+  - lib/presentation/settings/withdrawn_elsewhere_view_model.dart
+  - lib/presentation/settings/withdrawn_elsewhere_gate.dart
+  - lib/application/use_cases/auth/withdrawn_elsewhere_use_case.dart
+  - lib/infrastructure/data_sources/local/account_deletion_local_data_source.dart
 kinds:
   T: 退会処理の再試行
-updated: 2026-10-04
+  W: 他の端末での退会
+updated: 2026-10-12
 ---
 
 # 設定画面（退会） 振る舞い仕様書
@@ -23,6 +28,7 @@ updated: 2026-10-04
 設定画面（ボトムナビ「設定」タブ）の「退会」から、確認ダイアログ2回を経て退会する。
 Firestore と Firebase Authentication の削除は Cloud Functions の関数 `deleteAccount` を1回呼んで行い、成功を受け取ってから端末内（SQLite）のそのユーザーのデータを削除する。
 退会処理の進み具合を端末内に記録し、途中で止まった場合はアプリの起動時に再開ダイアログを表示して、再試行で最後まで終わらせる。
+他の端末で退会したアカウントのデータがこの端末に残っている場合は、起動時と復帰時に退会済みの記録（Firestore の `deleted_accounts/{uid}`）で見つける。ログイン中のアカウントが退会済みなら、お知らせダイアログの OK でログアウトしてログイン画面に移り、データの削除ダイアログの OK で端末内のデータを削除する。ログアウト済みのアカウントが退会済みなら、何も表示せずに端末内のデータを削除する。
 
 ## 2. データ定義
 
@@ -41,6 +47,16 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 ### 2.2 入力ルール
 
 該当なし（入力欄が無い）。
+
+### 2.3 退会済みの記録（Firestore `deleted_accounts/{uid}`）
+
+関数 `deleteAccount` が書き込む、退会したことの記録。ドキュメント ID が退会したユーザーの uid。退会後も削除しない。
+
+| 項目 | 型 | 説明 |
+|------|----|------|
+| deletedAt | Timestamp | 退会した日時（サーバーの時刻） |
+
+記録があることは「その uid は退会済み」を表す。メールアドレスなど個人を特定できる情報は持たない。
 
 ---
 
@@ -157,6 +173,102 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | 記録 `requested`・`pendingRetry`（ログイン中の uid が記録と違う） | 再試行（削除成功） | 記録なし・`completed` | ACD-V26 |
 | `completed` | 完了ダイアログを表示した | `idle` | ACD-V21 |
 
+### 3.6 他の端末での退会
+
+「退会済みの記録がある」は、`AccountDeletionRepository.isWithdrawnOnServer` がその uid について `Right(true)` を返すことを指す。
+「データの削除ダイアログ」は、タイトル「データの削除」、本文「このアカウントは他の端末で退会済みです。この端末に残っている WordStock のデータをすべて削除します。」、「OK」ボタンだけのダイアログを指す。
+「お知らせダイアログ」は、タイトル「アカウントが削除されました」、本文「このアカウントは他の端末で退会されたため、ログアウトします。引き続きご利用になる場合は、新しいアカウントで登録してログインしてください。」、「OK」ボタンだけのダイアログを指す。
+「失敗ダイアログ」は、タイトル「削除に失敗しました」、本文「端末内のデータを削除できませんでした。もう一度お試しください。」、「OK」ボタンだけのダイアログを指す。
+この節の「端末内の削除」は、3章冒頭の定義と違い、`AccountDeletionRepository.deleteLocalDataOfUsers`（対象の uid をまとめて1つのトランザクションで削除する）を指す。
+「強制ログアウトの記録」は、ログアウトが2回とも失敗したときに端末内に残す記録（`AccountDeletionRepository.markForcedSignOut`）を指す。記録がある uid は、Firebase 上でログイン中のままでも、アプリではログインしていないものとして扱う。
+「監視」は、ログイン中の uid の退会済みの記録のリアルタイムの監視（`AccountDeletionRepository.watchWithdrawn`）を指す。
+「無言の削除」は、ログアウト済みのアカウント（強制ログアウトの記録がある uid を含む）が退会済みのときに、ダイアログを出さずに `deleteLocalDataOfUsers` で削除することを指す。
+特に書かない限り、オンラインで、退会処理の記録と強制ログアウトの記録は無いものとする。
+
+| ID | 条件 | 期待される動作 | 根拠 | 確定度 |
+|----|------|----------------|------|--------|
+| ACD-W01 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態でアプリを起動した | ホーム画面（`/home`）の上に、タイトル「アカウントが削除されました」、本文「このアカウントは他の端末で退会されたため、ログアウトします。引き続きご利用になる場合は、新しいアカウントで登録してログインしてください。」、「OK」ボタンのダイアログが表示される。ほかのボタンは表示されない。データの削除ダイアログは表示されない | 概要 §退会済みが見つかったとき（ログイン中）1, 概要 §アカウント削除のお知らせダイアログ | 確定 |
+| ACD-W02 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態でアプリを起動した | ログイン画面（`/login`）が表示される。データの削除ダイアログもお知らせダイアログも表示されない。`deleteLocalDataOfUsers([A])` が1回呼ばれる | 概要 §退会済みが見つかったとき（ログアウト済み）1, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-W03 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、uid `A` にだけ退会済みの記録がある状態でアプリを起動した | ホーム画面（`/home`）が表示される。データの削除ダイアログもお知らせダイアログも表示されない。`deleteLocalDataOfUsers([A])` が1回呼ばれる | 概要 §退会済みが見つかったとき（ログアウト済み）1, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-W04 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録が無い状態でアプリを起動した | データの削除ダイアログは表示されない。ホーム画面（`/home`）が表示される | 概要 §他の端末での退会 | 確定 |
+| ACD-W05 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で、オフラインでアプリを起動した | データの削除ダイアログは表示されない。ホーム画面（`/home`）が表示される | 概要 §確認のタイミング（オフラインのときは確認しない） | 確定 |
+| ACD-W06 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、退会済みの記録の確認が `UnknownFailure` で失敗する状態でアプリを起動した | データの削除ダイアログは表示されない。ホーム画面（`/home`）が表示される | 概要 §確認のタイミング（読めなかった uid は次のきっかけで確認する） | 確定 |
+| ACD-W07 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が成功した | データの削除ダイアログが閉じる。表示中の画面のパスは `/login` のまま | 概要 §データの削除ダイアログ, 概要 §画面遷移 | 確定 |
+| ACD-W08 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除の完了を待っている | データの削除ダイアログが表示されたまま、「OK」ボタンが無効になり、ダイアログの中にローディングのインジケーターが表示される | 概要 §データの削除ダイアログ, 原則-4, 原則-5 | 確定 |
+| ACD-W09 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗した | データの削除ダイアログが閉じ、タイトル「削除に失敗しました」、本文「端末内のデータを削除できませんでした。もう一度お試しください。」、「OK」ボタンのダイアログが表示される。ほかのボタンは表示されない | 概要 §データの削除ダイアログ, 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-W10 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗して失敗ダイアログが表示されている状態で「OK」をタップしてデータの削除ダイアログがもう一度表示された後、その「OK」をタップし、端末内の削除が成功した | データの削除ダイアログが閉じる。失敗ダイアログは表示されない | 概要 §削除に失敗したときのダイアログ（OK で削除をやり直す） | 確定 |
+| ACD-W11 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で（削除の処理中ではない）、ダイアログの外側をタップした | データの削除ダイアログは表示されたまま。`deleteLocalDataOfUsers` は0回 | 概要 §データの削除ダイアログ | 確定 |
+| ACD-W12 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で（削除の処理中ではない）、戻る操作をした | データの削除ダイアログは表示されたまま。`deleteLocalDataOfUsers` は0回 | 概要 §データの削除ダイアログ | 確定 |
+| ACD-W13 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除の完了を待っている間に、ダイアログの外側をタップした | データの削除ダイアログは表示されたまま | 概要 §データの削除ダイアログ | 確定 |
+| ACD-W14 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除の完了を待っている間に、戻る操作をした | データの削除ダイアログは表示されたまま | 概要 §データの削除ダイアログ | 確定 |
+| ACD-W15 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `A` に退会済みの記録がある状態でアプリを起動した | 「退会処理が完了していません」ダイアログが表示される。データの削除ダイアログは表示されない | 概要 §確認のタイミング（退会処理の記録がある間は確認しない）, 概要 §データの削除ダイアログ（再開ダイアログを優先） | 確定 |
+| ACD-W16 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `C` に退会済みの記録がある状態でアプリを起動した | 「退会処理が完了していません」ダイアログが表示される。データの削除ダイアログは表示されない | 概要 §データの削除ダイアログ（再開ダイアログを表示している間は表示しない） | 確定 |
+| ACD-W17 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、起動時には uid `A` に退会済みの記録が無く、ホーム画面（`/home`）を表示している状態で記録ができ、アプリがフォアグラウンドに戻った | ホーム画面（`/home`）の上にお知らせダイアログが表示される | 概要 §確認のタイミング（resumed） | 確定 |
+| ACD-W18 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録がある状態でアプリを起動した | ダイアログは表示されない。`deleteLocalDataOfUsers` が1回呼ばれ、引数に `A` と `C` が含まれる | 概要 §退会済みが見つかったとき（ログアウト済み）1, 概要 §退会済みが見つかったとき（1つのトランザクション） | 確定 |
+| ACD-W19 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で（uid `A` の退会済みの記録はあるまま）、アプリがフォアグラウンドに戻った | データの削除ダイアログが1つだけ表示されたまま | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-W20 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で、オフラインでアプリを起動してホーム画面（`/home`）を表示し、オンラインになってからアプリがフォアグラウンドに戻った | ホーム画面（`/home`）の上にお知らせダイアログが表示される | 概要 §確認のタイミング（次のきっかけでもう一度確認する） | 確定 |
+| ACD-W21 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `A` に退会済みの記録がある状態でアプリを起動した | 「退会処理が完了していません」ダイアログが表示される。データの削除ダイアログは表示されない | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-W22 | （廃止）別のアカウントでログイン中に、データの削除ダイアログで削除が成功した | ログアウト済みのアカウントは何も表示せずに削除することになり、別のアカウントでログイン中にデータの削除ダイアログは表示されなくなったため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する）） | — | 廃止 |
+| ACD-W23 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、設定画面（`/settings`）を表示している状態で uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 表示中の画面のパスは `/settings` のまま。ダイアログは表示されない。`deleteLocalDataOfUsers([A])` が1回呼ばれる | 概要 §退会済みが見つかったとき（ログアウト済み）1（操作を妨げない）, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-W24 | ログイン中の uid が `A`、端末内にデータが1件も無く、uid `A` に退会済みの記録がある状態でアプリを起動した | ホーム画面（`/home`）の上にお知らせダイアログが表示される | 概要 §確認のタイミング（ログイン中の uid も確認する）, 概要 §退会済みが見つかったとき（ログイン中）1 | 確定 |
+| ACD-W25 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、退会処理の記録が無い状態でアプリを起動し、退会済みの記録の確認の応答を待っている | ホーム画面（`/home`）が表示される | 概要 §確認のタイミング（応答を待たない）, ユーザー決定 2026-10-12（ACD-Q11） | 確定 |
+| ACD-W26 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、「OK」をタップし、ログアウトが成功した | お知らせダイアログが閉じ、ログイン画面（`/login`）に移動し、その上にタイトル「データの削除」、本文「このアカウントは他の端末で退会済みです。この端末に残っている WordStock のデータをすべて削除します。」、「OK」ボタンのダイアログが表示される。ほかのボタンは表示されない | 概要 §退会済みが見つかったとき（ログイン中）2・3, 概要 §データの削除ダイアログ, 概要 §画面遷移 | 確定 |
+| ACD-W27 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、「OK」をタップし、1回目のログアウトが `UnknownFailure` で失敗し、2回目のログアウトが成功した | お知らせダイアログが閉じ、ログイン画面（`/login`）に移動し、その上にデータの削除ダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）2（失敗したらもう一度ログアウトする） | 確定 |
+| ACD-W28 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、ダイアログの外側をタップした | お知らせダイアログは表示されたまま。`AuthRepository.signOut` は0回 | 概要 §アカウント削除のお知らせダイアログ | 確定 |
+| ACD-W29 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、戻る操作をした | お知らせダイアログは表示されたまま。`AuthRepository.signOut` は0回 | 概要 §アカウント削除のお知らせダイアログ | 確定 |
+| ACD-W30 | ログイン中の uid が `A`、設定画面で退会の確認ダイアログ（タイトル「退会」）を表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 退会の確認ダイアログが閉じ、お知らせダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）1（ほかのダイアログを閉じる）, ユーザー決定 2026-10-12（ACD-Q09） | 確定 |
+| ACD-W31 | ログイン中の uid が `A`、設定画面で最終確認ダイアログ（タイトル「最終確認」）を表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 最終確認ダイアログが閉じ、お知らせダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）1, ユーザー決定 2026-10-12（ACD-Q09） | 確定 |
+| ACD-W32 | ログイン中の uid が `A`、設定画面で「退会できませんでした」ダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 「退会できませんでした」ダイアログが閉じ、お知らせダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）1, ユーザー決定 2026-10-12（ACD-Q09） | 確定 |
+| ACD-W33 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗して失敗ダイアログが表示されている状態で「OK」をタップした | 失敗ダイアログが閉じ、データの削除ダイアログが表示される | 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-W34 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗して失敗ダイアログが表示されている状態で失敗ダイアログの外側をタップした | 失敗ダイアログは表示されたまま。データの削除ダイアログは表示されない | 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-W35 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗して失敗ダイアログが表示されている状態で戻る操作をした | 失敗ダイアログは表示されたまま。データの削除ダイアログは表示されない | 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-W36 | ログイン中の uid が `A`、設定画面で「ログアウト」をタップして、タイトル「ログアウト」、本文「ログアウトしますか？」のダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | タイトル「ログアウト」のダイアログが閉じ、お知らせダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）1（ほかのダイアログを閉じる）, 現行UI（ログアウトのダイアログの文言） | 確定 |
+| ACD-W37 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップし、ログアウトが2回とも `UnknownFailure` で失敗した後、データの削除ダイアログの「OK」をタップせずにアプリを終了し、Firebase 上ではログイン中の uid が `A` のまま、もう一度アプリを起動した | ログイン画面（`/login`）が表示される。データの削除ダイアログもお知らせダイアログも表示されない。`deleteLocalDataOfUsers([A])` が1回呼ばれる | 概要 §退会済みが見つかったとき（強制ログアウト済みを含むログアウト済みは何も表示せずに削除）, 概要 §退会済みが見つかったとき（OK の前にアプリを終了した場合） | 確定 |
+| ACD-W38 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で、オフラインでアプリを起動した | データの削除ダイアログは表示されない。ログイン画面（`/login`）が表示される。`deleteLocalDataOfUsers` は0回 | 概要 §確認のタイミング（オフラインのときは確認しない） | 確定 |
+| ACD-W39 | ログインしていない状態で、端末内に uid `A` のデータがある状態でアプリを起動し、退会済みの記録の確認の応答を待っている | ログイン画面（`/login`）が表示される | 概要 §確認のタイミング（応答を待たない）, ユーザー決定 2026-10-12（ACD-Q11） | 確定 |
+| ACD-W40 | ログイン中の uid が `A`、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）に表示されたデータの削除ダイアログの「OK」をタップし、端末内の削除が成功した | データの削除ダイアログが閉じる。表示中の画面のパスは `/login` のまま。起動時の確認で `deleteLocalDataOfUsers([C])` が1回呼ばれている | 概要 §退会済みが見つかったとき（ログイン中・ログアウト済みの両方） | 確定 |
+| ACD-W41 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップしてログアウトが成功し、ログイン画面（`/login`）の上にデータの削除ダイアログが表示されている状態で、「OK」をタップし、端末内の削除が `UnknownFailure` で失敗して失敗ダイアログが表示されている状態で「OK」をタップしてデータの削除ダイアログがもう一度表示された後、その「OK」をタップし、端末内の削除がもう一度 `UnknownFailure` で失敗した | データの削除ダイアログが閉じ、失敗ダイアログが表示される | 概要 §削除に失敗したときのダイアログ（OK で削除をやり直す）, 原則-2 | 確定 |
+| ACD-W42 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、「OK」をタップし、ログアウトが2回とも `UnknownFailure` で失敗した | お知らせダイアログが閉じ、ログイン画面（`/login`）に移動し、その上にデータの削除ダイアログが表示される | 概要 §退会済みが見つかったとき（ログイン中）2（強制ログアウト）, ユーザー決定 2026-10-12（ACD-Q08） | 確定 |
+| ACD-W43 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップし、ログアウトが2回とも `UnknownFailure` で失敗した後、データの削除ダイアログの「OK」をタップして端末内の削除が成功し、アプリがフォアグラウンドに戻った | 表示中の画面のパスは `/login` のまま。ホーム画面に移動しない。データの削除ダイアログは表示されない | 概要 §退会済みが見つかったとき（ログイン中）2（そのアカウントでは画面を使えない） | 確定 |
+| ACD-W44 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、ホーム画面（`/home`）を表示している状態で、アプリをフォアグラウンドにしたまま uid `A` に退会済みの記録ができた | ホーム画面（`/home`）の上にお知らせダイアログが表示される | 概要 §確認のタイミング（リアルタイムで監視する） | 確定 |
+| ACD-W45 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、設定画面（`/settings`）を表示している状態で、アプリをフォアグラウンドにしたまま uid `A` に退会済みの記録ができた | 設定画面（`/settings`）の上にお知らせダイアログが表示される | 概要 §確認のタイミング（どの画面を操作していても） | 確定 |
+| ACD-W46 | ログイン中の uid が `A`、設定画面で最終確認ダイアログの「OK」をタップして「退会処理中です」が表示されている状態で、uid `A` に退会済みの記録ができた | お知らせダイアログは表示されない。「退会処理中です」が表示されたまま | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-W47 | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、端末内に uid `A` のデータがある状態で、オフラインでアプリを起動した | ログイン画面（`/login`）が表示される。ホーム画面に移動しない。`AuthRepository.signOut` は1回 | 概要 §退会済みが見つかったとき（ログイン中）2（起動し直しても同じ扱い・ログアウトは起動のたびにやり直す） | 確定 |
+| ACD-W48 | ログイン中の uid が `A`、設定画面で最終確認ダイアログ（タイトル「最終確認」）を表示している状態で、アプリをフォアグラウンドにしたまま uid `A` に退会済みの記録ができた | 最終確認ダイアログが閉じ、お知らせダイアログが表示される | 概要 §確認のタイミング（すぐに）, 概要 §退会済みが見つかったとき（ログイン中）1（ほかのダイアログを閉じる） | 確定 |
+| ACD-W49 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、お知らせダイアログの「OK」をタップし、ログアウトが2回とも `UnknownFailure` で失敗した後、データの削除ダイアログの「OK」をタップして端末内の削除が成功し、アプリを終了して、Firebase 上ではログイン中の uid が `A` のまま、もう一度アプリを起動した | ログイン画面（`/login`）が表示される。データの削除ダイアログもお知らせダイアログも表示されない | 概要 §退会済みが見つかったとき（強制ログアウト済みはログインしていないものとして扱う） | 確定 |
+| ACD-W50 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、端末内の削除が `UnknownFailure` で失敗する状態でアプリを起動した | ログイン画面（`/login`）が表示される。ダイアログは表示されない | 概要 §退会済みが見つかったとき（ログアウト済み）2（失敗しても何も表示しない） | 確定 |
+| ACD-W51 | ログイン中の uid が `A`、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録があり、uid `C` の端末内の削除が `UnknownFailure` で失敗する状態でアプリを起動した | ホーム画面（`/home`）の上にお知らせダイアログが表示される。失敗を知らせる表示は無い | 概要 §退会済みが見つかったとき（ログイン中）1, 概要 §退会済みが見つかったとき（ログアウト済み）2 | 確定 |
+| ACD-W52 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、uid `A` にだけ退会済みの記録があり、端末内の削除が `UnknownFailure` で失敗する状態でアプリを起動した | ホーム画面（`/home`）が表示される。ダイアログは表示されない | 概要 §退会済みが見つかったとき（ログアウト済み）1・2（操作を妨げない・失敗しても表示しない） | 確定 |
+| ACD-W53 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、1回目の端末内の削除が `UnknownFailure`、2回目が成功する状態でアプリを起動し、その後アプリがフォアグラウンドに戻った | ログイン画面（`/login`）が表示されたまま、ダイアログは表示されない。`deleteLocalDataOfUsers([A])` が合計2回呼ばれる | 概要 §退会済みが見つかったとき（ログアウト済み）2（次のきっかけで削除をやり直す） | 確定 |
+
+### 3.7 状態遷移（他の端末での退会）
+
+状態は 4.2 の `phase` で書く。
+
+| 現在の状態 | 操作・イベント | 次の状態 | ID |
+|-----------|---------------|---------|----|
+| `idle` | 確認を始めた（起動時・復帰時） | `checking` | ACD-V51 |
+| `checking` | ログイン中の uid が退会済み | `notifying` | ACD-V39, ACD-V47, ACD-V65, ACD-V69, ACD-V76, ACD-V109 |
+| `checking` | ログアウト済みの uid（強制ログアウトの記録がある uid を含む）だけが退会済み（無言の削除） | `idle` | ACD-V40, ACD-V41, ACD-V46, ACD-V68, ACD-V77, ACD-V87, ACD-V88, ACD-V107, ACD-V108, ACD-V110, ACD-V111 |
+| `checking` | 強制ログアウトの記録がある uid のデータが無い・オフライン | `idle` | ACD-V98, ACD-V101 |
+| `checking` | 見つからない・オフライン・確認の失敗・退会処理の記録あり | `idle` | ACD-V42〜V45, ACD-V48〜V50, ACD-V66, ACD-V67, ACD-V71 |
+| `idle` | 監視が退会済みでないと通知した・監視が失敗した・退会処理の記録あり・この端末の退会が完了した直後・監視を止めた後の通知 | 変わらない | ACD-V90〜V93, ACD-V104, ACD-V105 |
+| `notifying` | お知らせダイアログの OK（ログアウトの成否に関わらない） | `confirming` | ACD-V64, ACD-V72, ACD-V86 |
+| `idle` | 監視が退会済みを通知した | `notifying` | ACD-V89 |
+| `notifying` | 監視が退会済みを通知した | 変わらない | ACD-V96 |
+| `checking` | 監視が退会済みを通知した（確認の結果が出た後に反映） | `notifying` | ACD-V102, ACD-V106 |
+| `confirming` | データの削除ダイアログの OK | `deleting` | ACD-V53 |
+| `deleting` | 削除成功 | `idle` | ACD-V52, ACD-V56 |
+| `deleting` | 削除失敗 | `failed` | ACD-V54, ACD-V84 |
+| `failed` | 失敗ダイアログの OK | `confirming` | ACD-V55 |
+| `notifying` / `confirming` / `checking` / `deleting` / `failed` | 確認を始めた | 変わらない | ACD-V60, ACD-V61, ACD-V70, ACD-V73, ACD-V75 |
+| `notifying`（ログアウトの完了待ち） | お知らせダイアログの OK（二重操作） | 変わらない | ACD-V79 |
+| `idle` / `confirming` | お知らせダイアログの OK | 変わらない | ACD-V80, ACD-V85 |
+| `confirming` | 失敗ダイアログの OK | 変わらない | ACD-V81 |
+| `failed` | データの削除ダイアログの OK | 変わらない | ACD-V82 |
+| `deleting` | データの削除ダイアログの OK（二重操作） | 変わらない | ACD-V59 |
+| `idle` / `notifying` | データの削除ダイアログの OK | 変わらない | ACD-V63, ACD-V74 |
+
 ---
 
 ## 4. 状態管理仕様（AccountDeletionViewModel）
@@ -209,6 +321,96 @@ State の項目:
 | ACD-V37 | 記録が無い状態で `withdraw` を呼び、関数の呼び出しは成功し、`markServerDone` が `UnknownFailure` で失敗し、端末内の削除は成功した | `phase` は `completed`。`deleteLocalData(A)` は1回 | ACD-X23 | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
 | ACD-V38 | ViewModel を作成した直後（`checkPending` の完了前） | `phase` は `checking` | ACD-D16 | ユーザー決定 2026-10-03（ACD-Q06） | 確定 |
 
+### 4.2 WithdrawnElsewhereViewModel（他の端末での退会）
+
+State の項目:
+
+- `phase`: `idle`（待機）／ `checking`（退会済みの記録を確認している）／ `notifying`（お知らせダイアログを表示している）／ `confirming`（データの削除ダイアログを表示している）／ `deleting`（端末内のデータを削除している）／ `failed`（失敗ダイアログを表示している）
+- `userIds`: データの削除ダイアログで削除する uid の一覧（ログイン中に退会済みと分かった uid）。ログアウト済みの uid は `check` の中で無言の削除をし、`userIds` に入れない
+
+メソッド: `check`（起動時・復帰時の確認）／ `confirmSignOut`（お知らせダイアログの OK）／ `confirmDelete`（データの削除ダイアログの OK）／ `acknowledgeFailure`（失敗ダイアログの OK）。
+ログイン中の uid が変わると、その uid の監視（`watchWithdrawn`）を始め、前の uid の監視を止める。監視の通知は `Right(true)`（退会済み）／ `Right(false)`（退会済みでない）／ `Left(Failure)`。
+強制ログアウトの記録がある uid は、Firebase 上でログイン中でも「ログインしていない」として扱う。
+無言の削除では、実行中の同期が終わるのを待ってから削除する（ACD-V111。データの削除ダイアログの OK と同じく、概要 §退会処理の状態の記録からの類推）。
+「端末内の削除」は `AccountDeletionRepository.deleteLocalDataOfUsers` を指す（対象の uid をまとめて1つのトランザクションで削除する）。
+特に書かない限り、オンラインで、退会処理の記録は無いものとする。「未送信の変更を送る処理」は `SyncRepository.pushBeforeSignOut` を指す。
+
+| ID | 条件 | 期待される状態 | 対応する画面仕様 | 根拠 | 確定度 |
+|----|------|----------------|------------------|------|--------|
+| ACD-V39 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]`。`AuthRepository.signOut` は0回、`deleteLocalDataOfUsers` は0回 | ACD-W01, ACD-W17 | 概要 §退会済みが見つかったとき（ログイン中）1 | 確定 |
+| ACD-V40 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`deleteLocalDataOfUsers([A])` が1回呼ばれる。`signOut` は0回 | ACD-W02 | 概要 §退会済みが見つかったとき（ログアウト済み）1, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-V41 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、uid `A` にだけ退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`deleteLocalDataOfUsers([A])` が1回呼ばれる。`isWithdrawnOnServer` は `A`・`B` それぞれ1回、`signOut` は0回 | ACD-W03, ACD-W23 | 概要 §退会済みが見つかったとき（ログアウト済み）1, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-V42 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録が無い状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`signOut` は0回 | ACD-W04 | 概要 §他の端末での退会 | 確定 |
+| ACD-V43 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、`isWithdrawnOnServer` が `NetworkFailure` を返す状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`signOut` は0回 | ACD-W05 | 概要 §確認のタイミング（オフラインのときは確認しない） | 確定 |
+| ACD-V44 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、`isWithdrawnOnServer` が `UnknownFailure` を返す状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`signOut` は0回 | ACD-W06 | 概要 §確認のタイミング（読めなかった uid は次のきっかけで確認する） | 確定 |
+| ACD-V45 | ログインしていない状態で、`findLocalUserIds` が `UnknownFailure` を返す状態で `check` を呼んだ | `phase` は `idle`。`isWithdrawnOnServer` は0回 | — | 概要 §確認のタイミング（次のきっかけで確認する） | 確定 |
+| ACD-V46 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、`isWithdrawnOnServer(A)` が `UnknownFailure`、uid `C` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`deleteLocalDataOfUsers([C])` が1回呼ばれる | — | 概要 §確認のタイミング（読めなかった uid だけ次のきっかけで確認する） | 確定 |
+| ACD-V47 | ログイン中の uid が `A`、端末内にデータが1件も無く、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]`。`signOut` は0回 | ACD-W24 | 概要 §確認のタイミング（ログイン中の uid も確認する） | 確定 |
+| ACD-V48 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`isWithdrawnOnServer` は0回 | ACD-W15 | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-V49 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `C` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`isWithdrawnOnServer` は0回 | ACD-W16 | 概要 §データの削除ダイアログ（再開ダイアログを表示している間は表示しない）, ユーザー決定 2026-10-12（ACD-Q12） | 確定 |
+| ACD-V50 | 退会処理の記録の読み取り（`findPending`）が `UnknownFailure` を返す状態で `check` を呼んだ | `phase` は `idle`。`isWithdrawnOnServer` は0回 | — | ユーザー決定 2026-10-03（ACD-Q02: 読めない記録は途中とみなす）, 概要 §確認のタイミング（退会処理の記録がある uid は対象外） | 確定 |
+| ACD-V51 | ログイン中の uid が `A`、端末内に uid `A` のデータがある状態で `check` を呼び、`isWithdrawnOnServer` の応答を待っている | `phase` は `checking` | ACD-W25 | 概要 §確認のタイミング | 確定 |
+| ACD-V52 | `phase` が `confirming`、`userIds` が `[A]` の状態で `confirmDelete` を呼び、端末内の削除が成功した | `phase` は `idle`、`userIds` は空。`SyncRepository.waitUntilIdle` が1回呼ばれ、その完了後に `deleteLocalDataOfUsers([A])` が1回呼ばれる | ACD-W07 | 概要 §データの削除ダイアログ, 概要 §退会処理の状態の記録（実行中の同期が終わるのを待つ、からの類推） | 確定 |
+| ACD-V53 | `phase` が `confirming`、`userIds` が `[A]` の状態で `confirmDelete` を呼び、端末内の削除の完了を待っている | `phase` は `deleting` | ACD-W08 | 概要 §データの削除ダイアログ, 原則-5 | 確定 |
+| ACD-V54 | `phase` が `confirming`、`userIds` が `[A]` の状態で `confirmDelete` を呼び、端末内の削除が `UnknownFailure` で失敗した | `phase` は `failed`、`userIds` は `[A]` | ACD-W09 | 概要 §データの削除ダイアログ（削除が失敗） | 確定 |
+| ACD-V55 | `phase` が `failed`、`userIds` が `[A]` の状態で `acknowledgeFailure` を呼んだ | `phase` は `confirming`、`userIds` は `[A]`。`deleteLocalDataOfUsers` は呼ばれない | ACD-W33 | 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-V56 | `phase` が `failed`、`userIds` が `[A]` の状態で `acknowledgeFailure` を呼んで `phase` が `confirming` になった後、`confirmDelete` を呼び、端末内の削除が成功した | `phase` は `idle`、`userIds` は空 | ACD-W10 | 概要 §削除に失敗したときのダイアログ（OK で削除をやり直す） | 確定 |
+| ACD-V57 | （廃止）複数の uid のうち一部の削除だけが失敗した | 対象の uid をまとめて1つのトランザクションで削除することになり、一部だけ失敗する状態が無くなったため廃止（ユーザー決定 2026-10-12、ACD-Q10） | — | — | 廃止 |
+| ACD-V58 | （廃止）`userIds` が `[A, C]` の状態で削除が成功した | データの削除ダイアログで削除するのはログイン中だった uid だけになり、`userIds` が複数になる状態が無くなったため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する））。複数の uid の無言の削除は ACD-V68 で扱う | — | — | 廃止 |
+| ACD-V59 | `phase` が `deleting` の間に、もう一度 `confirmDelete` を呼び、端末内の削除が成功した | `deleteLocalDataOfUsers` は合計1回だけ呼ばれる | ACD-W08 | 原則-4 | 確定 |
+| ACD-V60 | `phase` が `confirming`、`userIds` が `[A]` の状態で `check` を呼んだ | `phase` は `confirming`、`userIds` は `[A]` のまま。`isWithdrawnOnServer` は0回 | ACD-W19 | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-V61 | `phase` が `checking` の間に、もう一度 `check` を呼んだ | `isWithdrawnOnServer(A)` は合計1回だけ呼ばれる | — | 原則-4 | 確定 |
+| ACD-V62 | （廃止）ViewModel を作成した直後の初期値 | 初期値だけを確かめる行で、無価値テストになるため廃止（初期状態は ACD-V42 などの前提として使われる） | — | — | 廃止 |
+| ACD-V63 | `phase` が `idle` の状態で `confirmDelete` を呼んだ | `phase` は `idle` のまま。`deleteLocalDataOfUsers` は0回 | — | 概要 §データの削除ダイアログ（削除は OK でだけ行う） | 確定 |
+| ACD-V64 | `phase` が `notifying`、`userIds` が `[A]` の状態で `confirmSignOut` を呼び、1回目の `signOut` が `UnknownFailure` で失敗し、2回目の `signOut` が成功した | `phase` は `confirming`、`userIds` は `[A]`。`signOut` は2回、`markForcedSignOut` は0回、`pushBeforeSignOut` は0回 | ACD-W27 | 概要 §退会済みが見つかったとき（ログイン中）2（もう一度ログアウトする） | 確定 |
+| ACD-V65 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、`isWithdrawnOnServer(A)` が1回目は `UnknownFailure`、2回目は `Right(true)` を返す状態で、`check` を2回呼んだ | 1回目の後の `phase` は `idle`。2回目の後の `phase` は `notifying`、`userIds` は `[A]` | ACD-W20 | 概要 §確認のタイミング（読めなかった uid は次のきっかけで確認する） | 確定 |
+| ACD-V66 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` の退会処理の記録が `requested` で、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`signOut` は0回、`deleteLocalDataOfUsers` は0回 | ACD-W21 | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-V67 | ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` の退会処理の記録が `serverDone` で、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`signOut` は0回、`deleteLocalDataOfUsers` は0回 | — | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-V68 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録がある状態で `check` を呼んだ | `phase` は `idle`。`deleteLocalDataOfUsers` が1回呼ばれ、引数に `A` と `C` が1回ずつ含まれる | ACD-W18 | 概要 §退会済みが見つかったとき（1つのトランザクション） | 確定 |
+| ACD-V69 | ログイン中の uid が `A`、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録がある状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]`。`deleteLocalDataOfUsers([C])` が1回呼ばれる。`signOut` は0回。`isWithdrawnOnServer(A)` は1回 | ACD-W40 | 概要 §確認のタイミング（端末内の uid とログイン中の uid）, 概要 §退会済みが見つかったとき | 確定 |
+| ACD-V70 | `phase` が `deleting` の間に `check` を呼んだ | `phase` は `deleting` のまま。`isWithdrawnOnServer` は0回 | — | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-V71 | ログイン中の uid が `A`、端末内に uid `A` のデータがある状態で `check` を呼び、`isWithdrawnOnServer(A)` の応答を待っている間に uid `A` の退会処理の記録が `requested` になり、その後 `Right(true)` が返った | `phase` は `idle`。お知らせダイアログ用の `notifying` にならない | — | 概要 §確認のタイミング（退会処理の記録がある uid は対象外。この端末で退会を始めた場合） | 確定 |
+| ACD-V72 | `phase` が `notifying`、`userIds` が `[A]` の状態で `confirmSignOut` を呼び、`signOut` が成功した | `phase` は `confirming`、`userIds` は `[A]`。`AuthRepository.signOut` は1回、`SyncRepository.pushBeforeSignOut` は0回、`deleteLocalDataOfUsers` は0回 | ACD-W26 | 概要 §退会済みが見つかったとき（ログイン中）2・3（未送信の変更は送信しない） | 確定 |
+| ACD-V73 | `phase` が `notifying`、`userIds` が `[A]` の状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]` のまま。`isWithdrawnOnServer` は0回 | — | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-V74 | `phase` が `notifying` の状態で `confirmDelete` を呼んだ | `phase` は `notifying` のまま。`deleteLocalDataOfUsers` は0回 | — | 概要 §退会済みが見つかったとき（ログイン中）3（ログアウトの後に削除する） | 確定 |
+| ACD-V75 | `phase` が `failed`、`userIds` が `[A]` の状態で `check` を呼んだ | `phase` は `failed`、`userIds` は `[A]` のまま。`isWithdrawnOnServer` は0回 | — | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-V76 | ログイン中の uid が `A`、`findLocalUserIds` が `UnknownFailure` を返し、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]` | — | 概要 §確認のタイミング（ログイン中の uid も確認する） | 確定 |
+| ACD-V77 | ログインしていない状態で、端末内に uid `A` と uid `C` のデータがあり、uid `C` に退会済みの記録があり、1回目の `check` のときは uid `A` の退会処理の記録が `requested`、2回目の `check` のときは記録が無い状態で、`check` を2回呼んだ | 1回目の後は `deleteLocalDataOfUsers` は0回。2回目の後に `deleteLocalDataOfUsers([C])` が1回呼ばれる。どちらの後も `phase` は `idle` | — | 概要 §確認のタイミング（退会処理が終わった後は次のきっかけで確認する）, ユーザー決定 2026-10-12（ACD-Q12） | 確定 |
+| ACD-V78 | （廃止）欠番 | 番号の付け間違いで使わなかった番号。仕様項目は無い | — | — | 廃止 |
+| ACD-V79 | `phase` が `notifying`、`userIds` が `[A]` の状態で `confirmSignOut` を呼び、`signOut` の完了を待っている間にもう一度 `confirmSignOut` を呼び、`signOut` が成功した | `AuthRepository.signOut` は合計1回だけ呼ばれる。`phase` は `confirming` | — | 原則-4 | 確定 |
+| ACD-V80 | `phase` が `idle` の状態で `confirmSignOut` を呼んだ | `phase` は `idle` のまま。`signOut` は0回 | — | 概要 §アカウント削除のお知らせダイアログ（OK でログアウトする） | 確定 |
+| ACD-V81 | `phase` が `confirming`、`userIds` が `[A]` の状態で `acknowledgeFailure` を呼んだ | `phase` は `confirming` のまま。`deleteLocalDataOfUsers` は0回 | — | 概要 §削除に失敗したときのダイアログ | 確定 |
+| ACD-V82 | `phase` が `failed`、`userIds` が `[A]` の状態で `confirmDelete` を呼んだ | `phase` は `failed` のまま。`deleteLocalDataOfUsers` は0回 | — | 概要 §削除に失敗したときのダイアログ（OK でデータの削除ダイアログに戻ってからやり直す） | 確定 |
+| ACD-V83 | （廃止）`userIds` が `A` と `C` を含む状態での `confirmSignOut` | ログアウト済みの uid は無言の削除になり `userIds` に入らなくなったため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する）） | — | — | 廃止 |
+| ACD-V84 | `phase` が `failed`、`userIds` が `[A]` の状態で `acknowledgeFailure` を呼んで `phase` が `confirming` になった後、`confirmDelete` を呼び、端末内の削除が `UnknownFailure` で失敗した | `phase` は `failed`、`userIds` は `[A]` | ACD-W41 | 概要 §削除に失敗したときのダイアログ（OK で削除をやり直す） | 確定 |
+| ACD-V85 | `phase` が `confirming`、`userIds` が `[A]` の状態で `confirmSignOut` を呼んだ | `phase` は `confirming` のまま。`signOut` は0回 | — | 概要 §アカウント削除のお知らせダイアログ（OK はお知らせダイアログを表示しているときだけ） | 確定 |
+| ACD-V86 | `phase` が `notifying`、`userIds` が `[A]` の状態で `confirmSignOut` を呼び、`signOut` が2回とも `UnknownFailure` で失敗した | `phase` は `confirming`、`userIds` は `[A]`。`signOut` は2回、`markForcedSignOut(A)` は1回、`pushBeforeSignOut` は0回 | ACD-W42 | 概要 §退会済みが見つかったとき（ログイン中）2（強制ログアウト）, ユーザー決定 2026-10-12（ACD-Q08） | 確定 |
+| ACD-V87 | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、`signOut` が `UnknownFailure` で失敗する状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`deleteLocalDataOfUsers([A])` が1回呼ばれる。`signOut` は1回、`clearForcedSignOut` は0回 | ACD-W37 | 概要 §退会済みが見つかったとき（強制ログアウト済みを含むログアウト済みは何も表示せずに削除）, 概要 §退会済みが見つかったとき（ログイン中）2（ログアウトは起動のたびにやり直す） | 確定 |
+| ACD-V88 | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、`signOut` が成功する状態で `check` を呼んだ | `phase` は `idle`。`deleteLocalDataOfUsers([A])` が1回呼ばれる。`signOut` は1回、`clearForcedSignOut(A)` は1回 | ACD-W37 | 概要 §退会済みが見つかったとき（ログイン中）2（ログアウトをやり直す） | 確定 |
+| ACD-V89 | ログイン中の uid が `A`、`phase` が `idle` の状態で、監視が `Right(true)` を通知した | `phase` は `notifying`、`userIds` は `[A]`。`signOut` は0回 | ACD-W44, ACD-W45 | 概要 §確認のタイミング（リアルタイムで監視する） | 確定 |
+| ACD-V90 | ログイン中の uid が `A`、`phase` が `idle` の状態で、監視が `Right(false)` を通知した | `phase` は `idle` のまま | — | 概要 §確認のタイミング | 確定 |
+| ACD-V91 | ログイン中の uid が `A`、`phase` が `idle` の状態で、監視が `Left(UnknownFailure)` を通知した | `phase` は `idle` のまま | — | 概要 §確認のタイミング（監視できない間は起動時・resumed の確認で補う） | 確定 |
+| ACD-V92 | ログイン中の uid が `A`、uid `A` の退会処理の記録が `requested`、`phase` が `idle` の状態で、監視が `Right(true)` を通知した | `phase` は `idle` のまま。`signOut` は0回 | ACD-W46 | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-V93 | ログイン中の uid が `A` で監視を始めた後にログアウトし、ログイン中の uid が無くなった | uid `A` の監視が止まる（`watchWithdrawn(A)` のストリームの購読が解除される）。その後に `phase` は `idle` のまま | — | 概要 §確認のタイミング（ログアウトしたときに監視を止める） | 確定 |
+| ACD-V94 | ログイン中の uid が `A` で監視を始めた後に、ログイン中の uid が `B` に変わった | `watchWithdrawn(B)` が1回呼ばれ、uid `A` の監視が止まる（`watchWithdrawn(A)` のストリームの購読が解除される） | — | 概要 §確認のタイミング（ログインしたときに監視を始める） | 確定 |
+| ACD-V95 | （廃止）`phase` が `confirming` で監視が通知した | `confirming` になるのはログイン中の uid をログアウトした後だけで、その時点で監視は止まっているため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する）） | — | — | 廃止 |
+| ACD-V96 | ログイン中の uid が `A`、`phase` が `notifying`、`userIds` が `[A]` の状態で、監視が `Right(true)` を通知した | `phase` は `notifying`、`userIds` は `[A]` のまま | — | 概要 §退会済みが見つかったとき（ダイアログは1つ） | 確定 |
+| ACD-V97 | （廃止）`phase` が `deleting` で監視が通知した | `deleting` になるのはログイン中の uid をログアウトした後だけで、その時点で監視は止まっているため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する）） | — | — | 廃止 |
+| ACD-V98 | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、端末内にデータが1件も無く、uid `A` に退会済みの記録があり、`signOut` が `UnknownFailure` で失敗する状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`signOut` は1回 | ACD-W49 | 概要 §退会済みが見つかったとき（強制ログアウト済みはログインしていないものとして扱う。確認するのは端末内にデータがある uid） | 確定 |
+| ACD-V99 | uid `A` の強制ログアウトの記録がある状態で、Firebase 上のログイン中の uid が `B` に変わった | `clearForcedSignOut(A)` が1回呼ばれる。`watchWithdrawn(B)` が1回呼ばれる | — | 概要 §退会済みが見つかったとき（ログイン中）2（強制ログアウトは uid `A` だけの扱い） | 確定 |
+| ACD-V100 | Firebase 上のログイン中の uid が `A` で監視を始めた後に、`confirmSignOut` を呼び、`signOut` が2回とも `UnknownFailure` で失敗した | uid `A` の監視が止まる（`watchWithdrawn(A)` のストリームの購読が解除される） | ACD-W42 | 概要 §確認のタイミング（ログアウトしたときに監視を止める）, 概要 §退会済みが見つかったとき（強制ログアウト） | 確定 |
+| ACD-V101 | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、`isWithdrawnOnServer` が `NetworkFailure` を返す状態で `check` を呼んだ | `signOut` は1回。`phase` は `idle` | ACD-W47 | 概要 §退会済みが見つかったとき（ログイン中）2（ログアウトは起動のたびにやり直す） | 確定 |
+| ACD-V102 | ログイン中の uid が `A`、`check` を呼んで `isWithdrawnOnServer(A)` の応答を待っている間に監視が `Right(true)` を通知し、その後 `isWithdrawnOnServer(A)` が `Right(false)` を返した | `phase` は `notifying`、`userIds` は `[A]` | — | 概要 §確認のタイミング（すぐに。確認中の通知を取りこぼさない） | 確定 |
+| ACD-V103 | （廃止）`phase` が `failed` で監視が通知した | `failed` になるのはログイン中の uid をログアウトした後だけで、その時点で監視は止まっているため廃止（ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する）） | — | — | 廃止 |
+| ACD-V104 | ログイン中の uid が `A`、uid `A` の退会処理の記録が `serverDone`、`phase` が `idle` の状態で、監視が `Right(true)` を通知した | `phase` は `idle` のまま。`signOut` は0回 | — | 概要 §確認のタイミング（退会処理の記録がある間は確認しない） | 確定 |
+| ACD-V105 | ログイン中の uid が `A`、`AccountDeletionViewModel` の `phase` が `completed`（この端末の退会処理が終わり、退会処理の記録は削除済みで、完了ダイアログをまだ表示していない）、`WithdrawnElsewhereViewModel` の `phase` が `idle` の状態で、監視が `Right(true)` を通知した | `WithdrawnElsewhereViewModel` の `phase` は `idle` のまま。`signOut` は0回（完了ダイアログの表示後は、ログイン中の uid が無くなり監視は止まっている） | — | 概要 §確認のタイミング（この端末の退会処理を優先する） | 確定 |
+| ACD-V106 | ログイン中の uid が `A`、`check` を呼んで `isWithdrawnOnServer(A)` の応答を待っている間に監視が `Right(true)` を通知し、その後 `isWithdrawnOnServer(A)` が `Left(UnknownFailure)` を返した | `phase` は `notifying`、`userIds` は `[A]` | — | 概要 §確認のタイミング（すぐに。確認中の通知を取りこぼさない） | 確定 |
+| ACD-V107 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、`deleteLocalDataOfUsers` が `UnknownFailure` で失敗する状態で `check` を呼んだ | `phase` は `idle`（`failed` にならない）、`userIds` は空 | ACD-W50 | 概要 §退会済みが見つかったとき（ログアウト済み）2, ユーザー決定 2026-10-12（ログアウト済みのアカウントは何も表示せずに削除する） | 確定 |
+| ACD-V108 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、1回目の `deleteLocalDataOfUsers` が `UnknownFailure`、2回目が成功する状態で、`check` を2回呼んだ | `deleteLocalDataOfUsers([A])` が合計2回呼ばれる。どちらの後も `phase` は `idle` | ACD-W53 | 概要 §退会済みが見つかったとき（ログアウト済み）2（次のきっかけで削除をやり直す） | 確定 |
+| ACD-V109 | ログイン中の uid が `A`、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録があり、`deleteLocalDataOfUsers([C])` が `UnknownFailure` で失敗する状態で `check` を呼んだ | `phase` は `notifying`、`userIds` は `[A]` | ACD-W51 | 概要 §退会済みが見つかったとき（ログイン中）1, 概要 §退会済みが見つかったとき（ログアウト済み）2（失敗しても何も表示しない） | 確定 |
+| ACD-V110 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、uid `A` にだけ退会済みの記録があり、`deleteLocalDataOfUsers([A])` が `UnknownFailure` で失敗する状態で `check` を呼んだ | `phase` は `idle`、`userIds` は空。`signOut` は0回 | ACD-W52 | 概要 §退会済みが見つかったとき（ログアウト済み）1・2 | 確定 |
+| ACD-V111 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で `check` を呼んだ | `SyncRepository.waitUntilIdle` が1回呼ばれ、その完了後に `deleteLocalDataOfUsers([A])` が呼ばれる | — | 概要 §退会処理の状態の記録（実行中の同期が終わるのを待つ、からの類推） | 確定 |
+
 ---
 
 ## 5. リポジトリ契約
@@ -252,10 +454,37 @@ State の項目:
 | ACD-R23 | syncOnResumed | ログイン中の uid `A` の前回の取得から5分以上たち、uid `A` の記録が `requested` の状態で `syncOnResumed` を呼んだ | リモートからの取得は0回 | 概要 §退会処理の状態の記録 | 確定 |
 | ACD-R28 | syncOnResumed | ログイン中の uid `A` の前回の取得から5分以上たち、uid `A` の記録が `serverDone` の状態で `syncOnResumed` を呼んだ | リモートからの取得は0回 | 概要 §退会処理の状態の記録 | 確定 |
 | ACD-R30 | syncAll | ログイン中の uid `A` に未送信の変更が1件あり、記録の読み取りが失敗する状態で `syncAll` を呼んだ | リモートへの送信・取得は0回。未送信の変更は1件のまま | ユーザー決定 2026-10-03（ACD-Q02） | 確定 |
+| ACD-R47 | syncAll | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、uid `A` に未送信の変更が1件ある状態で `syncAll` を呼んだ | リモートへの送信・取得は0回。未送信の変更は1件のまま | 概要 §退会済みが見つかったとき（ログイン中）2（そのアカウントでは同期も使えない） | 確定 |
+| ACD-R49 | pushPending | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、uid `A` に未送信の変更が1件ある状態で `pushPending` を呼んだ | リモートへの送信は0回。未送信の変更は1件のまま | 概要 §退会済みが見つかったとき（ログイン中）2（そのアカウントでは同期も使えない） | 確定 |
+| ACD-R50 | syncOnResumed | Firebase 上のログイン中の uid が `A`、uid `A` の強制ログアウトの記録があり、前回の取得から5分以上たった状態で `syncOnResumed` を呼んだ | リモートからの取得は0回 | 概要 §退会済みが見つかったとき（ログイン中）2（そのアカウントでは同期も使えない） | 確定 |
+
+### 5.3 AccountDeletionRepository（他の端末での退会）
+
+| ID | メソッド | 条件 | 期待される結果 | 根拠 | 確定度 |
+|----|----------|------|----------------|------|--------|
+| ACD-R31 | findLocalUserIds | uid `A` のフォルダと単語、uid `B` の `sync_queue` の行だけ、uid `C` の設定だけ、uid `D` の学習結果だけ、uid `E` の `sync_meta`（`pullCursor:E`）だけがある状態で `findLocalUserIds` を呼んだ | `Right` で、`A`・`B`・`C`・`D`・`E` が1回ずつ含まれる一覧（順不同）。ほかの uid は含まれない | 概要 §確認のタイミング（端末内にデータがある uid）, 概要 §退会済みが見つかったとき 3（削除するデータの種類） | 確定 |
+| ACD-R32 | findLocalUserIds | 端末内にどの uid のデータも無い状態で `findLocalUserIds` を呼んだ | `Right([])` | 概要 §確認のタイミング | 確定 |
+| ACD-R33 | isWithdrawnOnServer | オンラインで、uid `A` に退会済みの記録がある状態で `isWithdrawnOnServer(A)` を呼んだ | `Right(true)` | 概要 §退会済みの記録 | 確定 |
+| ACD-R34 | isWithdrawnOnServer | オンラインで、uid `A` に退会済みの記録が無い状態で `isWithdrawnOnServer(A)` を呼んだ | `Right(false)` | 概要 §退会済みの記録 | 確定 |
+| ACD-R35 | isWithdrawnOnServer | オフライン（接続状態の確認がオフラインを返す）で `isWithdrawnOnServer(A)` を呼んだ | `Left(NetworkFailure)`。退会済みの記録の読み取りは0回 | 概要 §確認のタイミング（オフラインのときは確認しない） | 確定 |
+| ACD-R36 | isWithdrawnOnServer | オンラインで、退会済みの記録の読み取りが例外を投げる状態で `isWithdrawnOnServer(A)` を呼んだ | `Left(UnknownFailure)` | 概要 §確認のタイミング（読めなかった uid）, 原則-10 | 確定 |
+| ACD-R37 | findLocalUserIds | 端末内の読み取りが例外を投げる状態で `findLocalUserIds` を呼んだ | `Left(UnknownFailure)` | 概要 §確認のタイミング（次のきっかけで確認する）, 原則-10 | 確定 |
+| ACD-R38 | deleteLocalDataOfUsers | 退会処理の記録が無く、uid `A`・`B`・`C` それぞれのフォルダ・単語・学習結果・設定・`sync_queue`・`sync_meta`（`pullCursor:<uid>`・`lastPulledAt:<uid>`）がある状態で `deleteLocalDataOfUsers([A, C])` を呼んだ | `Right(unit)`。uid `A`・`C` のフォルダ・単語・学習結果・設定・`sync_queue` の行・`sync_meta` のキーは0件。uid `B` の行とキーはすべて残る | 概要 §退会済みが見つかったとき（データをすべて削除・他のアカウントは残す） | 確定 |
+| ACD-R39 | deleteLocalDataOfUsers | uid `A` と uid `C` のデータがある状態で `deleteLocalDataOfUsers([A, C])` を呼び、uid `A` の行を削除した後、uid `C` の行を削除する前に SQLite の書き込みが失敗した | `Left(UnknownFailure)`。uid `A`・`C` のフォルダ・単語・学習結果・設定・`sync_queue`・`sync_meta` は呼ぶ前と同じ件数 | 概要 §退会済みが見つかったとき（1つのトランザクション） | 確定 |
+| ACD-R40 | deleteLocalDataOfUsers | uid `A` のデータが1件も無い状態で `deleteLocalDataOfUsers([A])` を呼んだ | `Right(unit)` | 概要 §削除に失敗したときのダイアログ（OK で削除をやり直す） | 確定 |
+| ACD-R41 | markForcedSignOut | 強制ログアウトの記録が無い状態で `markForcedSignOut(A)` を呼んだ | `Right(unit)`。その後の `findForcedSignOut` は `Right(Some(A))` | 概要 §退会済みが見つかったとき（ログイン中）2（起動し直しても同じように扱う） | 確定 |
+| ACD-R42 | findForcedSignOut | 強制ログアウトの記録が無い状態で `findForcedSignOut` を呼んだ | `Right(None)` | 概要 §退会済みが見つかったとき（ログイン中）2 | 確定 |
+| ACD-R43 | deleteLocalDataOfUsers | uid `A` のデータと uid `A` の強制ログアウトの記録がある状態で `deleteLocalDataOfUsers([A])` を呼んだ | `Right(unit)`。その後の `findForcedSignOut` は `Right(Some(A))`（データを削除しても、ログアウトが成功するまで記録は残る） | 概要 §退会済みが見つかったとき（ログイン中）2（ログアウトは起動のたびにやり直す） | 確定 |
+| ACD-R44 | clearForcedSignOut | uid `A` の強制ログアウトの記録がある状態で `clearForcedSignOut(A)` を呼んだ | `Right(unit)`。その後の `findForcedSignOut` は `Right(None)` | 概要 §退会済みが見つかったとき（ログイン中）2 | 確定 |
+| ACD-R45 | watchWithdrawn | オンラインで `watchWithdrawn(A)` の購読を始め、uid `A` に退会済みの記録が無い状態から、記録ができた | ストリームが `Right(false)`、`Right(true)` の順に通知する | 概要 §確認のタイミング（リアルタイムで監視する） | 確定 |
+| ACD-R46 | watchWithdrawn | オンラインで、退会済みの記録の監視が例外を通知する状態で `watchWithdrawn(A)` の購読を始めた | ストリームが `Left(UnknownFailure)` を通知する | 概要 §確認のタイミング（監視できない間は起動時・resumed の確認で補う）, 原則-10 | 確定 |
+| ACD-R48 | watchWithdrawn | オンラインで、uid `A` に退会済みの記録がある状態で `watchWithdrawn(A)` の購読を始めた | ストリームの最初の通知が `Right(true)` | 概要 §確認のタイミング（リアルタイムで監視する） | 確定 |
 
 ## 6. ユースケース
 
 DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure の種類による分岐）を持つ。これらは4章で ViewModel を通して検証する（ViewModel は UseCase を呼ぶだけで、独自の分岐を持たない）。UseCase 単体の仕様項目は作らない。
+
+WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の対象の選び方・ログアウト・削除の順序を 4.2 で ViewModel を通して検証する。UseCase 単体の仕様項目は作らない。
 
 ---
 
@@ -269,9 +498,35 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 - **起動直後の画面ごとの再開ダイアログの表示**: 起動直後の画面はログイン状態だけで決まる（ログイン中ならホーム、そうでなければログイン画面）ため、ログイン中（ACD-D03・ACD-D08・ACD-D12）とログインしていない（ACD-D04・ACD-D05）で網羅している
 - **自動同期の契機ごとの停止**（接続復帰・ログイン済み・登録や編集の直後）: どの契機も `syncAll` / `pushPending` / `syncOnResumed` を呼ぶため、ACD-R13・R14・R21・R22・R23・R28 で網羅している
 - **`waitUntilIdle` の待ち時間の上限**: 同期のリモート通信には1回ごとに時間の上限があり（online_offline §オンライン・オフラインの判定）、待ちは必ず終わる
-- **設定画面のダークモード・カラーテーマ・ログアウト**: この仕様書の範囲外（退会だけを扱う）
+- **設定画面のダークモード・カラーテーマ・ログアウト**: この仕様書の範囲外（退会だけを扱う）。ただし、ログアウトのダイアログが他の端末での退会で閉じること（ACD-W36）は扱う
 - **共通原則-11（`NetworkFailure` / `AuthFailure` → 通信エラーダイアログ → ログアウト）**: 退会処理の失敗には適用しない（概要 §操作が失敗したとき）。初回の `AuthFailure` も「退会できませんでした」とする（ACD-E01）
 - **原則-10（画面が崩れない）**: 表示する文言はすべて固定で、長い文字列や多数のデータを表示しないため、個別の仕様項目を作らない
+- **退会済みの記録（`deleted_accounts/{uid}`）を関数が書き込むこと**（最初に作る・退会後も残す・何度呼んでも1つ）: 関数の中の動作のため、Cloud Functions 側（`functions/test/delete_account.test.ts`）で Firebase Emulator を使って検証する
+- **Firestore のルール**（退会済みの記録がある uid の `users/{uid}` 配下への書き込みの拒否、ログインしていなくても退会済みの記録を1件ずつ読めること、一覧は読めないこと）: Flutter のテストの対象外。`functions/` 側で `@firebase/rules-unit-testing` と Firebase Emulator を使って自動テストする（ユーザー決定 2026-10-12）
+- **退会済みの記録をキャッシュではなくサーバーから読むこと**: Firestore SDK の呼び出し方そのもので、リモートのデータソースは単体テストの対象外（ACD-R33〜R36 は Repository の契約として検証する）
+- **`isWithdrawnOnServer` の `NotFoundFailure`**: 記録が無いことは `Right(false)` で表す（ACD-R34）ため、発生しない
+- **`isWithdrawnOnServer` の `AuthFailure`**: 退会済みの記録はログインしていなくても読めるため、発生しない
+- **`findLocalUserIds` の `NetworkFailure` / `AuthFailure` / `NotFoundFailure`**: 端末内の読み取りだけで、データが無ければ `Right([])`（ACD-R32）のため、発生しない
+- **データの削除ダイアログの OK での `deleteLocalDataOfUsers` の `NetworkFailure` / `AuthFailure` / `NotFoundFailure`**: 端末内の削除は通信も認証も使わず、対象の行が無くても成功する（ACD-R40）ため、発生しない
+- **データの削除ダイアログ・お知らせダイアログ・失敗ダイアログのキャンセル**: キャンセルボタンが無い
+- **`checking` / `deleting` / `failed` の状態での `confirmSignOut`、`checking` の状態での `confirmDelete`、`failed` 以外（`idle` / `notifying` / `checking` / `deleting`）の状態での `acknowledgeFailure`**: これらの状態では、お知らせダイアログ・データの削除ダイアログ・失敗ダイアログの OK が表示されていないため、画面からは呼ばれない。想定外の状態からの呼び出しは ACD-V63・V74・V80〜V82・V85 で代表する（`deleting` の状態での `confirmDelete` は二重操作として ACD-V59 で扱う）
+- **失敗ダイアログの二重操作**: OK を押すとダイアログが閉じるため、同じボタンを2回押せない（データの削除ダイアログは ACD-V59、お知らせダイアログは ACD-V79 で扱う）
+- **他の端末での退会の確認が失敗したことを表示しないこと（原則-2・原則-11 を適用しない）**: 確認はユーザーの操作ではなく、起動時・復帰時に裏で行うもので、失敗した uid は次のきっかけで確認し直す（概要 §確認のタイミング）。表示しないことは ACD-W05・ACD-W06 で検証する
+- **この仕組みを導入する前に退会したユーザー**: 退会済みの記録が無いため、他の端末での退会の対象外（概要 §退会済みの記録）
+- **お知らせダイアログの OK での `signOut` の `NetworkFailure` / `AuthFailure` / `NotFoundFailure`**: ログアウトの失敗は種類で扱いを変えない（どれも強制ログアウト）ため、`UnknownFailure` で代表する（ACD-V64・ACD-W27）
+- **ほかのダイアログを閉じる対象**: 表示中のダイアログはすべて閉じる。退会の確認・最終確認・「退会できませんでした」（ACD-W30〜W32）と設定画面のログアウトの確認（ACD-W36）で代表する。ほかの画面のダイアログ（フォルダ・単語の作成など）はこの仕様書の範囲外のため、個別の ID を作らない
+- **アプリを終了して起動し直したときの再表示**: 起動し直すと、ダイアログの状態は引き継がれず、起動時の確認の結果だけで決まる（ACD-V39・ACD-V40 と同じ動作）。ログイン中だったアカウントは ACD-W37、ログインしていない場合は ACD-W02 で確かめる
+- **データの削除ダイアログを表示している間の同期**: ログアウトした退会済みのアカウントは同期の対象にならない。ログアウトに失敗してログイン状態が残った場合も、書き込みは Firestore のルールで拒否され、削除済みのデータは取得されないため、個別の ID を作らない
+- **ほかのダイアログを閉じる処理の、確認の経路ごとの網羅**: 起動時・resumed・監視のどの経路で見つかっても、ほかのダイアログを閉じてからお知らせダイアログを出す処理は同じ。resumed の経路は ACD-W30〜W32・W36、監視の経路は ACD-W48 で代表する
+- **無言の削除の失敗を表示しないこと（原則-2 を適用しない）**: ログアウト済みのアカウントの削除はユーザーの操作ではなく、別のアカウントで操作中に表示すると誤解されるため表示しない（概要 §退会済みが見つかったとき（ログアウト済み）2）。表示しないことは ACD-W50 で検証する
+- **無言の削除の途中で、この端末で別のアカウントの退会処理が始まった場合**: 無言の削除の対象は退会済みの記録がある別の uid で、退会処理の対象のデータとは重ならないため、削除はそのまま完了させる。個別の ID を作らない
+- **無言の削除の同期の待ち時間**: 待つのはログイン中のアカウントの同期で、同期のリモート通信には1回ごとに時間の上限があり（online_offline §オンライン・オフラインの判定）、待ちは必ず終わる
+- **監視の中の動作**（Firestore のリアルタイムの監視の接続・オフラインから戻ったときの再接続）: Firestore SDK の動作で、リモートのデータソースは単体テストの対象外（ACD-R45・R46 は Repository の契約として検証する）
+- **監視の `NotFoundFailure` / `NetworkFailure` / `AuthFailure`**: 記録が無いことは `Right(false)` で表し、オフラインの間は SDK が通知を止めて再接続を待ち、退会済みの記録はログインしていなくても読めるため、`UnknownFailure` で代表する（ACD-V91・R46）
+- **強制ログアウトの記録の読み書きの失敗**: 端末内の読み書きで、失敗するのは記録を書けなかったときだけ。その場合は Firebase 上のログイン状態のまま起動し直すことになり、起動時の確認でお知らせダイアログからやり直す（ACD-V39）。個別の ID を作らない
+- **退会の完了ダイアログを表示している間に退会済みが見つかる場合**: 完了ダイアログはこの端末で退会してログアウトした後にだけ表示され、その時点でログイン中のアカウントは無いため、お知らせダイアログとは重ならない
+- **退会済みの uid の同期がルールで拒否されたとき**: 同期の失敗は画面に表示せず次のきっかけで再試行する（online_offline §送信）ため、通信エラーダイアログや強制ログアウトにはつながらない。この仕様書では扱わない
+- **データの削除ダイアログを表示している間に、別の uid の退会済みの記録ができた場合**: 表示中は確認し直さない（ACD-V60）。その uid は削除が終わった後の次のきっかけで見つかる
 
 ## 8. 要確認事項
 
@@ -284,6 +539,11 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 | ACD-Q05 | 記録の読み書き（`markRequested` / `markServerDone` / `clearRequest`）が `UnknownFailure` で失敗した場合の扱い | `markRequested` の失敗: A: 関数を呼ばず「退会できませんでした」を表示 ／ `markServerDone` の失敗: A: そのまま端末内の削除へ進む（削除で記録も消える。削除も失敗すれば記録は `requested` のまま再開ダイアログ → 再試行で関数をもう一度呼ぶ）／ `clearRequest` の失敗: A: 再開ダイアログを表示する（記録が残り、再試行で退会が進む。ユーザーは2回同意済み）、B: 「退会できませんでした」を表示する（次の起動時に再開ダイアログが出て、退会が進む） | すべて A。`markServerDone` の失敗後に端末内の削除も失敗した場合、記録は `requested` のまま再開ダイアログになり、再試行はサーバー側でユーザーが削除済みのため関数が `unauthenticated` を返し、ACD-T04 と同じ経路（端末内を削除して完了）になる。決定後に、各失敗の ID を 3章・4章・5章に追加する | 決定: 案すべて A（2026-10-03） |
 | ACD-Q06 | 起動時の記録の確認が終わるまでの間の表示（同期の開始・ホームへの移動・設定の「退会」のタップを許すか） | A: 確認が終わるまでスプラッシュ画面のままにし、同期も始めない ／ B: 通常どおり起動し、確認が終わり次第ダイアログを出す | A（確認前に同期が始まると、削除中のデータが送り返される恐れがあるため） | 決定: 案A（2026-10-03） |
 | ACD-Q07 | 関数の呼び出しを「応答が時間内に来ない」とみなす時間 | A: 60秒 ／ B: 120秒 | A（サーバー側の処理が長引いても、時間切れは「届いたか分からない」扱いで再開ダイアログになり、再試行で完了できるため、長くする必要がない）。決定後に「時間内に応答が来ない → `Left(UnknownFailure)`」の ID を ACD-R10 とは別に追加する | 決定: 案A（60秒）（2026-10-03） |
+| ACD-Q08 | （論点・案は決定前のもの。決定は右欄） 他の端末での退会を確認し、ログイン中のアカウントが退会済みだったときに、ログアウト（`signOut`）が `UnknownFailure` で失敗した場合の扱い（ACD-V64） | A: そのままデータの削除ダイアログを表示する（画面はログイン画面に移動しない）。OK で削除した後も、次の確認（起動時・復帰時）でまたログイン中の uid が退会済みと分かり（ACD-V47）、ログアウトをやり直す。ログアウトが失敗し続けると、確認のたびにデータの削除ダイアログがもう一度表示される ／ B: ダイアログを表示せず `idle` に戻し、次のきっかけで確認からやり直す | A（端末内のデータを消すことが目的で、ログアウトに失敗しても削除はできる。退会済みのアカウントは Firestore への書き込みがルールで拒否されるので、同期でデータが作り直されることもない。ログアウトの失敗はまれ）。決定後に、画面の ID（ダイアログの表示と、表示中の画面のパス）を 3.6 に追加する | 決定: お知らせダイアログ（OK でログアウト）→ ログイン画面でデータの削除ダイアログ、の2段階にする。ログアウトに失敗しても強制ログアウトとしてログイン画面に移る（2026-10-12） |
+| ACD-Q09 | （論点・案は決定前のもの。決定は右欄） 他のダイアログ（退会の確認・最終確認・「退会できませんでした」・完了ダイアログ）を表示している間に、ログイン中のアカウントが退会済みと分かった場合の扱い | A: 表示中のダイアログを閉じてからログイン画面に移動し、データの削除ダイアログを表示する ／ B: 表示中のダイアログが閉じるまで、確認の結果の反映を待つ ／ C: 何もせず、ダイアログを重ねる | A（退会済みのアカウントの操作を続けても意味が無く、Bは閉じるまで削除が遅れ、Cはダイアログが重なって操作が分かりにくい）。決定後に、ダイアログごとの画面の ID を 3.6 に追加する | 決定: 案A（2026-10-12） |
+| ACD-Q10 | （論点・案は決定前のもの。決定は右欄） 退会済みの uid が複数あり、OK で一部の uid の削除だけが失敗した場合に、もう一度 OK を押したときの削除の対象（ACD-V57） | A: 失敗した uid だけを削除し直す（`userIds` は `[C]`） ／ B: すべての uid を削除し直す（`userIds` は `[A, C]` のまま。削除済みの uid をもう一度削除しても成功する: ACD-R24） | B（削除は何度行っても同じ結果になるので、状態の持ち方が単純になる。ユーザーから見た違いは無い） | 決定: 対象の uid をまとめて1つのトランザクションで削除し、失敗したら失敗ダイアログを表示する。一部だけ失敗する状態は無くなる（2026-10-12） |
+| ACD-Q11 | （論点・案は決定前のもの。決定は右欄） 起動時に、他の端末での退会の確認（通信あり）が終わるまで、スプラッシュ画面に留めるか（ACD-W25） | A: 確認の応答を待たずに通常どおり起動する（退会済みと分かった時点でログイン画面に移動する） ／ B: 確認が終わるまでスプラッシュ画面に留める（ACD-D16 と同じ） | A（通信が遅いと起動が遅れる。退会済みのアカウントのデータが一瞬ホームに見えるが、見えるのは本人のデータで、Firestore への書き込みはルールで拒否される） | 決定: 案A（2026-10-12） |
+| ACD-Q12 | 退会処理の記録がある間は確認全体を止める（ACD-V49）場合に、別の uid の退会済みをいつ確認し直すか | A: 次のきっかけ（起動時・復帰時）まで待つ ／ B: 退会処理（再試行）が完了した直後に確認し直す | A（退会処理が完了するとログイン画面に移り、通常はその後すぐに次のきっかけがある。仕組みが単純になる） | 決定: 案A（2026-10-12） |
 
 ---
 
@@ -354,6 +614,57 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 | §操作が失敗したとき：通信エラーダイアログ・強制ログアウトをしない | ACD-X12（通信エラーダイアログが表示されない） |
 | §画面遷移：成功でログイン画面 | ACD-X10, ACD-T01 |
 | §画面遷移：「退会できませんでした」で OK → 設定画面のまま | ACD-X13 |
+| §目的：退会後も退会済みの記録を残す | 7章（関数の中の動作） |
+| §削除の方式：最初に退会済みの記録を作る | 7章（関数の中の動作） |
+| §退会済みの記録：退会した日時だけを書き込む・個人情報を持たない | 7章（関数の中の動作） |
+| §退会済みの記録：退会後も削除しない・uid で判定する | ACD-R33, ACD-R34 |
+| §退会済みの記録：何度呼んでも1つ | 7章（関数の中の動作） |
+| §退会済みの記録：書き込みをルールで拒否する | 7章（ルール） |
+| §退会済みの記録：ログインしていない端末からも1件ずつ読める（一覧は読めない） | ACD-W02（ログインしていない状態での確認）, 7章（ルール） |
+| §退会済みの記録：導入前に退会したユーザーは対象外 | 7章 |
+| §確認のタイミング：起動時に確認する | ACD-W01, ACD-W02, ACD-W03 |
+| §確認のタイミング：フォアグラウンドに戻ったとき（resumed）に確認する | ACD-W17, ACD-W20, ACD-W23 |
+| §確認のタイミング：ログイン中はリアルタイムで監視し、どの画面でもすぐにお知らせダイアログ | ACD-W44, ACD-W45, ACD-W48, ACD-V89, ACD-V90, ACD-V96, ACD-V102, ACD-V106, ACD-R45, ACD-R48 |
+| §確認のタイミング：オフライン・バックグラウンドの間は起動時・resumed の確認で補う | ACD-W17, ACD-W20, ACD-V91, 7章（監視の中の動作） |
+| §確認のタイミング：監視はログインで始め、ログアウトで止める | ACD-V93, ACD-V94, ACD-V99, ACD-V100 |
+| §確認のタイミング：応答を待たずに起動する・分かった時点でダイアログ | ACD-W25, ACD-W39, ACD-W17 |
+| §確認のタイミング：オフラインのときは確認しない | ACD-W05, ACD-W38, ACD-V43, ACD-R35 |
+| §確認のタイミング：読めなかった uid は次のきっかけで確認する | ACD-W06, ACD-W20, ACD-V44, ACD-V46, ACD-V65, ACD-R36, ACD-R37 |
+| §確認のタイミング：端末内にデータがある uid を確認する（ログイン中・ログアウト済みに関わらない） | ACD-W02, ACD-W03, ACD-V40, ACD-V41, ACD-V68, ACD-V69, ACD-R31, ACD-R32 |
+| §確認のタイミング：ログイン中の uid を確認する | ACD-W01, ACD-W24, ACD-V39, ACD-V47, ACD-V69, ACD-V76 |
+| §確認のタイミング：退会処理の記録がある間は確認しない | ACD-W15, ACD-W16, ACD-W21, ACD-W46, ACD-V92, ACD-V104, ACD-V105, ACD-V48, ACD-V49, ACD-V50, ACD-V66, ACD-V67, ACD-V71 |
+| §確認のタイミング：退会処理が終わった後は次のきっかけで確認する | ACD-V77 |
+| §退会済みが見つかったとき（ログイン中）：1. 今の画面の上にお知らせダイアログ | ACD-W01, ACD-W17, ACD-W24, ACD-V39 |
+| §退会済みが見つかったとき（ログイン中）：1. ほかのダイアログを閉じてから表示する | ACD-W30, ACD-W31, ACD-W32, ACD-W36, 7章（対象の代表・完了ダイアログとは重ならない） |
+| §退会済みが見つかったとき（ログイン中）：2. OK でログアウト・ログイン画面へ | ACD-W26, ACD-V72 |
+| §退会済みが見つかったとき（ログイン中）：2. 未送信の変更は送信しない | ACD-V72（`pushBeforeSignOut` は0回） |
+| §退会済みが見つかったとき（ログイン中）：2. ログアウトに失敗したらもう一度ログアウトする | ACD-W27, ACD-V64 |
+| §退会済みが見つかったとき（ログイン中）：2. それでも失敗したら強制ログアウト・ログイン画面へ | ACD-W42, ACD-V86, ACD-R41 |
+| §退会済みが見つかったとき（ログイン中）：2. そのアカウントでは画面も同期も使えない | ACD-W43, ACD-W47, ACD-W49, ACD-V100, ACD-R47, ACD-R49, ACD-R50 |
+| §退会済みが見つかったとき（ログイン中）：2. 起動し直しても同じ扱い・ログアウトは起動のたびにやり直す | ACD-W37, ACD-W47, ACD-W49, ACD-V87, ACD-V88, ACD-V98, ACD-V99, ACD-V101, ACD-R43, ACD-R44 |
+| §退会済みが見つかったとき（ログイン中）：3. ログイン画面に移った直後にデータの削除ダイアログ | ACD-W26, ACD-W27, ACD-V72, ACD-V74 |
+| §退会済みが見つかったとき（ログイン中）：4. データの削除ダイアログの OK でそのアカウントのデータを削除 | ACD-W07, ACD-V52 |
+| §退会済みが見つかったとき（ログアウト済み）：1. 何も表示せずに削除・操作を妨げず画面は移動しない | ACD-W02, ACD-W03, ACD-W18, ACD-W23, ACD-V40, ACD-V41, ACD-V46, ACD-V68, ACD-V69 |
+| §退会済みが見つかったとき（ログアウト済み）：1. 強制ログアウト済みも含む | ACD-W37, ACD-V87, ACD-V88 |
+| §退会済みが見つかったとき（ログアウト済み）：1. 何も表示せずに削除（実行中の同期が終わるのを待つ。概要に明記は無く、§退会処理の状態の記録からの類推） | ACD-V111 |
+| §退会済みが見つかったとき（ログアウト済み）：2. 失敗しても何も表示せず、次のきっかけでやり直す | ACD-W50, ACD-W51, ACD-W52, ACD-W53, ACD-V107〜V110 |
+| §退会済みが見つかったとき：退会済みのアカウントのデータをすべて削除・他のアカウントは残す | ACD-V52, ACD-V41, ACD-R38 |
+| §退会済みが見つかったとき：1つのトランザクションで削除 | ACD-R39 |
+| §退会済みが見つかったとき：データの削除ダイアログの OK の前にアプリを終了したら、次の起動時に何も表示せずに削除 | ACD-W37, ACD-V87, ACD-V88 |
+| §アカウント削除のお知らせダイアログ：構成（タイトル・本文・OK のみ） | ACD-W01 |
+| §アカウント削除のお知らせダイアログ：OK でログアウト・ログイン画面へ | ACD-W26 |
+| §アカウント削除のお知らせダイアログ：外側タップ・戻る操作では閉じない | ACD-W28, ACD-W29 |
+| §データの削除ダイアログ：構成（タイトル・本文・OK のみ） | ACD-W26 |
+| §データの削除ダイアログ：OK で削除・処理中は押せない・ローディング | ACD-W08, ACD-V53, ACD-V59 |
+| §データの削除ダイアログ：削除が成功したら閉じる | ACD-W07, ACD-W10, ACD-W40 |
+| §データの削除ダイアログ：削除が失敗したら閉じて失敗ダイアログ | ACD-W09, ACD-V54 |
+| §データの削除ダイアログ：外側タップ・戻る操作では閉じない | ACD-W11, ACD-W12, ACD-W13, ACD-W14 |
+| §データの削除ダイアログ：ログイン中のアカウントが退会済みの場合（お知らせダイアログの後）にだけ表示する | ACD-W26, ACD-W02, ACD-W03（ログアウト済みでは表示しない） |
+| §削除に失敗したときのダイアログ：構成（タイトル・本文・OK のみ） | ACD-W09 |
+| §削除に失敗したときのダイアログ：OK でデータの削除ダイアログを再表示・やり直し | ACD-W33, ACD-W10, ACD-W41, ACD-V55, ACD-V56, ACD-V84, ACD-R40 |
+| §削除に失敗したときのダイアログ：外側タップ・戻る操作では閉じない | ACD-W34, ACD-W35 |
+| §画面遷移：お知らせダイアログで OK → ログイン画面・その上にデータの削除ダイアログ（ログアウトに失敗しても同じ） | ACD-W26, ACD-W27 |
+| §画面遷移：削除が成功 → 今の画面のまま | ACD-W07, ACD-W40 |
 
 ### 9.2 操作 × 観点
 
@@ -367,6 +678,11 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 | 「退会できませんでした」の OK | ACD-X13, ACD-V22 | — 通信なし | — 通信なし | — 通信なし | — 通信なし | — OK のみ | ACD-X20 | — 処理なし | 7章（ダイアログが閉じる） | — 対象なし | — 値なし | — 入力なし |
 | 再試行 | ACD-T01, ACD-T02, ACD-T03, ACD-T04 | ACD-T07, ACD-V17, ACD-T08, ACD-V18, ACD-T12, ACD-T13, ACD-T14, ACD-V29〜V31 | 7章（発生しない） | ACD-T06, ACD-V16 | ACD-T04, ACD-V15（成功扱い） | — 再試行のみ | ACD-D06, ACD-D11 | ACD-T05, ACD-T09, ACD-V19, ACD-V25, ACD-D10, ACD-D13 | ACD-V20 | 7章（記録が無ければ再開ダイアログは出ない） | — 値なし | — 入力なし |
 | 記録の読み書き（markRequested / markServerDone / clearRequest） | ACD-R02, ACD-R03, ACD-R04 | ACD-X21, ACD-X22, ACD-X23, ACD-V35〜V37 | ACD-R26（記録が無くても成功） | — 通信なし | — 認証を使わない | — 操作なし | — 操作なし | — 画面操作なし | ACD-R25 | ACD-R26 | ACD-R25 | — 入力なし |
+| 他の端末での退会の確認（起動時・復帰時） | ACD-W01, ACD-W02, ACD-W03, ACD-W17, ACD-W18, ACD-W20, ACD-W23, ACD-W24, ACD-V39〜V41, ACD-V47, ACD-V65, ACD-V68, ACD-V69 | ACD-W06, ACD-W50, ACD-V44, ACD-V45, ACD-V46, ACD-V50, ACD-V76, ACD-V107, ACD-V108, ACD-R36, ACD-R37 | 7章（発生しない） | ACD-W05, ACD-W38, ACD-V43, ACD-R35 | 7章（発生しない） | — 操作なし | — 操作なし | ACD-V51, ACD-W25, ACD-W39 | ACD-V60, ACD-V61, ACD-V70, ACD-V73, ACD-V75, ACD-W19 | ACD-W04, ACD-V42（退会済みでない）, ACD-R32（データなし）, ACD-W15, ACD-W16, ACD-W21, ACD-V48, ACD-V49, ACD-V66, ACD-V67, ACD-V71（退会処理の記録あり） | — 値なし | — 入力なし |
+| ログイン中の uid の監視の通知 | ACD-W44, ACD-W45, ACD-W48, ACD-V89, ACD-V102, ACD-R48 | ACD-V91, ACD-R46 | 7章（UnknownFailure で代表） | 7章（UnknownFailure で代表） | 7章（UnknownFailure で代表） | — 操作なし | — 操作なし | — 処理中の表示なし | ACD-V96 | ACD-V90（退会済みでない）, ACD-V92, ACD-V104, ACD-V105, ACD-W46（退会処理の記録あり）, ACD-V93, ACD-V94（監視の対象の切り替え） | — 値なし | — 入力なし |
+| お知らせダイアログの OK | ACD-W26, ACD-W40, ACD-V72 | ACD-W27, ACD-V64（もう一度ログアウト）, ACD-W42, ACD-V86（強制ログアウト） | 7章（種類で扱いを変えない） | 7章（種類で扱いを変えない） | 7章（種類で扱いを変えない） | 7章（キャンセルボタンなし） | ACD-W28 | — 処理中の表示なし（ログアウトは端末内で終わる） | ACD-V79 | ACD-V80（対象なし） | — 値なし | — 入力なし |
+| データの削除ダイアログの OK | ACD-W07, ACD-W10, ACD-W40, ACD-V52, ACD-V56, ACD-R38 | ACD-W09, ACD-W41, ACD-V54, ACD-V84, ACD-R39 | 7章（発生しない） | 7章（発生しない） | 7章（発生しない） | 7章（キャンセルボタンなし） | ACD-W11, ACD-W13 | ACD-W08, ACD-W14, ACD-V53 | ACD-V59 | ACD-V63, ACD-V74, ACD-V82（対象なし）, ACD-R40（行が無くても成功） | — 値なし | — 入力なし |
+| 失敗ダイアログの OK | ACD-W33, ACD-V55 | — 処理なし | — 処理なし | — 処理なし | — 処理なし | 7章（キャンセルボタンなし） | ACD-W34 | — 処理なし | 7章（ダイアログが閉じる） | ACD-V81（対象なし） | — 値なし | — 入力なし |
 
 ### 9.3 操作 × 共通原則
 
@@ -376,3 +692,8 @@ DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure 
 | 最終確認で OK | ACD-X12（設定画面に留まる）, ACD-V07（記録を残す）, ACD-R06（失敗時は端末内のデータが消えない） | ACD-X12, ACD-X14, ACD-X15 | — 入力なし | ACD-X09, ACD-X16, ACD-V09 | ACD-X07 | ACD-X04 | ACD-X05, ACD-X06 | — 入力なし | ACD-R05（他の uid は残す）, ACD-R15, ACD-T10 | 7章（固定文言のみ）, ACD-R27 | 7章（適用しない）, ACD-E01 |
 | 再試行 | ACD-T06, ACD-T07, ACD-T08（再開ダイアログを残す） | ACD-T06, ACD-T07, ACD-T08 | — 入力なし | ACD-T05, ACD-T09, ACD-V20 | ACD-T05, ACD-T09 | — すでに同意済み | ACD-D06, ACD-D07, ACD-D10, ACD-D11（閉じる操作をしても記録は変わらない） | — 入力なし | ACD-R05, ACD-T10 | 7章（固定文言のみ） | 7章（適用しない） |
 | 起動時の確認 | — 表示中のデータなし | ACD-D15 | — 入力なし | — 起動時に1回だけ | ACD-D16 | — 削除を始めない | — キャンセルなし | — 入力なし | — 自分の端末の記録のみ | 7章（固定文言のみ） | — 通信なし |
+| 他の端末での退会の確認 | ACD-W05, ACD-W06（失敗しても今の画面のまま）, ACD-V66, ACD-V67, ACD-V71（自分の退会中はお知らせを出さない）, ACD-R39（無言の削除が失敗しても何も消えない） | 7章（裏の確認のため表示しない）, 7章（無言の削除の失敗は表示しない）, ACD-W50 | — 入力なし | ACD-V60, ACD-V61, ACD-V70, ACD-V73, ACD-V75 | ACD-W25, ACD-W39（応答を待たずに起動） | ACD-V39（ログイン中のアカウントはお知らせの後にデータの削除ダイアログで確認する）, ACD-V40（ログアウト済みは退会時に本人が同意済みのため確認しない） | — キャンセルなし | — 入力なし | ACD-R31（端末内の uid ごとに判定）, ACD-V41（ログイン中の別のアカウントはログアウトしない）, ACD-V69 | 7章（固定文言のみ） | 7章（適用しない） |
+| ログイン中の uid の監視の通知 | ACD-V91（失敗しても今の画面のまま） | 7章（裏の監視のため表示しない） | — 入力なし | ACD-V96 | — 裏で行う | ACD-V89（通知だけでは削除しない） | — キャンセルなし | — 入力なし | ACD-V94（ログイン中の uid だけを監視） | 7章（固定文言のみ） | 7章（適用しない） |
+| お知らせダイアログの OK | — 表示中のデータを消さない（削除は次のダイアログの OK） | ACD-W27（失敗しても強制ログアウトで先に進む） | — 入力なし | ACD-V79 | — 処理中の表示なし | ACD-W26（削除の前にデータの削除ダイアログで知らせる） | 7章（キャンセルなし）, ACD-W28, ACD-W29 | — 入力なし | ACD-V72（ログイン中の退会済みのアカウントだけをログアウト） | 7章（固定文言のみ） | 7章（適用しない） |
+| データの削除ダイアログの OK | ACD-R39（失敗しても何も消えない） | ACD-W09 | — 入力なし | ACD-W08, ACD-V59 | ACD-W08 | ACD-W01, ACD-W02（削除の前にダイアログで知らせる） | 7章（キャンセルなし）, ACD-W11, ACD-W12 | — 入力なし | ACD-R38（他の uid は残す）, ACD-V41 | 7章（固定文言のみ） | 7章（通信を使わない） |
+| 失敗ダイアログの OK | — 削除していない | ACD-W09（失敗ダイアログそのもの） | — 入力なし | 7章（ダイアログが閉じる） | — 処理なし | — 削除しない | ACD-W34, ACD-W35 | — 入力なし | — 自分の端末のデータのみ | 7章（固定文言のみ） | — 通信なし |

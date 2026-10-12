@@ -1,3 +1,5 @@
+import 'dart:async';
+
 // 仕様書: docs/detailed_design/presentation/settings/settings_page.md（接頭辞 ACD、5.1）
 //
 // 期待値はすべて上記仕様書から作った。実装は「どう呼ぶか」を知るためだけに読んでいる。
@@ -19,6 +21,12 @@ import 'package:word_stock/infrastructure/data_sources/local/tables/sync_meta_ta
 import 'package:word_stock/infrastructure/data_sources/local/tables/sync_queue_table.dart';
 import 'package:word_stock/infrastructure/data_sources/local/tables/word_table.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/local/sync_local_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
+import 'package:word_stock/infrastructure/sync/sync_service.dart';
 import 'package:word_stock/infrastructure/repositories/account_deletion_repository_impl.dart';
 
 import '../../helpers/fake_infrastructure.dart';
@@ -33,6 +41,52 @@ class FakeAccountDeletionRemoteDataSource
   Future<void> deleteAccount() async {
     callCount++;
     if (error != null) throw error!;
+  }
+}
+
+/// [WithdrawnAccountRemoteDataSource] の手書きフェイク。退会済みの記録を [withdrawn] で持つ。
+class FakeWithdrawnAccountRemoteDataSource
+    implements WithdrawnAccountRemoteDataSource {
+  final Set<String> withdrawn = {};
+  Object? error;
+  final StreamController<bool> watchController = StreamController<bool>();
+  int isWithdrawnCallCount = 0;
+
+  /// true のとき、購読開始時に [withdrawn] の現在の状態を最初の通知として流す。
+  bool emitCurrentOnWatch = false;
+
+  @override
+  Future<bool> isWithdrawn(String userId) async {
+    isWithdrawnCallCount++;
+    if (error != null) throw error!;
+    return withdrawn.contains(userId);
+  }
+
+  @override
+  Stream<bool> watch(String userId) async* {
+    if (emitCurrentOnWatch) yield withdrawn.contains(userId);
+    yield* watchController.stream;
+  }
+}
+
+/// 呼び出しを記録するだけの [SyncRemoteDataSource]（送信・取得の回数を確かめる用）。
+class _CountingSyncRemoteDataSource implements SyncRemoteDataSource {
+  final List<String> calls = [];
+
+  @override
+  Future<List<SyncRecord>> fetchChanges(
+    String userId,
+    SyncEntity entity, {
+    DateTime? since,
+  }) async {
+    calls.add('fetch:${entity.name}');
+    return [];
+  }
+
+  @override
+  Future<SyncRecord?> writeIfNewer(String userId, SyncRecord record) async {
+    calls.add('write:${record.entity.name}:${record.id}');
+    return null;
   }
 }
 
@@ -84,6 +138,7 @@ void main() {
     dbHelper = DatabaseHelper();
     final db = await dbHelper.database;
     await db.execute('DROP TRIGGER IF EXISTS fail_clear');
+    await db.execute('DROP TRIGGER IF EXISTS fail_folder_of_c');
     for (final table in [
       FolderTable.tableName,
       WordTable.tableName,
@@ -101,6 +156,7 @@ void main() {
     repo = AccountDeletionRepositoryImpl(
       localDataSource: local,
       remoteDataSource: remote,
+      withdrawnRemoteDataSource: FakeWithdrawnAccountRemoteDataSource(),
       connectivityMonitor: connectivity,
     );
   });
@@ -362,6 +418,7 @@ void main() {
       final repoWithReal = AccountDeletionRepositoryImpl(
         localDataSource: local,
         remoteDataSource: realRemote,
+        withdrawnRemoteDataSource: FakeWithdrawnAccountRemoteDataSource(),
         connectivityMonitor: connectivity,
       );
 
@@ -369,6 +426,310 @@ void main() {
 
       expect(functions.name, 'deleteAccount');
       expect(functions.options?.timeout, const Duration(seconds: 60));
+    });
+  });
+
+  // ---- 5.3 他の端末での退会の確認・強制ログアウト・監視 ----
+
+  AccountDeletionRepositoryImpl buildRepo(
+          FakeWithdrawnAccountRemoteDataSource withdrawnRemote) =>
+      AccountDeletionRepositoryImpl(
+        localDataSource: local,
+        remoteDataSource: remote,
+        withdrawnRemoteDataSource: withdrawnRemote,
+        connectivityMonitor: connectivity,
+      );
+
+  group('findLocalUserIds', () {
+    test('A のフォルダと単語、B の sync_queue だけ、C の設定だけ、D の学習結果だけ、E の sync_meta だけがある状態で findLocalUserIds を呼んだ場合、A〜E が1回ずつ含まれる [ACD-R31]',
+        () async {
+      final db = await dbHelper.database;
+      const ts = '2024-06-01T00:00:00.000Z';
+      await db.insert(FolderTable.tableName, {
+        'id': 'folder-A',
+        'name': 'f',
+        'userId': 'A',
+        'createdAt': ts,
+        'updatedAt': ts,
+      });
+      await db.insert(WordTable.tableName, {
+        'id': 'word-A',
+        'front': 'a',
+        'back': 'b',
+        'folderId': 'folder-A',
+        'userId': 'A',
+        'createdAt': ts,
+        'updatedAt': ts,
+      });
+      await db.insert(SyncQueueTable.tableName, {
+        'operation': 'create',
+        'table_name': 'folders',
+        'record_id': 'x',
+        'created_at': ts,
+        'user_id': 'B',
+      });
+      await db.insert(SettingsTable.tableName, {'userId': 'C', 'updatedAt': ts});
+      await db.insert(FlashcardResultTable.tableName, {
+        'id': 'result-D',
+        'folderId': 'folder-D',
+        'totalCount': 1,
+        'correctCount': 1,
+        'date': ts,
+        'userId': 'D',
+        'updatedAt': ts,
+      });
+      await db.insert(SyncMetaTable.tableName,
+          {'key': 'pullCursor:E', 'value': ts});
+
+      final result = await repo.findLocalUserIds();
+
+      final ids = result.getOrElse((_) => []);
+      expect(result.isRight(), isTrue);
+      expect(ids, unorderedEquals(['A', 'B', 'C', 'D', 'E']));
+    });
+
+    test('端末内にどの uid のデータも無い状態で findLocalUserIds を呼んだ場合、Right([]) を返す [ACD-R32]',
+        () async {
+      final result = await repo.findLocalUserIds();
+
+      expect(result.isRight(), isTrue);
+      expect(result.getOrElse((_) => ['x']), isEmpty);
+    });
+
+    test('端末内の読み取りが例外を投げる状態で findLocalUserIds を呼んだ場合、Left(UnknownFailure) になる [ACD-R37]',
+        () async {
+      final db = await dbHelper.database;
+      await db.execute('ALTER TABLE ${FolderTable.tableName} RENAME TO folders_bak');
+      addTearDown(() async => db.execute(
+          'ALTER TABLE folders_bak RENAME TO ${FolderTable.tableName}'));
+
+      final result = await repo.findLocalUserIds();
+
+      expect(result.isLeft(), isTrue);
+      result.match((f) => expect(f, isA<UnknownFailure>()), (_) => fail('Right'));
+    });
+  });
+
+  group('isWithdrawnOnServer', () {
+    test('オンラインで A に退会済みの記録がある状態で isWithdrawnOnServer(A) を呼んだ場合、Right(true) を返す [ACD-R33]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource()..withdrawn.add(userA);
+
+      final result = await buildRepo(w).isWithdrawnOnServer(userA);
+
+      expect(result, const Right<Failure, bool>(true));
+    });
+
+    test('オンラインで A に退会済みの記録が無い状態で isWithdrawnOnServer(A) を呼んだ場合、Right(false) を返す [ACD-R34]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource();
+
+      final result = await buildRepo(w).isWithdrawnOnServer(userA);
+
+      expect(result, const Right<Failure, bool>(false));
+    });
+
+    test('オフラインで isWithdrawnOnServer(A) を呼んだ場合、Left(NetworkFailure) になり記録の読み取りは0回になる [ACD-R35]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource()..withdrawn.add(userA);
+      connectivity.setOnline(false);
+
+      final result = await buildRepo(w).isWithdrawnOnServer(userA);
+
+      expect(result, const Left<Failure, bool>(Failure.network()));
+      expect(w.isWithdrawnCallCount, 0);
+    });
+
+    test('オンラインで退会済みの記録の読み取りが例外を投げる状態で isWithdrawnOnServer(A) を呼んだ場合、Left(UnknownFailure) になる [ACD-R36]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource()
+        ..error = Exception('read failed');
+
+      final result = await buildRepo(w).isWithdrawnOnServer(userA);
+
+      expect(result.isLeft(), isTrue);
+      result.match((f) => expect(f, isA<UnknownFailure>()), (_) => fail('Right'));
+    });
+  });
+
+  group('deleteLocalDataOfUsers', () {
+    test('記録が無く A・B・C のデータがある状態で deleteLocalDataOfUsers([A, C]) を呼んだ場合、A と C のデータだけが消え B は残る [ACD-R38]',
+        () async {
+      await seedUser(userA);
+      await seedUser(userB);
+      await seedUser('C');
+
+      final result = await repo.deleteLocalDataOfUsers([userA, 'C']);
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expect(await counts(userA), [0, 0, 0, 0, 0, 0]);
+      expect(await counts('C'), [0, 0, 0, 0, 0, 0]);
+      expect(await counts(userB), [1, 1, 1, 1, 1, 2]);
+    });
+
+    test('A の行の削除の後、C の行の削除の前に SQLite の書き込みが失敗した場合、Left(UnknownFailure) になり A と C の件数は呼ぶ前と同じになる [ACD-R39]',
+        () async {
+      await seedUser(userA);
+      await seedUser('C');
+      final db = await dbHelper.database;
+      await db.execute('''
+        CREATE TRIGGER fail_folder_of_c BEFORE DELETE ON ${FolderTable.tableName}
+        WHEN OLD.userId = 'C'
+        BEGIN SELECT RAISE(ABORT, 'forced failure'); END
+      ''');
+      addTearDown(
+          () async => db.execute('DROP TRIGGER IF EXISTS fail_folder_of_c'));
+
+      final result = await repo.deleteLocalDataOfUsers([userA, 'C']);
+
+      expect(result.isLeft(), isTrue);
+      result.match((f) => expect(f, isA<UnknownFailure>()), (_) => fail('Right'));
+      expect(await counts(userA), [1, 1, 1, 1, 1, 2]);
+      expect(await counts('C'), [1, 1, 1, 1, 1, 2]);
+    });
+
+    test('A のデータが1件も無い状態で deleteLocalDataOfUsers([A]) を呼んだ場合、Right(unit) を返す [ACD-R40]',
+        () async {
+      final result = await repo.deleteLocalDataOfUsers([userA]);
+
+      expect(result, const Right<Failure, Unit>(unit));
+    });
+
+    test('A のデータと A の強制ログアウトの記録がある状態で deleteLocalDataOfUsers([A]) を呼んだ場合、Right(unit) になり findForcedSignOut は Some(A) のままになる [ACD-R43]',
+        () async {
+      await seedUser(userA);
+      await repo.markForcedSignOut(userA);
+
+      final result = await repo.deleteLocalDataOfUsers([userA]);
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expect(await repo.findForcedSignOut(),
+          const Right<Failure, Option<String>>(Some(userA)));
+    });
+  });
+
+  group('強制ログアウトの記録', () {
+    test('強制ログアウトの記録が無い状態で markForcedSignOut(A) を呼んだ場合、Right(unit) になり findForcedSignOut は Some(A) を返す [ACD-R41]',
+        () async {
+      final result = await repo.markForcedSignOut(userA);
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expect(await repo.findForcedSignOut(),
+          const Right<Failure, Option<String>>(Some(userA)));
+    });
+
+    test('強制ログアウトの記録が無い状態で findForcedSignOut を呼んだ場合、Right(None) を返す [ACD-R42]',
+        () async {
+      final result = await repo.findForcedSignOut();
+
+      expect(result, const Right<Failure, Option<String>>(None()));
+    });
+
+    test('A の強制ログアウトの記録がある状態で clearForcedSignOut(A) を呼んだ場合、Right(unit) になり findForcedSignOut は Right(None) を返す [ACD-R44]',
+        () async {
+      await repo.markForcedSignOut(userA);
+
+      final result = await repo.clearForcedSignOut(userA);
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expect(await repo.findForcedSignOut(),
+          const Right<Failure, Option<String>>(None()));
+    });
+  });
+
+  group('watchWithdrawn', () {
+    test('オンラインで A の購読を始め、記録が無い状態から記録ができた場合、ストリームが Right(false)、Right(true) の順に通知する [ACD-R45]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource()
+        ..emitCurrentOnWatch = true;
+      final events = <Either<Failure, bool>>[];
+      final sub = buildRepo(w).watchWithdrawn(userA).listen(events.add);
+      addTearDown(sub.cancel);
+      await Future<void>.delayed(Duration.zero);
+
+      w.watchController.add(true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(events, [
+        const Right<Failure, bool>(false),
+        const Right<Failure, bool>(true),
+      ]);
+    });
+
+    test('オンラインで退会済みの記録の監視が例外を通知する状態で A の購読を始めた場合、ストリームが Left(UnknownFailure) を通知する [ACD-R46]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource();
+      final events = <Either<Failure, bool>>[];
+      final sub = buildRepo(w).watchWithdrawn(userA).listen(events.add);
+      addTearDown(sub.cancel);
+      await Future<void>.delayed(Duration.zero);
+
+      w.watchController.addError(Exception('watch failed'));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(events, hasLength(1));
+      events.single
+          .match((f) => expect(f, isA<UnknownFailure>()), (_) => fail('Right'));
+    });
+
+    test('オンラインで A に退会済みの記録がある状態で A の購読を始めた場合、ストリームの最初の通知が Right(true) になる [ACD-R48]',
+        () async {
+      final w = FakeWithdrawnAccountRemoteDataSource()
+        ..withdrawn.add(userA)
+        ..emitCurrentOnWatch = true;
+
+      final first = await buildRepo(w).watchWithdrawn(userA).first;
+
+      expect(first, const Right<Failure, bool>(true));
+    });
+  });
+
+  group('強制ログアウトした uid の同期の停止（SyncRepository の契約）', () {
+    late _CountingSyncRemoteDataSource syncRemote;
+    late SyncQueueDataSource syncQueue;
+    late SyncLocalDataSource syncLocal;
+    late SyncService service;
+
+    setUp(() async {
+      syncRemote = _CountingSyncRemoteDataSource();
+      syncQueue = SyncQueueDataSource(dbHelper);
+      syncLocal = SyncLocalDataSource(dbHelper);
+      service = SyncService(
+        localDataSource: syncLocal,
+        syncQueueDataSource: syncQueue,
+        remoteDataSource: syncRemote,
+        connectivityMonitor: connectivity,
+        getCurrentUserId: () => userA,
+        isAccountDeletionPending: local.shouldSkipSync,
+        clock: () => DateTime.utc(2024, 6, 2),
+      );
+      await seedUser(userA);
+      await repo.markForcedSignOut(userA);
+    });
+
+    test('ログイン中の uid A に強制ログアウトの記録があり未送信の変更が1件ある状態で syncAll を呼んだ場合、リモートへの送信・取得は0回で未送信の変更は1件のままになる [ACD-R47]',
+        () async {
+      await service.syncAll();
+
+      expect(syncRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userA), 1);
+    });
+
+    test('ログイン中の uid A に強制ログアウトの記録があり未送信の変更が1件ある状態で pushPending を呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R49]',
+        () async {
+      await service.pushPending();
+
+      expect(syncRemote.calls, isEmpty);
+      expect(await syncQueue.countByUser(userA), 1);
+    });
+
+    test('ログイン中の uid A に強制ログアウトの記録があり前回の取得から5分以上たった状態で syncOnResumed を呼んだ場合、リモートからの取得は0回になる [ACD-R50]',
+        () async {
+      await syncLocal.writeMetaDate('lastPulledAt:$userA', DateTime.utc(2024, 6, 1));
+
+      await service.syncOnResumed();
+
+      expect(syncRemote.calls.where((c) => c.startsWith('fetch:')), isEmpty);
     });
   });
 }

@@ -34,6 +34,7 @@ async function countDocs(uid: string): Promise<number> {
 beforeEach(async () => {
   await db.recursiveDelete(db.collection("users"));
   await db.recursiveDelete(db.collection("accounts"));
+  await db.recursiveDelete(db.collection("deleted_accounts"));
   const { users } = await auth.listUsers();
   await Promise.all(users.map((u) => auth.deleteUser(u.uid)));
 });
@@ -88,5 +89,35 @@ describe("deleteUserAccount", () => {
     await expect(deleteUserAccount("A", db, auth)).resolves.toBeUndefined();
     expect(await countDocs("A")).toBe(0);
     await expect(auth.getUser("A")).rejects.toMatchObject({ code: "auth/user-not-found" });
+  });
+
+  test("退会した場合、deleted_accounts/{uid} が退会日時だけを持って残る", async () => {
+    await auth.createUser({ uid: "A", email: "a@example.com" });
+    await seed("A");
+
+    await deleteUserAccount("A", db, auth);
+
+    const record = await db.doc("deleted_accounts/A").get();
+    expect(record.exists).toBe(true);
+    expect(Object.keys(record.data() ?? {})).toEqual(["deletedAt"]);
+  });
+
+  test("他のユーザーが退会した場合、deleted_accounts に自分の記録は作られない", async () => {
+    await auth.createUser({ uid: "A" });
+    await auth.createUser({ uid: "B" });
+
+    await deleteUserAccount("A", db, auth);
+
+    expect((await db.doc("deleted_accounts/B").get()).exists).toBe(false);
+  });
+
+  test("2回続けて呼んだ場合、deleted_accounts/{uid} は1つのまま残る", async () => {
+    await auth.createUser({ uid: "A" });
+
+    await deleteUserAccount("A", db, auth);
+    await deleteUserAccount("A", db, auth);
+
+    const all = await db.collection("deleted_accounts").get();
+    expect(all.docs.map((d) => d.id)).toEqual(["A"]);
   });
 });

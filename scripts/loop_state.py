@@ -623,11 +623,36 @@ def _read_frontmatter(text: str) -> dict:
     return meta
 
 
+# 見出しに書かれたクラス名（ID の持ち主）。1つの章に複数のクラスの仕様がある仕様書で、
+# ID をクラスごとに振り分けるために使う（例: `### 4.2 WithdrawnElsewhereViewModel`）
+_OWNER_RE = re.compile(
+    r"\b([A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*"
+    r"(?:ViewModel|Repository|UseCase|Page|DataSource|Service))\b"
+)
+
+
+def _heading_owner(line: str) -> str | None:
+    m = _OWNER_RE.search(line)
+    return m.group(1) if m else None
+
+
+def target_class_name(target: str) -> str:
+    """対象ファイル名をクラス名に直す（`foo_bar_view_model.dart` → `FooBarViewModel`）。
+
+    Mock・実装クラスは、仕様書の見出しに書くインターフェース名と突き合わせるため
+    先頭の `Mock` と末尾の `Impl` を外す。
+    """
+    stem = os.path.basename(target).removesuffix(".dart")
+    name = "".join(w[:1].upper() + w[1:] for w in stem.split("_"))
+    return name.removeprefix("Mock").removesuffix("Impl")
+
+
 def parse_spec(path: str) -> dict | None:
-    """仕様書から ID ごとの章・守る層・境界値の数・廃止かどうかを読む。
+    """仕様書から ID ごとの章・守る層・境界値の数・廃止かどうか・持ち主のクラスを読む。
 
     ID として数えるのは 2〜6章の表の**先頭列**だけ（7章「対象外」と8章「要確認事項」は除く。
     4章の「対応する画面仕様」列のように他の ID を引用している列も除く）。
+    持ち主は、ID の直前の見出し（`###`、無ければ `##`）に書かれたクラス名。無ければ None。
     """
     try:
         with open(path, encoding="utf-8") as f:
@@ -640,11 +665,17 @@ def parse_spec(path: str) -> dict | None:
         return None
     items: dict[str, dict] = {}
     chapter = 0
+    chapter_owner: str | None = None
+    owner: str | None = None
     row_re = re.compile(rf"^\|\s*({re.escape(prefix)}-[A-Z]\d{{2,}})\s*\|")
     for line in text.splitlines():
         h = re.match(r"^##\s+(\d+)\.", line)
         if h:
             chapter = int(h.group(1))
+            chapter_owner = owner = _heading_owner(line)
+            continue
+        if line.startswith("### "):
+            owner = _heading_owner(line) or chapter_owner
             continue
         if not 2 <= chapter <= 6:
             continue
@@ -658,6 +689,7 @@ def parse_spec(path: str) -> dict | None:
             "layer": "",
             "boundary": 0,
             "digest": spec_digest(chapter, cells),
+            "owner": owner,
         }
         if chapter == 2 and len(cells) >= 4:
             item["layer"] = cells[2]
@@ -673,16 +705,28 @@ def parse_spec(path: str) -> dict | None:
 
 
 def responsible_spec_ids(spec: dict, target: str) -> list[str]:
-    """対象ファイルが担当する仕様 ID（廃止を除く）。章ごとの振り分けは test-loop の規約どおり。"""
+    """対象ファイルが担当する仕様 ID（廃止を除く）。章ごとの振り分けは test-loop の規約どおり。
+
+    1つの章に複数のクラスの仕様がある（見出しにクラス名がある）場合は、対象ファイルの
+    クラス名と持ち主が一致する ID だけを担当にする（持ち主の無い ID は共通として含める）。
+    持ち主が対象ファイルと一致する ID が1つも無ければ、従来どおり章の ID をすべて担当にする。
+    """
     for match, chapter, layer in _SPEC_ROLES:
-        if match(target):
-            return sorted(
-                i for i, it in spec["items"].items()
-                if not it["abolished"] and (
-                    it["chapter"] == chapter
-                    or (it["chapter"] == 2 and it["layer"].startswith(layer))
-                )
-            )
+        if not match(target):
+            continue
+        live = {i: it for i, it in spec["items"].items() if not it["abolished"]}
+        in_chapter = {i: it for i, it in live.items() if it["chapter"] == chapter}
+        cls = target_class_name(target)
+        if any(it.get("owner") == cls for it in in_chapter.values()):
+            in_chapter = {
+                i: it for i, it in in_chapter.items()
+                if it.get("owner") in (cls, None)
+            }
+        guarded = {
+            i for i, it in live.items()
+            if it["chapter"] == 2 and it["layer"].startswith(layer)
+        }
+        return sorted(set(in_chapter) | guarded)
     return []
 
 

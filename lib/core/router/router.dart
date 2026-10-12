@@ -15,6 +15,7 @@ import 'package:word_stock/presentation/sample/sample_page.dart';
 import 'package:word_stock/presentation/settings/account_deletion_state.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_page.dart';
+import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
 import 'package:word_stock/presentation/shell/shell_page.dart';
 import 'package:word_stock/presentation/shell/shell_view_model.dart';
 import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_page.dart';
@@ -37,7 +38,10 @@ GoRouter router(Ref ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
-      final isLoggedIn = authState.valueOrNull != null;
+      // 強制ログアウトした uid は、Firebase 上でログイン中でもログインしていないものとして扱う
+      final user = authState.valueOrNull;
+      final forced = ref.read(withdrawnElsewhereViewModelProvider).forcedUserId;
+      final isLoggedIn = user != null && user.id != forced;
       final isSyncing = ref.read(authSyncInProgressProvider);
       final loc = state.matchedLocation;
       final isAuthRoute = loc == '/login' || loc == '/sign-up' || loc == '/password-reset';
@@ -59,6 +63,10 @@ GoRouter router(Ref ref) {
   ref.listen(authStateProvider, (_, __) => goRouter.refresh());
   ref.listen(authSyncInProgressProvider, (_, __) => goRouter.refresh());
   ref.listen(isDeveloperProvider, (_, __) => goRouter.refresh());
+  ref.listen(
+    withdrawnElsewhereViewModelProvider.select((s) => s.forcedUserId),
+    (_, __) => goRouter.refresh(),
+  );
 
   return goRouter;
 }

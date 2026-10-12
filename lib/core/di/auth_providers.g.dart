@@ -146,5 +146,24 @@ final deleteAccountUseCaseProvider = Provider<DeleteAccountUseCase>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DeleteAccountUseCaseRef = ProviderRef<DeleteAccountUseCase>;
+String _$withdrawnElsewhereUseCaseHash() =>
+    r'f55d03f03a2dcfb3115b13bbd52f49d53db7619b';
+
+/// See also [withdrawnElsewhereUseCase].
+@ProviderFor(withdrawnElsewhereUseCase)
+final withdrawnElsewhereUseCaseProvider =
+    Provider<WithdrawnElsewhereUseCase>.internal(
+  withdrawnElsewhereUseCase,
+  name: r'withdrawnElsewhereUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$withdrawnElsewhereUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef WithdrawnElsewhereUseCaseRef = ProviderRef<WithdrawnElsewhereUseCase>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

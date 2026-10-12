@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:word_stock/core/app_lifecycle_observer.dart';
+import 'package:word_stock/core/di/auth_providers.dart';
 import 'package:word_stock/core/di/repository_providers.dart';
 import 'package:word_stock/core/di/sync_providers.dart';
 import 'package:word_stock/core/error/failure.dart';
@@ -22,6 +24,8 @@ import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_page.dart';
 import 'package:word_stock/presentation/settings/settings_view_model.dart';
+import 'package:word_stock/presentation/settings/withdrawn_elsewhere_gate.dart';
+import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
 
@@ -91,6 +95,7 @@ void main() {
   });
 
   _withdrawalTests();
+  _withdrawnElsewhereTests();
 }
 
 class LoadingSettingsViewModel extends SettingsViewModel {
@@ -192,6 +197,93 @@ class _FakeAccountDeletionRepository implements AccountDeletionRepository {
     record = null;
     return const Right(unit);
   }
+
+  // 他の端末での退会（既定値は「退会済みの記録なし・強制ログアウトの記録なし・端末内の uid なし」）
+  /// 退会済みの記録がある uid
+  final Set<String> withdrawn = {};
+
+  /// 端末内にデータがある uid
+  List<String> localUserIds = [];
+
+  /// 強制ログアウトの記録の uid
+  String? forcedUid;
+
+  /// オフライン（isWithdrawnOnServer が NetworkFailure になる）
+  bool offline = false;
+  Failure? isWithdrawnFailure;
+  Completer<void>? isWithdrawnGate;
+
+  /// deleteLocalDataOfUsers の呼び出し記録（引数のコピー）
+  final List<List<String>> deleteOfUsersCalls = [];
+
+  /// deleteLocalDataOfUsers の結果を呼び出し順に差し込む（尽きたら deleteOfUsersFailure）
+  List<Failure?> deleteOfUsersResults = [];
+  Failure? deleteOfUsersFailure;
+  Completer<void>? deleteOfUsersGate;
+
+  final Map<String, StreamController<Either<Failure, bool>>> _watchers = {};
+
+  StreamController<Either<Failure, bool>> _watcher(String userId) =>
+      _watchers.putIfAbsent(
+          userId, () => StreamController<Either<Failure, bool>>.broadcast());
+
+  /// 監視に「退会済みになった」と通知する（記録も付ける）。
+  void emitWithdrawn(String userId) {
+    withdrawn.add(userId);
+    _watcher(userId).add(const Right(true));
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> findLocalUserIds() async =>
+      Right(List.of(localUserIds));
+
+  @override
+  Future<Either<Failure, bool>> isWithdrawnOnServer(String userId) async {
+    final gate = isWithdrawnGate;
+    if (gate != null) await gate.future;
+    if (offline) return const Left(Failure.network());
+    final f = isWithdrawnFailure;
+    if (f != null) return Left(f);
+    return Right(withdrawn.contains(userId));
+  }
+
+  @override
+  Stream<Either<Failure, bool>> watchWithdrawn(String userId) =>
+      _watcher(userId).stream;
+
+  @override
+  Future<Either<Failure, Unit>> deleteLocalDataOfUsers(
+      List<String> userIds) async {
+    final call = deleteOfUsersCalls.length;
+    deleteOfUsersCalls.add(List.of(userIds));
+    final gate = deleteOfUsersGate;
+    if (gate != null) await gate.future;
+    final f = call < deleteOfUsersResults.length
+        ? deleteOfUsersResults[call]
+        : deleteOfUsersFailure;
+    if (f != null) return Left(f);
+    localUserIds = [
+      for (final id in localUserIds)
+        if (!userIds.contains(id)) id,
+    ];
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> markForcedSignOut(String userId) async {
+    forcedUid = userId;
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Option<String>>> findForcedSignOut() async =>
+      Right(optionOf(forcedUid));
+
+  @override
+  Future<Either<Failure, Unit>> clearForcedSignOut(String userId) async {
+    if (forcedUid == userId) forcedUid = null;
+    return const Right(unit);
+  }
 }
 
 /// ログイン状態を持つ Fake。signOut に成功するとログアウト状態（null）を流す。
@@ -200,6 +292,9 @@ class _FakeAuthRepository implements AuthRepository {
 
   AppUser? user;
   Failure? signOutFailure;
+
+  /// signOut の結果を呼び出し順に差し込む（尽きたら signOutFailure）
+  List<Failure?> signOutResults = [];
   int signOutCount = 0;
   final _controller = StreamController<AppUser?>.broadcast();
 
@@ -211,8 +306,9 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, Unit>> signOut() async {
+    final call = signOutCount;
     signOutCount++;
-    final f = signOutFailure;
+    final f = call < signOutResults.length ? signOutResults[call] : signOutFailure;
     if (f != null) return Left(f);
     user = null;
     _controller.add(null);
@@ -1130,6 +1226,899 @@ void _withdrawalTests() {
 
       expect(_retryTitle, findsNothing);
       expect(env.repo.requestCount, 0);
+    });
+  });
+}
+
+// ─── 他の端末での退会（仕様書 3.6 / ACD-W 系） ───
+
+/// lib/app.dart の配線（Gate の重ね方・initialize→authState 待ち→check・resumed で check）と同じにしている。
+/// app.dart を変えたらここも更新する。
+class _WithdrawnTestApp extends ConsumerStatefulWidget {
+  const _WithdrawnTestApp();
+
+  @override
+  ConsumerState<_WithdrawnTestApp> createState() => _WithdrawnTestAppState();
+}
+
+class _WithdrawnTestAppState extends ConsumerState<_WithdrawnTestApp> {
+  AppLifecycleObserver? _observer;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(accountDeletionViewModelProvider.notifier).checkPending();
+    _check(initial: true);
+    _observer = AppLifecycleObserver(onResumed: _check);
+    WidgetsBinding.instance.addObserver(_observer!);
+  }
+
+  Future<void> _check({bool initial = false}) async {
+    final viewModel = ref.read(withdrawnElsewhereViewModelProvider.notifier);
+    if (initial) await viewModel.initialize();
+    try {
+      await ref.read(authStateProvider.future);
+    } catch (_) {}
+    if (!mounted) return;
+    await viewModel.check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_observer!);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final router = ref.watch(routerProvider);
+    return MaterialApp.router(
+      routerConfig: router,
+      builder: (context, child) => AccountDeletionGate(
+        router: router,
+        child: WithdrawnElsewhereGate(router: router, child: child!),
+      ),
+    );
+  }
+}
+
+/// 組み立て済みの環境でアプリ（_WithdrawnTestApp）を起動する。同じ環境で起動し直すこともできる。
+Future<void> _startApp(WidgetTester tester, _Env env) async {
+  await tester.pumpWidget(const SizedBox());
+  await tester.pumpWidget(ProviderScope(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(env.auth),
+      accountDeletionRepositoryProvider.overrideWithValue(env.repo),
+      folderRepositoryProvider.overrideWithValue(MockFolderRepository()),
+      wordRepositoryProvider.overrideWithValue(MockWordRepository()),
+      settingsRepositoryProvider.overrideWithValue(MockSettingsRepository()),
+      flashcardResultRepositoryProvider
+          .overrideWithValue(MockFlashcardResultRepository()),
+      syncRepositoryProvider.overrideWithValue(MockSyncRepository()),
+    ],
+    child: const _WithdrawnTestApp(),
+  ));
+  env.container = ProviderScope.containerOf(
+      tester.element(find.byType(_WithdrawnTestApp)));
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 2));
+  await _settle(tester);
+}
+
+Future<_Env> _launchW(
+  WidgetTester tester, {
+  AppUser? user = _userA,
+  List<String> local = const [],
+  Set<String> withdrawn = const {},
+  AccountDeletionStatus? status,
+  String recordUserId = 'A',
+  void Function(_Env env)? configure,
+}) async {
+  final env = _Env(user: user, recordUserId: recordUserId, status: status);
+  env.repo.localUserIds = List.of(local);
+  env.repo.withdrawn.addAll(withdrawn);
+  configure?.call(env);
+  await _startApp(tester, env);
+  return env;
+}
+
+/// アプリがフォアグラウンドに戻った（resumed）。
+Future<void> _resume(WidgetTester tester) async {
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  await _settle(tester);
+}
+
+final _noticeTitle = find.text('アカウントが削除されました');
+final _noticeBody = find.text(
+    'このアカウントは他の端末で退会されたため、ログアウトします。'
+    '引き続きご利用になる場合は、新しいアカウントで登録してログインしてください。');
+final _deleteTitle = find.text('データの削除');
+final _deleteBody = find.text(
+    'このアカウントは他の端末で退会済みです。'
+    'この端末に残っている WordStock のデータをすべて削除します。');
+final _failedTitle = find.text('削除に失敗しました');
+final _failedBody = find.text('端末内のデータを削除できませんでした。もう一度お試しください。');
+
+void _expectNoWithdrawnDialogs() {
+  expect(_noticeTitle, findsNothing);
+  expect(_deleteTitle, findsNothing);
+  expect(_failedTitle, findsNothing);
+}
+
+void _expectNoticeWithOnlyOk() {
+  expect(_noticeTitle, findsOneWidget);
+  expect(_noticeBody, findsOneWidget);
+  expect(find.text('OK'), findsOneWidget);
+  expect(_dialogButtons, findsOneWidget);
+}
+
+void _expectDeleteDialogWithOnlyOk() {
+  expect(_deleteTitle, findsOneWidget);
+  expect(_deleteBody, findsOneWidget);
+  expect(find.text('OK'), findsOneWidget);
+  expect(_dialogButtons, findsOneWidget);
+}
+
+void _expectFailedDialogWithOnlyOk() {
+  expect(_failedTitle, findsOneWidget);
+  expect(_failedBody, findsOneWidget);
+  expect(find.text('OK'), findsOneWidget);
+  expect(_dialogButtons, findsOneWidget);
+}
+
+Future<void> _tapOk(WidgetTester tester) async {
+  await tester.tap(find.text('OK'));
+  await _settle(tester);
+}
+
+/// A が退会済みで起動し、お知らせの「OK」でログアウトして、データの削除ダイアログまで進める。
+Future<_Env> _launchToDeleteDialog(
+  WidgetTester tester, {
+  void Function(_Env env)? configure,
+}) async {
+  final env = await _launchW(tester,
+      local: ['A'], withdrawn: {'A'}, configure: configure);
+  await _tapOk(tester);
+  return env;
+}
+
+/// データの削除ダイアログの「OK」をタップして削除に失敗し、失敗ダイアログまで進める。
+Future<_Env> _launchToFailedDialog(WidgetTester tester) async {
+  final env = await _launchToDeleteDialog(tester,
+      configure: (e) => e.repo.deleteOfUsersResults = [_unknown]);
+  await _tapOk(tester);
+  return env;
+}
+
+bool _okEnabled(WidgetTester tester) =>
+    tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'OK')).onPressed !=
+    null;
+
+void _withdrawnElsewhereTests() {
+  group('SettingsPage 他の端末での退会：起動時', () {
+    testWidgets(
+        'ログイン中（uid A）で端末内に A のデータがあり A が退会済みの状態でアプリを起動した場合、ホーム画面の上にお知らせダイアログ（「OK」だけ）が表示され、データの削除ダイアログは表示されない [ACD-W01]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A'], withdrawn: {'A'});
+
+      expect(env.path, '/home');
+      _expectNoticeWithOnlyOk();
+      expect(_deleteTitle, findsNothing);
+    });
+
+    testWidgets(
+        'ログインしていない状態で端末内に A のデータがあり A が退会済みの状態でアプリを起動した場合、ログイン画面が表示されダイアログは出ず deleteLocalDataOfUsers([A]) が1回呼ばれる [ACD-W02]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: null, local: ['A'], withdrawn: {'A'});
+
+      expect(env.path, '/login');
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls, [
+        ['A']
+      ]);
+    });
+
+    testWidgets(
+        'ログイン中の uid が B で端末内に A と B のデータがあり A だけが退会済みの状態でアプリを起動した場合、ホーム画面が表示されダイアログは出ず deleteLocalDataOfUsers([A]) が1回呼ばれる [ACD-W03]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: _userB, local: ['A', 'B'], withdrawn: {'A'});
+
+      expect(env.path, '/home');
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls, [
+        ['A']
+      ]);
+    });
+
+    testWidgets(
+        'ログイン中で端末内に A のデータがあり A に退会済みの記録が無い状態でアプリを起動した場合、データの削除ダイアログは表示されずホーム画面が表示される [ACD-W04]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/home');
+    });
+
+    testWidgets(
+        'ログイン中で端末内に A のデータがあり A が退会済みの状態でオフラインでアプリを起動した場合、データの削除ダイアログは表示されずホーム画面が表示される [ACD-W05]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.offline = true);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/home');
+    });
+
+    testWidgets(
+        'ログイン中で端末内に A のデータがあり退会済みの記録の確認が UnknownFailure で失敗する状態でアプリを起動した場合、データの削除ダイアログは表示されずホーム画面が表示される [ACD-W06]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'], configure: (e) => e.repo.isWithdrawnFailure = _unknown);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/home');
+    });
+
+    testWidgets(
+        'ログインしていない状態で端末内に A のデータがあり A が退会済みの状態でオフラインでアプリを起動した場合、ダイアログは表示されずログイン画面が表示され deleteLocalDataOfUsers は0回である [ACD-W38]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: null,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.offline = true);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/login');
+      expect(env.repo.deleteOfUsersCalls, isEmpty);
+    });
+
+    testWidgets(
+        'ログイン中で端末内にデータが1件も無く A が退会済みの状態でアプリを起動した場合、ホーム画面の上にお知らせダイアログが表示される [ACD-W24]',
+        (tester) async {
+      final env = await _launchW(tester, withdrawn: {'A'});
+
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'ログイン中で端末内に A のデータがあり退会処理の記録が無い状態で起動し退会済みの記録の確認の応答を待っている場合、ホーム画面が表示される [ACD-W25]',
+        (tester) async {
+      final gate = Completer<void>();
+      final env = await _launchW(tester,
+          local: ['A'], configure: (e) => e.repo.isWithdrawnGate = gate);
+
+      expect(env.path, '/home');
+      expect(find.byType(NavigationBar), findsOneWidget);
+
+      gate.complete();
+      await _settle(tester);
+    });
+
+    testWidgets(
+        'ログインしていない状態で端末内に A のデータがある状態で起動し退会済みの記録の確認の応答を待っている場合、ログイン画面が表示される [ACD-W39]',
+        (tester) async {
+      final gate = Completer<void>();
+      final env = await _launchW(tester,
+          user: null,
+          local: ['A'],
+          configure: (e) => e.repo.isWithdrawnGate = gate);
+
+      expect(env.path, '/login');
+      expect(find.text('ログイン'), findsOneWidget);
+
+      gate.complete();
+      await _settle(tester);
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：お知らせとログアウト', () {
+    testWidgets(
+        'お知らせダイアログの「OK」をタップしてログアウトが成功した場合、お知らせが閉じてログイン画面に移動し、その上にデータの削除ダイアログ（「OK」だけ）が表示される [ACD-W26]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A'], withdrawn: {'A'});
+
+      await _tapOk(tester);
+
+      expect(_noticeTitle, findsNothing);
+      expect(env.path, '/login');
+      _expectDeleteDialogWithOnlyOk();
+    });
+
+    testWidgets(
+        'お知らせダイアログの「OK」をタップし1回目のログアウトが UnknownFailure で失敗し2回目が成功した場合、お知らせが閉じてログイン画面に移動しデータの削除ダイアログが表示される [ACD-W27]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.auth.signOutResults = [_unknown]);
+
+      await _tapOk(tester);
+
+      expect(_noticeTitle, findsNothing);
+      expect(env.path, '/login');
+      expect(_deleteTitle, findsOneWidget);
+      expect(env.auth.signOutCount, 2);
+    });
+
+    testWidgets(
+        'お知らせダイアログが表示されている状態でダイアログの外側をタップした場合、お知らせは表示されたままで signOut は0回である [ACD-W28]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A'], withdrawn: {'A'});
+
+      await _tapOutside(tester);
+
+      expect(_noticeTitle, findsOneWidget);
+      expect(env.auth.signOutCount, 0);
+    });
+
+    testWidgets(
+        'お知らせダイアログが表示されている状態で戻る操作をした場合、お知らせは表示されたままで signOut は0回である [ACD-W29]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A'], withdrawn: {'A'});
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_noticeTitle, findsOneWidget);
+      expect(env.auth.signOutCount, 0);
+    });
+
+    testWidgets(
+        'お知らせダイアログの「OK」をタップしログアウトが2回とも UnknownFailure で失敗した場合、お知らせが閉じてログイン画面に移動しデータの削除ダイアログが表示される [ACD-W42]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.auth.signOutResults = [_unknown, _unknown]);
+
+      await _tapOk(tester);
+
+      expect(_noticeTitle, findsNothing);
+      expect(env.path, '/login');
+      expect(_deleteTitle, findsOneWidget);
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：データの削除ダイアログ', () {
+    testWidgets(
+        'データの削除ダイアログの「OK」をタップし端末内の削除が成功した場合、ダイアログが閉じて画面のパスは /login のままである [ACD-W07]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester);
+
+      await _tapOk(tester);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/login');
+    });
+
+    testWidgets(
+        'データの削除ダイアログの「OK」をタップし端末内の削除の完了を待っている場合、ダイアログは表示されたまま「OK」が無効になりインジケーターが表示される [ACD-W08]',
+        (tester) async {
+      await _launchToDeleteDialog(tester,
+          configure: (e) => e.repo.deleteOfUsersGate = Completer<void>());
+
+      await _tapOk(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+      expect(_okEnabled(tester), isFalse);
+      expect(
+          find.descendant(
+              of: find.byType(AlertDialog),
+              matching: find.byType(CircularProgressIndicator)),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'データの削除ダイアログの「OK」をタップし端末内の削除が UnknownFailure で失敗した場合、データの削除ダイアログが閉じて失敗ダイアログ（「OK」だけ）が表示される [ACD-W09]',
+        (tester) async {
+      await _launchToFailedDialog(tester);
+
+      expect(_deleteTitle, findsNothing);
+      _expectFailedDialogWithOnlyOk();
+    });
+
+    testWidgets(
+        '端末内の削除が UnknownFailure で失敗した後に失敗ダイアログの「OK」でやり直して削除が成功した場合、データの削除ダイアログが閉じ失敗ダイアログは表示されない [ACD-W10]',
+        (tester) async {
+      await _launchToFailedDialog(tester);
+      await _tapOk(tester);
+      expect(_deleteTitle, findsOneWidget);
+
+      await _tapOk(tester);
+
+      expect(_deleteTitle, findsNothing);
+      expect(_failedTitle, findsNothing);
+    });
+
+    testWidgets(
+        'データの削除ダイアログが表示されている状態（削除の処理中ではない）でダイアログの外側をタップした場合、ダイアログは表示されたままで deleteLocalDataOfUsers は0回である [ACD-W11]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester);
+
+      await _tapOutside(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+      expect(env.repo.deleteOfUsersCalls, isEmpty);
+    });
+
+    testWidgets(
+        'データの削除ダイアログが表示されている状態（削除の処理中ではない）で戻る操作をした場合、ダイアログは表示されたままで deleteLocalDataOfUsers は0回である [ACD-W12]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+      expect(env.repo.deleteOfUsersCalls, isEmpty);
+    });
+
+    testWidgets(
+        'データの削除ダイアログの「OK」をタップし端末内の削除の完了を待っている間にダイアログの外側をタップした場合、ダイアログは表示されたままである [ACD-W13]',
+        (tester) async {
+      await _launchToDeleteDialog(tester,
+          configure: (e) => e.repo.deleteOfUsersGate = Completer<void>());
+      await _tapOk(tester);
+
+      await _tapOutside(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'データの削除ダイアログの「OK」をタップし端末内の削除の完了を待っている間に戻る操作をした場合、ダイアログは表示されたままである [ACD-W14]',
+        (tester) async {
+      await _launchToDeleteDialog(tester,
+          configure: (e) => e.repo.deleteOfUsersGate = Completer<void>());
+      await _tapOk(tester);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'データの削除ダイアログが表示されている状態で A の退会済みの記録があるままアプリがフォアグラウンドに戻った場合、データの削除ダイアログは1つだけ表示されたままである [ACD-W19]',
+        (tester) async {
+      await _launchToDeleteDialog(tester);
+
+      await _resume(tester);
+
+      expect(_deleteTitle, findsOneWidget);
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+
+    testWidgets(
+        '端末内の削除が UnknownFailure で失敗して失敗ダイアログが表示されている状態で「OK」をタップした場合、失敗ダイアログが閉じてデータの削除ダイアログが表示される [ACD-W33]',
+        (tester) async {
+      await _launchToFailedDialog(tester);
+
+      await _tapOk(tester);
+
+      expect(_failedTitle, findsNothing);
+      expect(_deleteTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        '失敗ダイアログが表示されている状態でダイアログの外側をタップした場合、失敗ダイアログは表示されたままでデータの削除ダイアログは表示されない [ACD-W34]',
+        (tester) async {
+      await _launchToFailedDialog(tester);
+
+      await _tapOutside(tester);
+
+      expect(_failedTitle, findsOneWidget);
+      expect(_deleteTitle, findsNothing);
+    });
+
+    testWidgets(
+        '失敗ダイアログが表示されている状態で戻る操作をした場合、失敗ダイアログは表示されたままでデータの削除ダイアログは表示されない [ACD-W35]',
+        (tester) async {
+      await _launchToFailedDialog(tester);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_failedTitle, findsOneWidget);
+      expect(_deleteTitle, findsNothing);
+    });
+
+    testWidgets(
+        '失敗ダイアログの「OK」でやり直した端末内の削除がもう一度 UnknownFailure で失敗した場合、データの削除ダイアログが閉じて失敗ダイアログが表示される [ACD-W41]',
+        (tester) async {
+      await _launchToDeleteDialog(tester,
+          configure: (e) => e.repo.deleteOfUsersResults = [_unknown, _unknown]);
+      await _tapOk(tester);
+      await _tapOk(tester);
+      expect(_deleteTitle, findsOneWidget);
+
+      await _tapOk(tester);
+
+      expect(_deleteTitle, findsNothing);
+      expect(_failedTitle, findsOneWidget);
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：再開ダイアログとの優先', () {
+    testWidgets(
+        'ログインしていない状態で A の退会処理の記録が requested で A が退会済みの状態でアプリを起動した場合、再開ダイアログが表示されデータの削除ダイアログは表示されない [ACD-W15]',
+        (tester) async {
+      await _launchW(tester,
+          user: null,
+          local: ['A'],
+          withdrawn: {'A'},
+          status: AccountDeletionStatus.requested);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_deleteTitle, findsNothing);
+    });
+
+    testWidgets(
+        'ログインしていない状態で A の退会処理の記録が requested で C が退会済みの状態でアプリを起動した場合、再開ダイアログが表示されデータの削除ダイアログは表示されない [ACD-W16]',
+        (tester) async {
+      await _launchW(tester,
+          user: null,
+          local: ['A', 'C'],
+          withdrawn: {'C'},
+          status: AccountDeletionStatus.requested);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_deleteTitle, findsNothing);
+    });
+
+    testWidgets(
+        'ログイン中で A の退会処理の記録が requested で A が退会済みの状態でアプリを起動した場合、再開ダイアログが表示されデータの削除ダイアログは表示されない [ACD-W21]',
+        (tester) async {
+      await _launchW(tester,
+          local: ['A'],
+          withdrawn: {'A'},
+          status: AccountDeletionStatus.requested);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_deleteTitle, findsNothing);
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：復帰時の確認', () {
+    testWidgets(
+        'ログイン中で起動時には A に退会済みの記録が無く、ホーム画面を表示している状態で記録ができアプリがフォアグラウンドに戻った場合、ホーム画面の上にお知らせダイアログが表示される [ACD-W17]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      expect(_noticeTitle, findsNothing);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'ログインしていない状態で端末内に A と C のデータがあり両方が退会済みの状態でアプリを起動した場合、ダイアログは表示されず deleteLocalDataOfUsers が1回呼ばれ引数に A と C が含まれる [ACD-W18]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: null, local: ['A', 'C'], withdrawn: {'A', 'C'});
+
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls.length, 1);
+      expect(env.repo.deleteOfUsersCalls.single, containsAll(['A', 'C']));
+    });
+
+    testWidgets(
+        'ログイン中で A が退会済みの状態でオフラインで起動してホーム画面を表示し、オンラインになってからアプリがフォアグラウンドに戻った場合、ホーム画面の上にお知らせダイアログが表示される [ACD-W20]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.offline = true);
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsNothing);
+      env.repo.offline = false;
+
+      await _resume(tester);
+
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'ログイン中の uid が B で端末内に A と B のデータがあり設定画面を表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、設定画面のままダイアログは出ず deleteLocalDataOfUsers([A]) が1回呼ばれる [ACD-W23]',
+        (tester) async {
+      final env = await _launchW(tester, user: _userB, local: ['A', 'B']);
+      await _openSettingsTab(tester);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(env.path, '/settings');
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls, [
+        ['A']
+      ]);
+    });
+
+    testWidgets(
+        'ログインしていない状態で A の削除が1回目 UnknownFailure・2回目成功の状態で起動しその後アプリがフォアグラウンドに戻った場合、ログイン画面のままダイアログは出ず deleteLocalDataOfUsers([A]) が合計2回呼ばれる [ACD-W53]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: null,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.deleteOfUsersResults = [_unknown]);
+      expect(env.repo.deleteOfUsersCalls.length, 1);
+
+      await _resume(tester);
+
+      expect(env.path, '/login');
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls, [
+        ['A'],
+        ['A']
+      ]);
+    });
+
+    testWidgets(
+        '強制ログアウトの後にデータの削除ダイアログの「OK」で削除が成功しアプリがフォアグラウンドに戻った場合、画面のパスは /login のままでホーム画面に移動せずデータの削除ダイアログは表示されない [ACD-W43]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester,
+          configure: (e) => e.auth.signOutResults = [_unknown, _unknown]);
+      await _tapOk(tester);
+      env.auth.signOutFailure = _unknown;
+
+      await _resume(tester);
+
+      expect(env.path, '/login');
+      expect(find.byType(NavigationBar), findsNothing);
+      expect(_deleteTitle, findsNothing);
+      expect(env.auth.user?.id, 'A');
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：ほかのダイアログを閉じてお知らせを出す', () {
+    testWidgets(
+        '退会の確認ダイアログ（タイトル「退会」）を表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、確認ダイアログが閉じてお知らせダイアログが表示される [ACD-W30]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      await _openSettingsTab(tester);
+      await tester.tap(find.text('退会'));
+      await _settle(tester);
+      expect(find.text('このアプリから退会いたしますか？'), findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(find.text('このアプリから退会いたしますか？'), findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        '最終確認ダイアログ（タイトル「最終確認」）を表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、最終確認ダイアログが閉じてお知らせダイアログが表示される [ACD-W31]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      await _openSettingsTab(tester);
+      await tester.tap(find.text('退会'));
+      await _settle(tester);
+      await _tapOk(tester);
+      expect(find.text('最終確認'), findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(find.text('最終確認'), findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        '「退会できませんでした」ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、そのダイアログが閉じてお知らせダイアログが表示される [ACD-W32]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'], configure: (e) => e.repo.requestFailure = _network);
+      await _openSettingsTab(tester);
+      await _withdrawToFinalOk(tester);
+      expect(find.text('退会できませんでした'), findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(find.text('退会できませんでした'), findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        '「ログアウト」をタップしてログアウトのダイアログ（本文「ログアウトしますか？」）を表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、そのダイアログが閉じてお知らせダイアログが表示される [ACD-W36]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      await _openSettingsTab(tester);
+      await tester.tap(find.text('ログアウト'));
+      await _settle(tester);
+      expect(find.text('ログアウトしますか？'), findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(find.text('ログアウトしますか？'), findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：強制ログアウト', () {
+    testWidgets(
+        'お知らせの「OK」でログアウトが2回とも失敗し、データの削除ダイアログの「OK」を押さずに終了して Firebase 上は A のまま起動し直した場合、ログイン画面が表示されダイアログは出ず deleteLocalDataOfUsers([A]) が1回呼ばれる [ACD-W37]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester,
+          configure: (e) => e.auth.signOutResults = [_unknown, _unknown]);
+      expect(_deleteTitle, findsOneWidget);
+      expect(env.repo.forcedUid, 'A');
+      expect(env.auth.user?.id, 'A');
+      expect(env.repo.deleteOfUsersCalls, isEmpty);
+      env.auth.signOutFailure = _unknown;
+
+      await _startApp(tester, env);
+
+      expect(env.auth.user?.id, 'A');
+      expect(env.path, '/login');
+      _expectNoWithdrawnDialogs();
+      expect(env.repo.deleteOfUsersCalls, [
+        ['A']
+      ]);
+    });
+
+    testWidgets(
+        'お知らせの「OK」でログアウトが2回とも失敗しデータの削除が成功した後、アプリを終了して Firebase 上は A のまま起動し直した場合、ログイン画面が表示されダイアログは出ない [ACD-W49]',
+        (tester) async {
+      final env = await _launchToDeleteDialog(tester,
+          configure: (e) => e.auth.signOutResults = [_unknown, _unknown]);
+      await _tapOk(tester);
+      expect(_deleteTitle, findsNothing);
+      env.auth.signOutFailure = _unknown;
+
+      await _startApp(tester, env);
+
+      expect(env.auth.user?.id, 'A');
+      expect(env.path, '/login');
+      _expectNoWithdrawnDialogs();
+    });
+
+    testWidgets(
+        'Firebase 上のログイン中の uid が A で A の強制ログアウトの記録があり端末内に A のデータがある状態でオフラインで起動した場合、ログイン画面が表示されホーム画面に移動せず signOut は1回である [ACD-W47]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A'], configure: (e) {
+        e.repo.forcedUid = 'A';
+        e.repo.offline = true;
+        e.auth.signOutFailure = _unknown;
+      });
+
+      expect(env.path, '/login');
+      expect(find.byType(NavigationBar), findsNothing);
+      expect(env.auth.signOutCount, 1);
+      expect(env.auth.user?.id, 'A');
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：複数のアカウント・削除の失敗', () {
+    testWidgets(
+        'ログイン中で端末内に A と C のデータがあり両方が退会済みで、お知らせの「OK」でログアウトし、データの削除ダイアログの「OK」で削除が成功した場合、ダイアログが閉じて画面のパスは /login のままで、起動時に deleteLocalDataOfUsers([C]) が1回呼ばれている [ACD-W40]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A', 'C'], withdrawn: {'A', 'C'});
+      expect(env.repo.deleteOfUsersCalls, [
+        ['C']
+      ]);
+      await _tapOk(tester);
+      expect(_deleteTitle, findsOneWidget);
+
+      await _tapOk(tester);
+
+      expect(_deleteTitle, findsNothing);
+      expect(env.path, '/login');
+      expect(env.repo.deleteOfUsersCalls.where((c) => c.length == 1 && c.first == 'C').length, 1);
+    });
+
+    testWidgets(
+        'ログインしていない状態で A が退会済みで端末内の削除が UnknownFailure で失敗する状態でアプリを起動した場合、ログイン画面が表示されダイアログは表示されない [ACD-W50]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: null,
+          local: ['A'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.deleteOfUsersFailure = _unknown);
+
+      expect(env.path, '/login');
+      _expectNoWithdrawnDialogs();
+    });
+
+    testWidgets(
+        'ログイン中で端末内に A と C のデータがあり両方が退会済みで C の端末内の削除が UnknownFailure で失敗する状態でアプリを起動した場合、ホーム画面の上にお知らせダイアログが表示され失敗を知らせる表示は無い [ACD-W51]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A', 'C'],
+          withdrawn: {'A', 'C'},
+          configure: (e) => e.repo.deleteOfUsersFailure = _unknown);
+
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsOneWidget);
+      expect(_failedTitle, findsNothing);
+    });
+
+    testWidgets(
+        'ログイン中の uid が B で端末内に A と B のデータがあり A だけが退会済みで端末内の削除が UnknownFailure で失敗する状態でアプリを起動した場合、ホーム画面が表示されダイアログは表示されない [ACD-W52]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: _userB,
+          local: ['A', 'B'],
+          withdrawn: {'A'},
+          configure: (e) => e.repo.deleteOfUsersFailure = _unknown);
+
+      expect(env.path, '/home');
+      _expectNoWithdrawnDialogs();
+    });
+  });
+
+  group('SettingsPage 他の端末での退会：リアルタイムの監視', () {
+    testWidgets(
+        'ログイン中でホーム画面を表示している状態でアプリをフォアグラウンドにしたまま A に退会済みの記録ができた場合、ホーム画面の上にお知らせダイアログが表示される [ACD-W44]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      expect(env.path, '/home');
+
+      env.repo.emitWithdrawn('A');
+      await _settle(tester);
+
+      expect(env.path, '/home');
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        'ログイン中で設定画面を表示している状態でアプリをフォアグラウンドにしたまま A に退会済みの記録ができた場合、設定画面の上にお知らせダイアログが表示される [ACD-W45]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      await _openSettingsTab(tester);
+
+      env.repo.emitWithdrawn('A');
+      await _settle(tester);
+
+      expect(env.path, '/settings');
+      expect(_noticeTitle, findsOneWidget);
+    });
+
+    testWidgets(
+        '最終確認ダイアログの「OK」をタップして「退会処理中です」が表示されている状態で A に退会済みの記録ができた場合、お知らせダイアログは表示されず「退会処理中です」が表示されたままである [ACD-W46]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'], configure: (e) => e.repo.requestGate = Completer<void>());
+      await _openSettingsTab(tester);
+      await _withdrawToFinalOk(tester);
+      expect(_processingText, findsOneWidget);
+
+      env.repo.emitWithdrawn('A');
+      await _settle(tester);
+
+      expect(_noticeTitle, findsNothing);
+      expect(_processingText, findsOneWidget);
+    });
+
+    testWidgets(
+        '最終確認ダイアログ（タイトル「最終確認」）を表示している状態でアプリをフォアグラウンドにしたまま A に退会済みの記録ができた場合、最終確認ダイアログが閉じてお知らせダイアログが表示される [ACD-W48]',
+        (tester) async {
+      final env = await _launchW(tester, local: ['A']);
+      await _openSettingsTab(tester);
+      await tester.tap(find.text('退会'));
+      await _settle(tester);
+      await _tapOk(tester);
+      expect(find.text('最終確認'), findsOneWidget);
+
+      env.repo.emitWithdrawn('A');
+      await _settle(tester);
+
+      expect(find.text('最終確認'), findsNothing);
+      expect(_noticeTitle, findsOneWidget);
     });
   });
 }
