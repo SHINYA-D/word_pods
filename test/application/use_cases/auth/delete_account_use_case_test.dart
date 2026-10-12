@@ -61,6 +61,36 @@ class _FakeDeletionRepository implements AccountDeletionRepository {
     log.calls.add('deleteLocalData');
     return deleteLocalResult;
   }
+
+  // 他の端末での退会（このテストでは使わない）
+  @override
+  Future<Either<Failure, List<String>>> findLocalUserIds() async =>
+      const Right([]);
+
+  @override
+  Future<Either<Failure, bool>> isWithdrawnOnServer(String userId) async =>
+      const Right(false);
+
+  @override
+  Stream<Either<Failure, bool>> watchWithdrawn(String userId) =>
+      const Stream.empty();
+
+  @override
+  Future<Either<Failure, Unit>> deleteLocalDataOfUsers(
+          List<String> userIds) async =>
+      const Right(unit);
+
+  @override
+  Future<Either<Failure, Unit>> markForcedSignOut(String userId) async =>
+      const Right(unit);
+
+  @override
+  Future<Either<Failure, Option<String>>> findForcedSignOut() async =>
+      const Right(None());
+
+  @override
+  Future<Either<Failure, Unit>> clearForcedSignOut(String userId) async =>
+      const Right(unit);
 }
 
 class _FakeAuthRepository implements AuthRepository {
