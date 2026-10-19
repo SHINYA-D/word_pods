@@ -57,7 +57,7 @@ final signInWithEmailUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SignInWithEmailUseCaseRef = ProviderRef<SignInWithEmailUseCase>;
-String _$signUpUseCaseHash() => r'c7cd08fbb921f342817624ded583b70a600f4eb6';
+String _$signUpUseCaseHash() => r'0d89b91db81fa0969c9a22e1fbd89e2c08dfd762';
 
 /// See also [signUpUseCase].
 @ProviderFor(signUpUseCase)

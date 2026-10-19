@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:word_stock/core/app_lifecycle_observer.dart';
 import 'package:word_stock/core/di/auth_providers.dart';
+import 'package:word_stock/core/di/local_data_source_providers.dart';
 import 'package:word_stock/core/di/sync_providers.dart';
 import 'package:word_stock/core/router/router.dart';
 import 'package:word_stock/core/theme/app_theme.dart';
+import 'package:word_stock/presentation/legal/legal_consent_gate.dart';
+import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
 import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_view_model.dart';
@@ -20,6 +25,7 @@ class App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<App> {
   AppLifecycleObserver? _lifecycleObserver;
+  StreamSubscription<bool>? _connectivitySubscription;
 
   @override
   void initState() {
@@ -42,8 +48,24 @@ class _AppState extends ConsumerState<App> {
     _lifecycleObserver = AppLifecycleObserver(onResumed: () {
       autoSync.onResumed();
       _checkWithdrawnElsewhere();
+      ref.read(legalConsentViewModelProvider.notifier).check();
     });
     WidgetsBinding.instance.addObserver(_lifecycleObserver!);
+
+    // オフラインからオンラインに戻ったら、規約への同意を判定する（オフラインの間は出さない）
+    bool? lastOnline;
+    try {
+      _connectivitySubscription =
+          ref.read(connectivityMonitorProvider).onStatusChanged().listen((online) {
+        final wasOnline = lastOnline;
+        lastOnline = online;
+        if (online && wasOnline == false) {
+          ref.read(legalConsentViewModelProvider.notifier).check();
+        }
+      });
+    } catch (_) {
+      // 接続状態を監視できなくても、起動時・復帰時の判定で補う
+    }
   }
 
   Future<void> _checkWithdrawnElsewhere({bool initial = false}) async {
@@ -55,11 +77,16 @@ class _AppState extends ConsumerState<App> {
       // ログイン状態を読めなくても、ログアウト済みのアカウントの確認は行う
     }
     if (!mounted) return;
+    // 規約への同意の判定は、強制ログアウトの記録を読み終えてから始める（退会の確認とは並行して行う）
+    if (initial) {
+      unawaited(ref.read(legalConsentViewModelProvider.notifier).start());
+    }
     await viewModel.check();
   }
 
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
     if (_lifecycleObserver != null) {
       WidgetsBinding.instance.removeObserver(_lifecycleObserver!);
     }
@@ -90,7 +117,10 @@ class _AppState extends ConsumerState<App> {
         router: router,
         child: WithdrawnElsewhereGate(
           router: router,
-          child: child ?? const SizedBox.shrink(),
+          child: LegalConsentGate(
+            router: router,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

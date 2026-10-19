@@ -189,5 +189,23 @@ final withdrawnAccountRemoteDataSourceProvider =
 // ignore: unused_element
 typedef WithdrawnAccountRemoteDataSourceRef
     = ProviderRef<WithdrawnAccountRemoteDataSource>;
+String _$legalRemoteDataSourceHash() =>
+    r'bad7785153d98d26c1b033ee6c0ca44afbfea491';
+
+/// See also [legalRemoteDataSource].
+@ProviderFor(legalRemoteDataSource)
+final legalRemoteDataSourceProvider = Provider<LegalRemoteDataSource>.internal(
+  legalRemoteDataSource,
+  name: r'legalRemoteDataSourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$legalRemoteDataSourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef LegalRemoteDataSourceRef = ProviderRef<LegalRemoteDataSource>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -31,6 +31,13 @@ import '../../helpers/test_helpers.dart';
 
 const _userId = 'mock-user-id';
 
+/// 設定画面の項目が増えても「退会」等が表示範囲に入るよう、画面を縦に大きくする。
+void _useTallView(WidgetTester tester) {
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+}
+
 Widget buildSettingsPage({List<Override> extra = const []}) {
   return buildWithMockRepositories(child: const SettingsPage(), extra: extra);
 }
@@ -38,6 +45,7 @@ Widget buildSettingsPage({List<Override> extra = const []}) {
 void main() {
   group('SettingsPage', () {
     testWidgets('ローディング中は CircularProgressIndicator が表示される', (tester) async {
+      _useTallView(tester);
       await tester.pumpWidget(buildSettingsPage(extra: [
         settingsViewModelProvider(_userId)
             .overrideWith(LoadingSettingsViewModel.new),
@@ -47,6 +55,7 @@ void main() {
     });
 
     testWidgets('設定が読み込まれるとダークモードスイッチが表示される', (tester) async {
+      _useTallView(tester);
       await tester.pumpWidget(buildSettingsPage(extra: [
         settingsViewModelProvider(_userId)
             .overrideWith(DataSettingsViewModel.new),
@@ -58,6 +67,7 @@ void main() {
     });
 
     testWidgets('カラーテーマのドロップダウンが表示される', (tester) async {
+      _useTallView(tester);
       await tester.pumpWidget(buildSettingsPage(extra: [
         settingsViewModelProvider(_userId)
             .overrideWith(DataSettingsViewModel.new),
@@ -69,6 +79,7 @@ void main() {
     });
 
     testWidgets('ログアウト項目が表示される', (tester) async {
+      _useTallView(tester);
       await tester.pumpWidget(buildSettingsPage(extra: [
         settingsViewModelProvider(_userId)
             .overrideWith(DataSettingsViewModel.new),
@@ -80,6 +91,7 @@ void main() {
     });
 
     testWidgets('ログアウトをタップすると確認ダイアログが表示される', (tester) async {
+      _useTallView(tester);
       await tester.pumpWidget(buildSettingsPage(extra: [
         settingsViewModelProvider(_userId)
             .overrideWith(DataSettingsViewModel.new),
@@ -379,6 +391,7 @@ Future<_Env> _launch(
   AccountDeletionStatus? status,
   void Function(_Env env)? configure,
 }) async {
+  _useTallView(tester);
   final env = _Env(user: user, recordUserId: recordUserId, status: status);
   configure?.call(env);
   await tester.pumpWidget(ProviderScope(
@@ -1284,6 +1297,7 @@ class _WithdrawnTestAppState extends ConsumerState<_WithdrawnTestApp> {
 
 /// 組み立て済みの環境でアプリ（_WithdrawnTestApp）を起動する。同じ環境で起動し直すこともできる。
 Future<void> _startApp(WidgetTester tester, _Env env) async {
+  _useTallView(tester);
   await tester.pumpWidget(const SizedBox());
   await tester.pumpWidget(ProviderScope(
     overrides: [

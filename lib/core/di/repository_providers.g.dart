@@ -130,6 +130,23 @@ final accountRepositoryProvider = Provider<AccountRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AccountRepositoryRef = ProviderRef<AccountRepository>;
+String _$legalRepositoryHash() => r'8e24180fddf67521933bb21c2556afccbd8e6d7f';
+
+/// See also [legalRepository].
+@ProviderFor(legalRepository)
+final legalRepositoryProvider = Provider<LegalRepository>.internal(
+  legalRepository,
+  name: r'legalRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$legalRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef LegalRepositoryRef = ProviderRef<LegalRepository>;
 String _$sampleRepositoryHash() => r'1eaa2384e7d4b9e1df4d546e2134f63ca7a39e2b';
 
 /// See also [sampleRepository].

@@ -12,7 +12,8 @@ service cloud.firestore {
     }
 
     // 退会済みの記録。ログインしていない端末からも退会済みかを確認できるよう、1件ずつの読み取りだけ許す
-    // （uid と退会日時だけで、個人を特定できる情報は持たない）。一覧の読み取りと書き込みはサーバーだけ
+    // （退会日時とメールアドレスを持つ。uid を知っていればログインしていなくても読める点に注意）。
+    // 一覧の読み取りと書き込みはサーバーだけ
     match /deleted_accounts/{userId} {
       allow get: if true;
       allow list, write: if false;
@@ -23,6 +24,11 @@ service cloud.firestore {
       allow read: if request.auth != null
                   && request.auth.uid == userId;
       allow write: if false;
+    }
+
+    // 規約への同意の履歴。退会後も残す証跡。読み書きともサーバー（Admin SDK）だけ
+    match /consent_logs/{userId}/{document=**} {
+      allow read, write: if false;
     }
 
     // アプリ全体の設定（規約の現行版数など）。誰でも読めて、書き込みはサーバーだけ

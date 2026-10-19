@@ -88,3 +88,54 @@ describe("deleted_accounts/{uid}", () => {
     await assertFails(setDoc(doc(db, "deleted_accounts/A"), { deletedAt: new Date() }));
   });
 });
+
+describe("consent_logs/{uid}（規約への同意の履歴）", () => {
+  async function seedLog(uid: string): Promise<void> {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `consent_logs/${uid}/logs/l1`), {
+        document: "terms",
+        version: "2026-01-01",
+      });
+    });
+  }
+
+  test("本人の場合でも、履歴を読めない", async () => {
+    await seedLog("A");
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(getDoc(doc(db, "consent_logs/A/logs/l1")));
+  });
+
+  test("本人の場合でも、履歴を書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(
+      setDoc(doc(db, "consent_logs/A/logs/l2"), { document: "terms", version: "2026-01-01" }),
+    );
+  });
+
+  test("本人の場合でも、履歴の一覧を読めない", async () => {
+    await seedLog("A");
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(getDocs(collection(db, "consent_logs/A/logs")));
+  });
+});
+
+describe("app_config/legal（規約の現行の版数）", () => {
+  test("ログインしていない場合でも読める", async () => {
+    const db = env.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(db, "app_config/legal")));
+  });
+
+  test("ログインしている本人でも書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(setDoc(doc(db, "app_config/legal"), { termsVersion: "2026-01-01" }));
+  });
+});
+
+describe("accounts/{uid}（規約への同意の最新の記録）", () => {
+  test("本人の場合でも、consents を書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(
+      setDoc(doc(db, "accounts/A"), { consents: { terms: { version: "2026-01-01" } } }, { merge: true }),
+    );
+  });
+});

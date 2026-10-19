@@ -7,6 +7,7 @@ import 'package:word_stock/domain/repositories/account_deletion_repository.dart'
 import 'package:word_stock/domain/repositories/account_repository.dart';
 import 'package:word_stock/domain/repositories/auth_repository.dart';
 import 'package:word_stock/domain/repositories/folder_repository.dart';
+import 'package:word_stock/domain/repositories/legal_repository.dart';
 import 'package:word_stock/domain/repositories/sample_repository.dart';
 import 'package:word_stock/domain/repositories/settings_repository.dart';
 import 'package:word_stock/domain/repositories/flashcard_result_repository.dart';
@@ -15,10 +16,12 @@ import 'package:word_stock/infrastructure/repositories/account_deletion_reposito
 import 'package:word_stock/infrastructure/repositories/account_repository_impl.dart';
 import 'package:word_stock/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:word_stock/infrastructure/repositories/folder_repository_impl.dart';
+import 'package:word_stock/infrastructure/repositories/legal_repository_impl.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_account_deletion_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_account_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_auth_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_folder_repository.dart';
+import 'package:word_stock/infrastructure/repositories/mock/mock_legal_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_sample_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_settings_repository.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
@@ -108,6 +111,15 @@ AccountRepository accountRepository(Ref ref) {
   if (kUseMocks) return MockAccountRepository();
   return AccountRepositoryImpl(
     remoteDataSource: ref.watch(accountRemoteDataSourceProvider),
+  );
+}
+
+@Riverpod(keepAlive: true)
+LegalRepository legalRepository(Ref ref) {
+  if (kUseMocks) return MockLegalRepository();
+  return LegalRepositoryImpl(
+    remoteDataSource: ref.watch(legalRemoteDataSourceProvider),
+    connectivityMonitor: ref.watch(connectivityMonitorProvider),
   );
 }
 

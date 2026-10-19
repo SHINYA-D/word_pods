@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:word_stock/core/di/legal_providers.dart';
+import 'package:word_stock/domain/entities/legal_consent.dart';
 import 'package:word_stock/presentation/auth/auth_state.dart';
 import 'package:word_stock/presentation/auth/sign_up/sign_up_view_model.dart';
+import 'package:word_stock/presentation/legal/legal_document_page.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -17,6 +20,20 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
+
+  /// 新規登録画面で、利用規約・プライバシーポリシーに同意したか（2つともチェックしないと登録できない）
+  bool _termsChecked = false;
+  bool _privacyChecked = false;
+
+  /// 閲覧画面を開いている（素早く2回押しても1つだけ開く）
+  bool _documentOpen = false;
+
+  Future<void> _openDocument(String title, String url) async {
+    if (_documentOpen) return;
+    _documentOpen = true;
+    await Navigator.of(context).push(LegalDocumentPage.route(title: title, url: url));
+    _documentOpen = false;
+  }
 
   @override
   void dispose() {
@@ -44,6 +61,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     });
 
     final isLoading = state.isLoading;
+    // 読み込んでいる間は null（ボタンとリンクを押せない）
+    final LegalConfig? legalConfig = ref.watch(signUpLegalConfigProvider).valueOrNull;
+    final canSubmit =
+        !isLoading && legalConfig != null && _termsChecked && _privacyChecked;
 
     return Scaffold(
       appBar: AppBar(title: const Text('新規登録')),
@@ -102,15 +123,37 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+                _LegalRow(
+                  linkLabel: '利用規約を読む',
+                  checkLabel: '利用規約に同意する',
+                  checked: _termsChecked,
+                  onOpen: legalConfig == null
+                      ? null
+                      : () => _openDocument('利用規約', legalConfig.termsUrl),
+                  onChanged: (v) => setState(() => _termsChecked = v),
+                ),
+                _LegalRow(
+                  linkLabel: 'プライバシーポリシーを読む',
+                  checkLabel: 'プライバシーポリシーに同意する',
+                  checked: _privacyChecked,
+                  onOpen: legalConfig == null
+                      ? null
+                      : () => _openDocument(
+                          'プライバシーポリシー', legalConfig.privacyUrl),
+                  onChanged: (v) => setState(() => _privacyChecked = v),
+                ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: isLoading
+                  onPressed: !canSubmit
                       ? null
                       : () {
                           if (_formKey.currentState!.validate()) {
                             vm.signUp(
                               email: _emailController.text.trim(),
                               password: _passwordController.text,
+                              termsVersion: legalConfig.termsVersion,
+                              privacyVersion: legalConfig.privacyVersion,
                             );
                           }
                         },
@@ -127,6 +170,45 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 同意ダイアログと同じ、リンクとチェックボックスの行。
+class _LegalRow extends StatelessWidget {
+  const _LegalRow({
+    required this.linkLabel,
+    required this.checkLabel,
+    required this.checked,
+    required this.onOpen,
+    required this.onChanged,
+  });
+
+  final String linkLabel;
+  final String checkLabel;
+  final bool checked;
+
+  /// null なら押せない（規約の情報を読み込んでいる間）
+  final VoidCallback? onOpen;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(onPressed: onOpen, child: Text(linkLabel)),
+        ),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: checked,
+          title: Text(checkLabel),
+          onChanged: (value) => onChanged(value ?? false),
+        ),
+      ],
     );
   }
 }

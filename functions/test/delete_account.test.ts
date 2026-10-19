@@ -35,6 +35,7 @@ beforeEach(async () => {
   await db.recursiveDelete(db.collection("users"));
   await db.recursiveDelete(db.collection("accounts"));
   await db.recursiveDelete(db.collection("deleted_accounts"));
+  await db.recursiveDelete(db.collection("consent_logs"));
   const { users } = await auth.listUsers();
   await Promise.all(users.map((u) => auth.deleteUser(u.uid)));
 });
@@ -91,7 +92,7 @@ describe("deleteUserAccount", () => {
     await expect(auth.getUser("A")).rejects.toMatchObject({ code: "auth/user-not-found" });
   });
 
-  test("退会した場合、deleted_accounts/{uid} が退会日時だけを持って残る", async () => {
+  test("メールアドレスのあるユーザーが退会した場合、deleted_accounts/{uid} が退会日時とメールアドレスを持って残る", async () => {
     await auth.createUser({ uid: "A", email: "a@example.com" });
     await seed("A");
 
@@ -99,7 +100,27 @@ describe("deleteUserAccount", () => {
 
     const record = await db.doc("deleted_accounts/A").get();
     expect(record.exists).toBe(true);
+    expect(Object.keys(record.data() ?? {}).sort()).toEqual(["deletedAt", "email"]);
+    expect(record.get("email")).toBe("a@example.com");
+  });
+
+  test("メールアドレスの無いユーザーが退会した場合、deleted_accounts/{uid} が退会日時だけを持って残る", async () => {
+    await auth.createUser({ uid: "A" });
+
+    await deleteUserAccount("A", db, auth);
+
+    const record = await db.doc("deleted_accounts/A").get();
+    expect(record.exists).toBe(true);
     expect(Object.keys(record.data() ?? {})).toEqual(["deletedAt"]);
+  });
+
+  test("ユーザーの削除後に再試行した場合、前回書いたメールアドレスが残る", async () => {
+    await auth.createUser({ uid: "A", email: "a@example.com" });
+
+    await deleteUserAccount("A", db, auth);
+    await deleteUserAccount("A", db, auth);
+
+    expect((await db.doc("deleted_accounts/A").get()).get("email")).toBe("a@example.com");
   });
 
   test("他のユーザーが退会した場合、deleted_accounts に自分の記録は作られない", async () => {
@@ -119,5 +140,16 @@ describe("deleteUserAccount", () => {
 
     const all = await db.collection("deleted_accounts").get();
     expect(all.docs.map((d) => d.id)).toEqual(["A"]);
+  });
+
+  test("規約への同意の履歴がある場合、退会しても consent_logs/{uid} の履歴は残る", async () => {
+    await auth.createUser({ uid: "A" });
+    await seed("A");
+    await db.doc("consent_logs/A/logs/l1").set({ document: "terms", version: "2026-01-01" });
+
+    await deleteUserAccount("A", db, auth);
+
+    const logs = await db.collection("consent_logs/A/logs").get();
+    expect(logs.docs.map((d) => d.data().version)).toEqual(["2026-01-01"]);
   });
 });

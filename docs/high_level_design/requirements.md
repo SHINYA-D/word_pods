@@ -737,23 +737,32 @@ accounts/
       platform: string             // 'ios' | 'android'
       expiresAt: timestamp
       updatedAt: timestamp
-    consents: map                  // 将来。無ければ未同意として扱う（docs/high_level_design/legal_consent.md）
+    consents: map                  // 最新の同意。無ければ未同意として扱う（docs/high_level_design/legal_consent.md）
       terms:   { version: string, agreedAt: timestamp }
       privacy: { version: string, agreedAt: timestamp }
 
+consent_logs/
+  {userId}/
+    logs/
+      {logId}/                     // 同意の履歴（追記のみ）。クライアントは読み書き不可。退会後も削除しない
+        document: string           // 'terms' | 'privacy'
+        version: string            // 同意した版数（YYYY-MM-DD）
+        agreedAt: timestamp        // サーバー時刻
+
 app_config/
-  legal/                           // 将来。誰でも読める。書き込みは Admin SDK だけ
-    termsVersion: string           // 利用規約の現行版数（再同意が必要かの判定に使う）
-    privacyVersion: string         // プライバシーポリシーの現行版数
-    termsUrl: string
+  legal/                           // 誰でも読める。書き込みは Admin SDK だけ
+    termsVersion: string           // 利用規約の現行版数（改定日 YYYY-MM-DD。再同意が必要かの判定に使う）
+    privacyVersion: string         // プライバシーポリシーの現行版数（改定日 YYYY-MM-DD）
+    termsUrl: string               // WEB で公開している利用規約の URL（アプリは WebView で表示する）
     privacyUrl: string
 ```
 
-- **作成:** 新規登録（メール・Google）で Auth にユーザーが作られたとき、Cloud Functions（`onAuthUserCreated`）が `{ isDeveloper: false, createdAt }` で作る。既にあれば上書きしない。トリガー導入前の既存ユーザーには `functions/scripts/backfill_accounts.js` で一度だけ作る
+- **作成:** 新規登録（メール・Google）で Auth にユーザーが作られたとき、Cloud Functions（`onAuthUserCreated`）が `{ isDeveloper: false, createdAt }` で作る。トリガー導入前の既存ユーザーには `functions/scripts/backfill_accounts.js` で一度だけ作る
+- **常にそろえるフィールド:** `isDeveloper`（既定値 `false`）と `createdAt`（ドキュメントを最初に作った時刻）は、開発者かどうかに関わらず必ず置く（ユーザー決定 2026-10-19）。`accounts/{uid}` に書き込む関数（`onAuthUserCreated`・`acceptLegal`）は、どちらもこの2つが無ければ補う。すでにある値は上書きしない（コンソールで `true` にした `isDeveloper` を守るため）。新規登録の直後は2つの関数がほぼ同時に書き込むため、どちらが先でもそろうようにする。補完スクリプトも、欠けているドキュメントにこの2つを補う
 - **更新:** サブスク・同意は Cloud Functions が `set(..., { merge: true })` で該当フィールドだけを書く。クライアントからは書き込まない
 - **削除:** 退会時に `users/{userId}` と一緒に削除する（`functions/src/delete_account.ts`）
 - **欠損時:** ドキュメントやフィールドが無いとき（トリガーの失敗・遅れ）は、すべてデフォルト（開発者でない・無料・未同意）として扱う
-- **履歴:** ドキュメントには「現在の状態」だけを置く。同意の履歴や購入履歴が必要になったら、サブコレクション（例: `accounts/{userId}/consent_logs`）に分ける
+- **履歴:** ドキュメントには「現在の状態」だけを置く。同意の履歴は、退会後も残すためにトップレベルの `consent_logs/{userId}` に置く（`accounts` は退会で削除されるため）。購入履歴が必要になったら別途検討する
 - **同期:** オフライン同期（SQLite・`sync_queue`）の対象外。アプリは Firestore から直接読む
 
 > **ローカルDB（SQLite）とのミラーリングについて:** 本アプリはオフライン同期対応のため、上記Firestore構造とほぼ同一のスキーマを持つSQLiteテーブル（`folders` / `words` / `flashcard_results` / `settings`）をローカルに保持し、UI層は常にSQLiteを読み取り元とする。加えて未同期の変更操作を記録する `sync_queue` テーブル、最終同期時刻を記録する `sync_meta` テーブルを持つ。SQLite側のテーブル定義・カラム（`syncStatus` 等）の詳細は `docs/high_level_design/online_offline.md` を参照。

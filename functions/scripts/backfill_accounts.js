@@ -1,5 +1,5 @@
-// 既存ユーザーに accounts/{uid}（isDeveloper: false）を作る一回きりの移行スクリプト。
-// 既にあるドキュメントは上書きしない。
+// すべてのユーザーの accounts/{uid} に isDeveloper（既定値 false）と createdAt をそろえる移行スクリプト。
+// ドキュメントが無ければ作り、あれば足りないフィールドだけを補う。すでにある値は上書きしない。
 //
 // 実行方法（functions/ で）:
 //   gcloud auth application-default login   # 初回のみ。対象プロジェクトの権限があるアカウントで

@@ -4,6 +4,7 @@ import 'package:word_stock/core/router/router.dart';
 import 'package:word_stock/core/theme/app_theme.dart';
 import 'package:word_stock/core/widgets/error_screen.dart';
 import 'package:word_stock/core/di/auth_providers.dart';
+import 'package:word_stock/presentation/legal/widgets/legal_links_section.dart';
 import 'package:word_stock/presentation/settings/account_deletion_state.dart';
 import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_stock/presentation/settings/settings_view_model.dart';
@@ -74,6 +75,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 },
               ),
             ),
+            const Divider(),
+            const LegalLinksSection(),
             const Divider(),
             const ListTile(
               title: Text('アカウント',

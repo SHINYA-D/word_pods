@@ -11,15 +11,24 @@ class SignUpViewModel extends _$SignUpViewModel {
   @override
   AuthState build() => AuthState.initial();
 
+  /// [termsVersion] / [privacyVersion] は、新規登録画面に表示して同意してもらった版数。
   Future<void> signUp({
     required String email,
     required String password,
+    required String termsVersion,
+    required String privacyVersion,
   }) async {
+    if (state.isLoading) return;
     state = state.copyWith(isLoading: true, isSuccess: false, errorMessage: null);
     ref.read(authSyncInProgressProvider.notifier).state = true;
     final result = await ref
         .read(signUpUseCaseProvider)
-        .call(email: email, password: password);
+        .call(
+          email: email,
+          password: password,
+          termsVersion: termsVersion,
+          privacyVersion: privacyVersion,
+        );
     ref.read(authSyncInProgressProvider.notifier).state = false;
     result.fold(
       (failure) => state = state.copyWith(

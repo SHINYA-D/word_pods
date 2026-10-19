@@ -55,8 +55,9 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | 項目 | 型 | 説明 |
 |------|----|------|
 | deletedAt | Timestamp | 退会した日時（サーバーの時刻） |
+| email | string | 退会したユーザーのメールアドレス（Authentication から取る）。メールアドレスの無いユーザーは持たない |
 
-記録があることは「その uid は退会済み」を表す。メールアドレスなど個人を特定できる情報は持たない。
+記録があることは「その uid は退会済み」を表す。アプリは記録の有無だけを見て、フィールドは読まない。
 
 ---
 
