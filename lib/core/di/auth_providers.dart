@@ -31,6 +31,7 @@ SignInWithEmailUseCase signInWithEmailUseCase(Ref ref) =>
 SignUpUseCase signUpUseCase(Ref ref) => SignUpUseCase(
       ref.watch(authRepositoryProvider),
       ref.watch(syncRepositoryProvider),
+      ref.watch(legalRepositoryProvider),
     );
 
 @Riverpod(keepAlive: true)

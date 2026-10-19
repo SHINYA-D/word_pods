@@ -9,6 +9,7 @@ import 'package:word_stock/infrastructure/data_sources/firestore_data_source.dar
 import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
+import 'package:word_stock/infrastructure/data_sources/remote/legal_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
 import 'package:word_stock/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
 
@@ -59,3 +60,9 @@ AccountRemoteDataSource accountRemoteDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 WithdrawnAccountRemoteDataSource withdrawnAccountRemoteDataSource(Ref ref) =>
     WithdrawnAccountRemoteDataSource(ref.watch(firestoreProvider));
+
+@Riverpod(keepAlive: true)
+LegalRemoteDataSource legalRemoteDataSource(Ref ref) => LegalRemoteDataSource(
+      ref.watch(firestoreProvider),
+      ref.watch(firebaseFunctionsProvider),
+    );

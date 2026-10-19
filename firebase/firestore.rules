@@ -25,6 +25,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // 規約への同意の履歴。退会後も残す証跡。読み書きともサーバー（Admin SDK）だけ
+    match /consent_logs/{userId}/{document=**} {
+      allow read, write: if false;
+    }
+
     // アプリ全体の設定（規約の現行版数など）。誰でも読めて、書き込みはサーバーだけ
     match /app_config/{docId} {
       allow read: if true;

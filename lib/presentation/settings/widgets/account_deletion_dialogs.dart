@@ -93,6 +93,8 @@ Future<void> showAccountDeletionCompletedDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
+      // タイトルが無いので、本文が上に寄らないよう上の余白を広げ、OK ボタンとの間を詰める
+      contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
       content: const Text('退会が完了しました'),
       actions: [
         TextButton(

@@ -24,4 +24,7 @@ class FirestorePath {
 
   // --- accounts（本人は読み取りのみ。書き込みは Cloud Functions / コンソール） ---
   static String account(String userId) => 'accounts/$userId';
+
+  // --- app_config（誰でも読める。書き込みはコンソール） ---
+  static const legalConfig = 'app_config/legal';
 }
