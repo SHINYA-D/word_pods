@@ -35,6 +35,7 @@ beforeEach(async () => {
   await db.recursiveDelete(db.collection("users"));
   await db.recursiveDelete(db.collection("accounts"));
   await db.recursiveDelete(db.collection("deleted_accounts"));
+  await db.recursiveDelete(db.collection("consent_logs"));
   const { users } = await auth.listUsers();
   await Promise.all(users.map((u) => auth.deleteUser(u.uid)));
 });
@@ -119,5 +120,16 @@ describe("deleteUserAccount", () => {
 
     const all = await db.collection("deleted_accounts").get();
     expect(all.docs.map((d) => d.id)).toEqual(["A"]);
+  });
+
+  test("規約への同意の履歴がある場合、退会しても consent_logs/{uid} の履歴は残る", async () => {
+    await auth.createUser({ uid: "A" });
+    await seed("A");
+    await db.doc("consent_logs/A/logs/l1").set({ document: "terms", version: "2026-01-01" });
+
+    await deleteUserAccount("A", db, auth);
+
+    const logs = await db.collection("consent_logs/A/logs").get();
+    expect(logs.docs.map((d) => d.data().version)).toEqual(["2026-01-01"]);
   });
 });

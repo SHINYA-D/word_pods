@@ -9,6 +9,7 @@ import 'package:word_stock/core/di/sync_status_providers.dart';
 import 'package:word_stock/core/error/failure.dart';
 import 'package:word_stock/domain/entities/app_user.dart';
 import 'package:word_stock/infrastructure/repositories/mock/mock_auth_repository.dart';
+import 'package:word_stock/infrastructure/repositories/mock/mock_legal_repository.dart';
 import 'package:word_stock/presentation/auth/sign_up/sign_up_view_model.dart';
 
 import '../../../helpers/fake_auth_use_case_repositories.dart';
@@ -25,20 +26,31 @@ class FakeSignUpUseCase extends SignUpUseCase {
       : super(
           MockAuthRepository(),
           FakeSyncServiceForLogin(),
+          MockLegalRepository(),
         );
 
   final Either<Failure, AppUser> result;
   final Completer<void>? delayCompleter;
   int callCount = 0;
   final List<Map<String, String>> receivedCalls = [];
+  final List<({String email, String password, String termsVersion, String privacyVersion})>
+      receivedVersions = [];
 
   @override
   Future<Either<Failure, AppUser>> call({
     required String email,
     required String password,
+    required String termsVersion,
+    required String privacyVersion,
   }) async {
     callCount++;
     receivedCalls.add({'email': email, 'password': password});
+    receivedVersions.add((
+      email: email,
+      password: password,
+      termsVersion: termsVersion,
+      privacyVersion: privacyVersion,
+    ));
     if (delayCompleter != null) {
       await delayCompleter!.future;
     }
@@ -76,7 +88,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final state = container.read(signUpViewModelProvider);
       expect(state.isLoading, isFalse);
@@ -90,13 +102,35 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'foo@example.com', password: 'secret');
+          .signUp(email: 'foo@example.com', password: 'secret', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       expect(useCase.callCount, 1);
       expect(
         useCase.receivedCalls.single,
         {'email': 'foo@example.com', 'password': 'secret'},
       );
+    });
+
+    test(
+        "email 'a@example.com'・password 'password1'・termsVersion '2026-01-01'・privacyVersion '2026-01-01' で signUp を呼んだ場合、SignUpUseCase が1回その引数で呼ばれる [LGL-V88]",
+        () async {
+      final useCase = FakeSignUpUseCase(const Right(_testUser));
+      final container = _makeContainer(useCase);
+
+      await container.read(signUpViewModelProvider.notifier).signUp(
+            email: 'a@example.com',
+            password: 'password1',
+            termsVersion: '2026-01-01',
+            privacyVersion: '2026-01-01',
+          );
+
+      expect(useCase.callCount, 1);
+      expect(useCase.receivedVersions.single, (
+        email: 'a@example.com',
+        password: 'password1',
+        termsVersion: '2026-01-01',
+        privacyVersion: '2026-01-01',
+      ));
     });
 
     test('呼び出し中は isLoading が true になり isSuccess/errorMessage はリセットされる', () async {
@@ -109,7 +143,7 @@ void main() {
 
       final future = container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final loadingState = container.read(signUpViewModelProvider);
       expect(loadingState.isLoading, isTrue);
@@ -130,7 +164,7 @@ void main() {
 
       final future = container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       expect(container.read(authSyncInProgressProvider), isTrue);
 
@@ -146,7 +180,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final state = container.read(signUpViewModelProvider);
       expect(state.isLoading, isFalse);
@@ -160,7 +194,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'dup@example.com', password: 'password123');
+          .signUp(email: 'dup@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final state = container.read(signUpViewModelProvider);
       expect(state.isSuccess, isFalse);
@@ -173,7 +207,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final state = container.read(signUpViewModelProvider);
       expect(state.isSuccess, isFalse);
@@ -187,7 +221,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       final state = container.read(signUpViewModelProvider);
       expect(state.isSuccess, isFalse);
@@ -200,7 +234,7 @@ void main() {
 
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
 
       expect(container.read(authSyncInProgressProvider), isFalse);
     });
@@ -211,7 +245,7 @@ void main() {
       final container = _makeContainer(FakeSignUpUseCase(const Right(_testUser)));
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
       expect(container.read(signUpViewModelProvider).isSuccess, isTrue);
 
       container.read(signUpViewModelProvider.notifier).resetState();
@@ -227,7 +261,7 @@ void main() {
           _makeContainer(FakeSignUpUseCase(const Left(Failure.network())));
       await container
           .read(signUpViewModelProvider.notifier)
-          .signUp(email: 'new@example.com', password: 'password123');
+          .signUp(email: 'new@example.com', password: 'password123', termsVersion: '2026-01-01', privacyVersion: '2026-01-01');
       expect(
         container.read(signUpViewModelProvider).errorMessage,
         isNotNull,
