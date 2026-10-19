@@ -78,7 +78,7 @@ void main() {
   group('fetchLegalConfig', () {
     test('app_config/legal に4項目がすべて文字列である場合、Right(LegalConfig) になる [LGL-R01]', () async {
       remote.config = validConfig();
-      expect(await repo.fetchLegalConfig(), Right<Failure, LegalConfig>(validLegalConfig));
+      expect(await repo.fetchLegalConfig(), const Right<Failure, LegalConfig>(validLegalConfig));
     });
 
     test('app_config/legal が無い場合、Left(NotFoundFailure) になる [LGL-R02]', () async {
