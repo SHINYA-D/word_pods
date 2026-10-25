@@ -2,18 +2,18 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/folder_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/local_date.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/folder_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/sync_queue_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/word_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/word_local_data_source.dart';
-import 'package:word_stock/infrastructure/repositories/word_repository_impl.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/local_date.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/folder_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/sync_queue_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/word_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/word_local_data_source.dart';
+import 'package:word_pods/infrastructure/repositories/word_repository_impl.dart';
 
 import '../../helpers/fake_infrastructure.dart';
 
@@ -86,7 +86,7 @@ void main() {
   setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-    // DatabaseHelper は 'wordstock.db' という固定のファイル名を使うため、
+    // DatabaseHelper は 'wordpods.db' という固定のファイル名を使うため、
     // 他のテストファイルと同時実行された際に同一パスを取り合ってロック競合が
     // 発生しないよう、このテストファイル専用の一時ディレクトリに切り替える。
     final tempDir = await Directory.systemTemp.createTemp(

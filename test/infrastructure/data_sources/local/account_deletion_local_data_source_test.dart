@@ -3,16 +3,16 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart' show Sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/account_deletion_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/flashcard_result_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/folder_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/settings_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/sync_meta_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/sync_queue_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/word_table.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/account_deletion_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/flashcard_result_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/folder_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/settings_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/sync_meta_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/sync_queue_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/word_table.dart';
 
 void main() {
   const userId = 'user-1';

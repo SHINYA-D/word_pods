@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/infrastructure/repositories/auth_repository_impl.dart';
 
 import '../../helpers/fake_auth_infrastructure.dart';
 

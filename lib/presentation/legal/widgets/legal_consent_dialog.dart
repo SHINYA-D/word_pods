@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/presentation/legal/legal_consent_state.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/legal/legal_consent_state.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
 
 /// 同意ダイアログ。閉じられない（外側タップ・戻る操作では閉じない）。
 ///
@@ -37,7 +37,7 @@ class LegalConsentDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。',
+              'WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。',
             ),
             if (state.termsRequired && config != null)
               _DocumentRow(

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
 import 'sync_service.dart';
 
 /// 同期のきっかけを [SyncService] に伝える。

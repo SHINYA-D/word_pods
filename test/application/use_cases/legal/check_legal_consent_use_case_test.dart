@@ -1,10 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/legal/check_legal_consent_use_case.dart';
-import 'package:word_stock/application/use_cases/legal/get_legal_config_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/domain/repositories/legal_repository.dart';
+import 'package:word_pods/application/use_cases/legal/check_legal_consent_use_case.dart';
+import 'package:word_pods/application/use_cases/legal/get_legal_config_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/repositories/legal_repository.dart';
 
 const _config = LegalConfig(
   termsVersion: '2026-01-01',
@@ -131,8 +131,8 @@ void main() {
     const defaultConfig = LegalConfig(
       termsVersion: '2026-10-12',
       privacyVersion: '2026-10-12',
-      termsUrl: 'https://word-stock-web.web.app/terms',
-      privacyUrl: 'https://word-stock-web.web.app/privacy',
+      termsUrl: 'https://word-pods-web.web.app/terms',
+      privacyUrl: 'https://word-pods-web.web.app/privacy',
     );
 
     _FakeLegalRepository notFoundWith(String? terms, String? privacy) => _FakeLegalRepository(
@@ -165,8 +165,8 @@ void main() {
       final r = (await _run(notFoundWith(null, null))).getOrElse((_) => throw StateError('Left'));
       expect(r.config.termsVersion, '2026-10-12');
       expect(r.config.privacyVersion, '2026-10-12');
-      expect(r.config.termsUrl, 'https://word-stock-web.web.app/terms');
-      expect(r.config.privacyUrl, 'https://word-stock-web.web.app/privacy');
+      expect(r.config.termsUrl, 'https://word-pods-web.web.app/terms');
+      expect(r.config.privacyUrl, 'https://word-pods-web.web.app/privacy');
     });
   });
 }

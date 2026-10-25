@@ -1,10 +1,10 @@
 import 'dart:developer' show log;
 
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
 
 class SignInWithEmailUseCase {
   const SignInWithEmailUseCase(this._repository, this._syncService);

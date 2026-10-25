@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:word_stock/core/router/router.dart';
+import 'package:word_pods/core/router/router.dart';
 
 class FlashcardModeResultPage extends StatelessWidget {
   const FlashcardModeResultPage({

@@ -1,9 +1,9 @@
 ---
 name: widget-test-authoring
-description: WordStockでPresentation層のPage（*_page.dart）のWidgetテスト（testWidgets()）を書くときの作法・雛形集。buildWithMockRepositories()の使い方、ViewModelサブクラスoverrideでのloading/success/error注入、pump/pumpAndSettleの使い分け。Widgetテストの新規作成・修正時に参照する。
+description: WordPodsでPresentation層のPage（*_page.dart）のWidgetテスト（testWidgets()）を書くときの作法・雛形集。buildWithMockRepositories()の使い方、ViewModelサブクラスoverrideでのloading/success/error注入、pump/pumpAndSettleの使い分け。Widgetテストの新規作成・修正時に参照する。
 ---
 
-# Widgetテストの書き方（WordStock）
+# Widgetテストの書き方（WordPods）
 
 CLAUDE.md「## テスト方針」の実装ガイド。`testWidgets()` を使い、
 **「描画されるか」「操作で期待どおり反応するか」** だけを見る。ロジック網羅は ViewModel 単体テストの担当。

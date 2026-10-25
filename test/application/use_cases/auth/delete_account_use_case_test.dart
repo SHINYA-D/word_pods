@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/application/use_cases/auth/delete_account_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
+import 'package:word_pods/application/use_cases/auth/delete_account_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
 
 /// 呼び出し順を全 Fake で共有して記録する。
 class _Log {

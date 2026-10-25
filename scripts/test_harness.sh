@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# WordStock テストハーネス
+# WordPods テストハーネス
 #
 #   scripts/test_harness.sh [<test path> ...]
 #

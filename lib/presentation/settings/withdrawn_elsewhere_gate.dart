@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/presentation/settings/widgets/account_deletion_dialogs.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/presentation/settings/widgets/account_deletion_dialogs.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 enum _DialogKind { notice, delete, failed }
 

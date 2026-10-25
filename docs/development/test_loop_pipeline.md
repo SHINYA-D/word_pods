@@ -245,7 +245,7 @@ Excel の前に `python3 scripts/loop_state.py rerun-check` を実行する（�
 点検結果は次回に持ち越されない（ステートは手順12で破棄され、2回目はその時点の仕様書とテストで判定し直す）。
 仕様書に項目を足していれば、2回目の `can-skip` はその ID を「テストの無い仕様 ID」として検出し、生成が走る。
 
-続いて `test-doc-excel-generator` エージェントを起動し、`~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx` を生成する。
+続いて `test-doc-excel-generator` エージェントを起動し、`~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx` を生成する。
 手順8〜10で問題が残っていても必ず実行する。
 起動プロンプトには今回のループで実際に対象にしたファイル（`done` + `skipped`）を渡す。一部のファイルだけの依頼なら、
 `gen_test_excel.py --only <対象ファイル>` でその対象の項目書だけを Excel に含める。
@@ -347,7 +347,7 @@ test-loop 実行中に生成・更新されうるファイルを、発生元ご�
 
 | パス | 生成元 | 内容 |
 |------|--------|------|
-| `~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx` | test-doc-excel-generator（`scripts/gen_test_excel.py` 経由） | 「表紙」「記載要領・観点一覧」「サマリ」「要確認一覧」「単体テスト項目書」「Widgetテスト項目書」「仕様との対応」「対象外一覧」の8シート構成。入力は `test/test_cases/**/*.md`・`coverage/harness_report.json`・`.test_loop/state.json` |
+| `~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx` | test-doc-excel-generator（`scripts/gen_test_excel.py` 経由） | 「表紙」「記載要領・観点一覧」「サマリ」「要確認一覧」「単体テスト項目書」「Widgetテスト項目書」「仕様との対応」「対象外一覧」の8シート構成。入力は `test/test_cases/**/*.md`・`coverage/harness_report.json`・`.test_loop/state.json` |
 
 ### まとめ図
 
@@ -367,7 +367,7 @@ scripts/test_harness.sh 実行のたびに coverage/ 配下を上書き:
 .test_loop/state.json        … ループ進捗・回数（loop_state.py が管理）
 
 全Tier完了後、手順11で1回だけ:
-  ~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx
+  ~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx
 ```
 
 ## 関連ファイル
@@ -419,6 +419,6 @@ coverage/harness_report.json
     テストが無い対象ファイル(`coverage.untested_files`)、不要になった対象外登録(`stale_exclusions`)などを含む。
     ループの合否判定とExcel生成はこのファイルを読んで行う
 
-~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx
+~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx
   … 最終成果物のExcel項目書。「表紙」「記載要領・観点一覧」「サマリ」「要確認一覧」「単体テスト項目書」「Widgetテスト項目書」「仕様との対応」「対象外一覧」の8シート構成
 ```

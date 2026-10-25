@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
 
 /// `lib/application/use_cases/auth/**` のテストで共有する手書き Fake 群。
 ///

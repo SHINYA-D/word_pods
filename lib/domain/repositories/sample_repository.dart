@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/sample.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/sample.dart';
 
 abstract class SampleRepository {
   Future<Either<Failure, List<Sample>>> getSamples({

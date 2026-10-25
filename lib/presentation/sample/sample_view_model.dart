@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/sample_providers.dart';
-import 'package:word_stock/presentation/sample/sample_state.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/sample_providers.dart';
+import 'package:word_pods/presentation/sample/sample_state.dart';
 
 part 'sample_view_model.g.dart';
 

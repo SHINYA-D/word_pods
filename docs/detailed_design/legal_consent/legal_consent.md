@@ -54,8 +54,8 @@ updated: 2026-10-18
 |------|-------|
 | termsVersion | `2026-10-12` |
 | privacyVersion | `2026-10-12` |
-| termsUrl | `https://word-stock-web.web.app/terms` |
-| privacyUrl | `https://word-stock-web.web.app/privacy` |
+| termsUrl | `https://word-pods-web.web.app/terms` |
+| privacyUrl | `https://word-pods-web.web.app/privacy` |
 
 ### 2.2 入力ルール
 
@@ -89,7 +89,7 @@ updated: 2026-10-18
 
 用語の定義:
 
-- 「同意ダイアログ」は、タイトル「同意のお願い」、本文「WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、同意が必要な文書の行、「同意する」ボタン、「ログアウト」ボタンからなるダイアログを指す
+- 「同意ダイアログ」は、タイトル「同意のお願い」、本文「WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、同意が必要な文書の行、「同意する」ボタン、「ログアウト」ボタンからなるダイアログを指す
 - 「利用規約の行」は、リンク「利用規約を読む」とチェックボックス「利用規約に同意する」を指す
 - 「プライバシーポリシーの行」は、リンク「プライバシーポリシーを読む」とチェックボックス「プライバシーポリシーに同意する」を指す
 - 「閲覧画面」は、同意ダイアログのリンクから開く、全画面の WebView の画面を指す
@@ -106,7 +106,7 @@ updated: 2026-10-18
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
-| LGL-D01 | 未同意の状態でアプリを起動した | ホーム画面（`/home`）の上に同意ダイアログが表示される。タイトル「同意のお願い」、本文「WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、「利用規約を読む」「利用規約に同意する」「プライバシーポリシーを読む」「プライバシーポリシーに同意する」「同意する」「ログアウト」が表示される。2つのチェックボックスは未チェック。「同意する」ボタンは無効。「ログアウト」ボタンは有効 | 概要 §同意が必要かの判定, 概要 §判定のタイミング（起動時）, 概要 §同意ダイアログ, ユーザー決定 2026-10-14（LGL-Q01） | 確定 |
+| LGL-D01 | 未同意の状態でアプリを起動した | ホーム画面（`/home`）の上に同意ダイアログが表示される。タイトル「同意のお願い」、本文「WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、「利用規約を読む」「利用規約に同意する」「プライバシーポリシーを読む」「プライバシーポリシーに同意する」「同意する」「ログアウト」が表示される。2つのチェックボックスは未チェック。「同意する」ボタンは無効。「ログアウト」ボタンは有効 | 概要 §同意が必要かの判定, 概要 §判定のタイミング（起動時）, 概要 §同意ダイアログ, ユーザー決定 2026-10-14（LGL-Q01） | 確定 |
 | LGL-D02 | 同意済みの版数が利用規約 `2026-01-01`・プライバシーポリシー `2025-06-01` の状態でアプリを起動した | ホーム画面（`/home`）の上に同意ダイアログが表示される。「プライバシーポリシーを読む」「プライバシーポリシーに同意する」は表示され、「利用規約を読む」「利用規約に同意する」は表示されない。「同意する」「ログアウト」は表示される | 概要 §同意ダイアログ（同意が必要な文書の行だけ）, ユーザー決定 2026-10-14 | 確定 |
 | LGL-D03 | 同意済みの版数が利用規約 `2025-06-01`・プライバシーポリシー `2026-01-01` の状態でアプリを起動した | ホーム画面（`/home`）の上に同意ダイアログが表示される。「利用規約を読む」「利用規約に同意する」は表示され、「プライバシーポリシーを読む」「プライバシーポリシーに同意する」は表示されない。「同意する」「ログアウト」は表示される | 概要 §同意ダイアログ（同意が必要な文書の行だけ）, ユーザー決定 2026-10-14 | 確定 |
 | LGL-D04 | 同意済みの版数が利用規約 `2026-01-01`・プライバシーポリシー `2026-01-01` の状態でアプリを起動した | ホーム画面（`/home`）が表示される。同意ダイアログは表示されない | 概要 §同意が必要かの判定 | 確定 |
@@ -280,10 +280,10 @@ updated: 2026-10-18
 | LGL-B39 | 設定画面（`/settings`）で「プライバシーポリシー」をタップして閲覧画面を開き、閲覧画面の戻るボタンをタップした | 閲覧画面が閉じ、設定画面（`/settings`）が表示される。同意ダイアログは表示されない | 概要 §設定画面から規約を読む（戻ると設定画面に戻る） | 確定 |
 | LGL-B40 | 設定画面（`/settings`）で「利用規約」をタップし、現行の規約の情報の読み取りの応答を待っている | 「利用規約」の項目にローディングのインジケーターが表示される | 概要 §設定画面から規約を読む（読み取り中の表示）, 原則-5 | 確定 |
 | LGL-B41 | 設定画面（`/settings`）で「プライバシーポリシー」をタップし、現行の規約の情報の読み取りの応答を待っている | 「プライバシーポリシー」の項目にローディングのインジケーターが表示される | 概要 §設定画面から規約を読む（読み取り中の表示）, 原則-5 | 確定 |
-| LGL-B42 | `app_config/legal` が無い状態で、設定画面（`/settings`）で「利用規約」をタップした | 閲覧画面が開き、上部のバーに「利用規約」が表示される。WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される。スナックバーは表示されない | 概要 §設定画面から規約を読む（既定値の URL で開く）, ユーザー決定 2026-10-18 | 確定 |
-| LGL-B43 | `app_config/legal` が無い状態で、設定画面（`/settings`）で「プライバシーポリシー」をタップした | 閲覧画面が開き、上部のバーに「プライバシーポリシー」が表示される。WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される。スナックバーは表示されない | 概要 §設定画面から規約を読む（既定値の URL で開く）, ユーザー決定 2026-10-18 | 確定 |
-| LGL-B44 | `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「利用規約を読む」をタップした | 閲覧画面が開き、WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される | 概要 §既定値 | 確定 |
-| LGL-B45 | `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「プライバシーポリシーを読む」をタップした | 閲覧画面が開き、WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される | 概要 §既定値 | 確定 |
+| LGL-B42 | `app_config/legal` が無い状態で、設定画面（`/settings`）で「利用規約」をタップした | 閲覧画面が開き、上部のバーに「利用規約」が表示される。WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される。スナックバーは表示されない | 概要 §設定画面から規約を読む（既定値の URL で開く）, ユーザー決定 2026-10-18 | 確定 |
+| LGL-B43 | `app_config/legal` が無い状態で、設定画面（`/settings`）で「プライバシーポリシー」をタップした | 閲覧画面が開き、上部のバーに「プライバシーポリシー」が表示される。WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される。スナックバーは表示されない | 概要 §設定画面から規約を読む（既定値の URL で開く）, ユーザー決定 2026-10-18 | 確定 |
+| LGL-B44 | `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「利用規約を読む」をタップした | 閲覧画面が開き、WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される | 概要 §既定値 | 確定 |
+| LGL-B45 | `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「プライバシーポリシーを読む」をタップした | 閲覧画面が開き、WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される | 概要 §既定値 | 確定 |
 | LGL-B46 | 設定画面（`/settings`）で「利用規約」をタップし、現行の規約の情報の読み取りの応答を待っている間に「プライバシーポリシー」をタップした | 読み取りが成功すると、閲覧画面が1つだけ開き、上部のバーに「利用規約」が表示される | 概要 §設定画面から規約を読む（閲覧画面は1つだけ）, 原則-4 | 確定 |
 
 ### 3.4 エラー種別ごとの扱い
@@ -368,7 +368,7 @@ updated: 2026-10-18
 | LGL-S16 | 現行の規約の情報の読み取りが `UnknownFailure` で失敗する状態で新規登録画面を開き、正しい入力をして2つのチェックボックスをチェックし「アカウント作成」をタップし、アカウントの作成が成功した | 同意の送信が1回、利用規約 `2026-10-12`・プライバシーポリシー `2026-10-12` を引数に呼ばれる | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
 | LGL-S17 | 「メールアドレス」に `a@example.com` を入力し、「利用規約に同意する」をチェックした後、「利用規約を読む」をタップし、閲覧画面の戻るボタンをタップした | 閲覧画面（上部のバーに「利用規約」、WebView に `https://example.com/terms` の読み込みが指示される）が開き、戻るボタンで新規登録画面に戻る。「メールアドレス」は `a@example.com` のまま、「利用規約に同意する」はチェックされたまま | 概要 §新規登録画面の構成（リンク・戻ると入力内容とチェックはそのまま） | 確定 |
 | LGL-S18 | 「プライバシーポリシーを読む」をタップした | 閲覧画面が開き、上部のバーに「プライバシーポリシー」が表示される。WebView に `https://example.com/privacy` の読み込みが指示される | 概要 §新規登録画面の構成（リンク） | 確定 |
-| LGL-S19 | `app_config/legal` が無い状態で新規登録画面を開き、「利用規約を読む」をタップした | WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
+| LGL-S19 | `app_config/legal` が無い状態で新規登録画面を開き、「利用規約を読む」をタップした | WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
 | LGL-S20 | 「メールアドレス」を空のまま、パスワードとパスワード（確認）に `password1` を入力し、2つのチェックボックスをチェックして「アカウント作成」をタップした | 「メールアドレスを入力してください」が表示される。アカウントの作成は0回、同意の送信は0回 | 概要 §登録の流れ（入力チェックは今までどおり） | 確定 |
 | LGL-S21 | 正しい入力をし、2つのチェックボックスをチェックして「アカウント作成」をタップし、アカウントの作成の応答を待っている間に、もう一度「アカウント作成」をタップした | アカウントの作成は1回だけ呼ばれる | 原則-4 | 確定 |
 | LGL-S22 | 画面の大きさが幅 320・高さ 480 の端末で、新規登録画面を開いた | 表示のはみ出し（オーバーフロー）が起きない。スクロールすると「アカウント作成」ボタンが表示される | 原則-10 | 確定 |
@@ -376,8 +376,8 @@ updated: 2026-10-18
 | LGL-S24 | 正しい入力をし、2つのチェックボックスをチェックして「アカウント作成」をタップし、アカウントの作成が成功し、同意の送信が `AuthFailure` で失敗した（新しい uid は未同意のまま。その後の判定は成功する） | ホーム画面（`/home`）に移動し、その上に同意ダイアログが表示される。「通信エラー」ダイアログは表示されない | 概要 §登録の流れ（通信エラー・認証エラーを含め、失敗の種類によらない） | 確定 |
 | LGL-S25 | 正しい入力をし、2つのチェックボックスをチェックして「アカウント作成」をタップし、アカウントの作成が `NetworkFailure` で失敗した | スナックバーに「通信エラーが発生しました」が表示される。表示中の画面は新規登録画面のまま。「メールアドレス」は `a@example.com` のまま、2つのチェックボックスはチェックされたまま。同意の送信は0回 | 概要 §登録の流れ（アカウントの作成が失敗） | 確定 |
 | LGL-S26 | 正しい入力をし、2つのチェックボックスをチェックして「アカウント作成」をタップし、アカウントの作成が `UnknownFailure`（メッセージ `x`）で失敗した | スナックバーに「エラーが発生しました: x」が表示される。表示中の画面は新規登録画面のまま。2つのチェックボックスはチェックされたまま。同意の送信は0回 | 概要 §登録の流れ（アカウントの作成が失敗） | 確定 |
-| LGL-S27 | `app_config/legal` が無い状態で新規登録画面を開き、「プライバシーポリシーを読む」をタップした | WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
-| LGL-S28 | 現行の規約の情報の読み取りが `NetworkFailure` で失敗する状態で新規登録画面を開き、「利用規約を読む」をタップした | WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
+| LGL-S27 | `app_config/legal` が無い状態で新規登録画面を開き、「プライバシーポリシーを読む」をタップした | WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
+| LGL-S28 | 現行の規約の情報の読み取りが `NetworkFailure` で失敗する状態で新規登録画面を開き、「利用規約を読む」をタップした | WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される | 概要 §新規登録画面の構成（読めなかったときは既定値） | 確定 |
 | LGL-S29 | 「利用規約を読む」を素早く2回タップした | 閲覧画面は1つだけ開く。閲覧画面の戻るボタンを1回タップすると新規登録画面が表示される | 原則-4 | 確定 |
 | LGL-S30 | 新規登録画面を開き、現行の規約の情報の読み取りの応答を待っている間に、「利用規約を読む」をタップした | 閲覧画面は開かない | 概要 §新規登録画面の構成（読み込んでいる間はリンクを押せない） | 確定 |
 | LGL-S31 | 「プライバシーポリシーに同意する」をチェックした後、「プライバシーポリシーを読む」をタップし、閲覧画面の戻るボタンをタップした | 新規登録画面に戻り、「プライバシーポリシーに同意する」はチェックされたまま | 概要 §新規登録画面の構成（戻るとチェックはそのまま） | 確定 |
@@ -486,7 +486,7 @@ State の項目:
 | LGL-V79 | 未同意で `message` が `outdated`、`termsChecked` と `privacyChecked` が true の状態で `accept` を呼び、送信の応答を待っている | `message` は null | LGL-A51 | ユーザー決定 2026-10-14（LGL-Q06） | 確定 |
 | LGL-V80 | 未同意で `phase` が `required` の状態で `signOut` を呼び、ログアウトが `NetworkFailure` で失敗した | `phase` は `required`、`message` は `signOutFailed` | LGL-A52 | 原則-11 の例外（循環を避ける） | 確定 |
 | LGL-V81 | 未同意で `phase` が `required` の状態で `signOut` を呼び、ログアウトが `AuthFailure` で失敗した | `phase` は `required`、`message` は `signOutFailed` | LGL-A53 | 原則-11 の例外（循環を避ける） | 確定 |
-| LGL-V82 | `app_config/legal` が無く（`fetchLegalConfig` が `Left(NotFoundFailure)`）、未同意の状態で `check` を呼んだ | `phase` は `required`、`termsRequired` と `privacyRequired` は true、`config` は既定値（`termsVersion` `2026-10-12`・`privacyVersion` `2026-10-12`・`termsUrl` `https://word-stock-web.web.app/terms`・`privacyUrl` `https://word-stock-web.web.app/privacy`） | LGL-D51, LGL-B44, LGL-B45 | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
+| LGL-V82 | `app_config/legal` が無く（`fetchLegalConfig` が `Left(NotFoundFailure)`）、未同意の状態で `check` を呼んだ | `phase` は `required`、`termsRequired` と `privacyRequired` は true、`config` は既定値（`termsVersion` `2026-10-12`・`privacyVersion` `2026-10-12`・`termsUrl` `https://word-pods-web.web.app/terms`・`privacyUrl` `https://word-pods-web.web.app/privacy`） | LGL-D51, LGL-B44, LGL-B45 | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
 | LGL-V83 | `app_config/legal` が無く、同意済みの版数が利用規約 `2026-10-12`・プライバシーポリシー `2026-10-12` の状態で `check` を呼んだ | `phase` は `idle` | LGL-D52 | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
 | LGL-V84 | 未同意で `termsChecked` と `privacyChecked` が true の状態で `accept` を呼び、送信が `outdated` を返し、続く判定し直しで `app_config/legal` が無かった | `phase` は `required`、`termsChecked` と `privacyChecked` は false、`message` は `outdated`、`config.termsVersion` は `2026-10-12` | LGL-A58 | 概要 §既定値, 概要 §同意の送信（版数が違う） | 確定 |
 | LGL-V85 | 初回の同期の間（`authSyncInProgressProvider` が true）に、ログイン中の uid が null から `A` に変わった（uid `A` は未同意） | `phase` は `idle`。`fetchLegalConfig` は0回 | LGL-D54, LGL-D55, LGL-D59 | 概要 §判定のタイミング（初回の同期が終わってから判定する） | 確定 |
@@ -576,10 +576,10 @@ State の項目:
 | LGL-K11 | `fetchConsents` が `Left(NetworkFailure)` を返す | `Left(NetworkFailure)` | 概要 §判定しないとき・判定できないとき（オフライン） | 確定 |
 | LGL-K12 | `fetchConsents` が `Left(UnknownFailure)` を返す | `Left(UnknownFailure)` | 概要 §判定しないとき・判定できないとき（読み取りに失敗） | 確定 |
 | LGL-K13 | `fetchConsents` が利用規約 null・プライバシーポリシー null を返す状態で `call('A')` を呼んだ | `fetchConsents` が1回、`'A'` を引数に呼ばれる | 概要 §同意が必要かの判定（ログイン中のユーザーについて）, 原則-9 | 確定 |
-| LGL-K14 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返し、`fetchConsents` が利用規約 null・プライバシーポリシー null を返す | `Right`。`termsRequired` と `privacyRequired` は true、`config` は既定値（`LegalConfig(termsVersion: '2026-10-12', privacyVersion: '2026-10-12', termsUrl: 'https://word-stock-web.web.app/terms', privacyUrl: 'https://word-stock-web.web.app/privacy')`） | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
+| LGL-K14 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返し、`fetchConsents` が利用規約 null・プライバシーポリシー null を返す | `Right`。`termsRequired` と `privacyRequired` は true、`config` は既定値（`LegalConfig(termsVersion: '2026-10-12', privacyVersion: '2026-10-12', termsUrl: 'https://word-pods-web.web.app/terms', privacyUrl: 'https://word-pods-web.web.app/privacy')`） | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
 | LGL-K15 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返し、`fetchConsents` が利用規約 `2026-10-12`・プライバシーポリシー `2026-10-12` を返す | `Right`。`termsRequired` と `privacyRequired` は false | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
 | LGL-K16 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返す状態で `call('A')` を呼んだ | `fetchConsents` が1回、`'A'` を引数に呼ばれる | 概要 §既定値（既定値で判定する） | 確定 |
-| LGL-K17 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返し（`app_config/legal` の `termsVersion` だけが欠けている）、`fetchConsents` が利用規約 null・プライバシーポリシー null を返す | `Right` の `config` は既定値（4項目すべて。`privacyUrl` も `https://word-stock-web.web.app/privacy`） | 概要 §既定値（一部が欠けても4項目すべて置き換える） | 確定 |
+| LGL-K17 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返し（`app_config/legal` の `termsVersion` だけが欠けている）、`fetchConsents` が利用規約 null・プライバシーポリシー null を返す | `Right` の `config` は既定値（4項目すべて。`privacyUrl` も `https://word-pods-web.web.app/privacy`） | 概要 §既定値（一部が欠けても4項目すべて置き換える） | 確定 |
 
 送信（`accept`）は Repository への委譲のみ。仕様項目なし（動作は4章・5章で検証する）。
 
@@ -593,7 +593,7 @@ State の項目:
 | LGL-G02 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返す | 既定値の `LegalConfig` の `Right` | 概要 §既定値, ユーザー決定 2026-10-18 | 確定 |
 | LGL-G03 | `fetchLegalConfig` が `Left(NetworkFailure)` を返す | `Left(NetworkFailure)` | 概要 §設定画面から規約を読む（読めなかったとき） | 確定 |
 | LGL-G04 | `fetchLegalConfig` が `Left(UnknownFailure)` を返す | `Left(UnknownFailure)` | 概要 §設定画面から規約を読む（読めなかったとき） | 確定 |
-| LGL-G05 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返す（`app_config/legal` の `privacyUrl` だけが欠けている） | 既定値の `LegalConfig` の `Right`（`termsVersion` `2026-10-12`・`privacyVersion` `2026-10-12`・`termsUrl` `https://word-stock-web.web.app/terms`・`privacyUrl` `https://word-stock-web.web.app/privacy`） | 概要 §既定値（一部が欠けても4項目すべて置き換える） | 確定 |
+| LGL-G05 | `fetchLegalConfig` が `Left(NotFoundFailure)` を返す（`app_config/legal` の `privacyUrl` だけが欠けている） | 既定値の `LegalConfig` の `Right`（`termsVersion` `2026-10-12`・`privacyVersion` `2026-10-12`・`termsUrl` `https://word-pods-web.web.app/terms`・`privacyUrl` `https://word-pods-web.web.app/privacy`） | 概要 §既定値（一部が欠けても4項目すべて置き換える） | 確定 |
 
 ### 6.3 SignUpUseCase（新規登録の処理）
 

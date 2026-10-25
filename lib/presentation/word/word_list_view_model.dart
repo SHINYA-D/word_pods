@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/core/di/word_providers.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/core/di/word_providers.dart';
 
 part 'word_list_view_model.g.dart';
 

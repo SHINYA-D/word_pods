@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_state.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_view_model.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_state.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_view_model.dart';
 
 class FlashcardModePage extends ConsumerStatefulWidget {
   const FlashcardModePage({

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:word_stock/core/firebase/firestore_path.dart';
+import 'package:word_pods/core/firebase/firestore_path.dart';
 
 /// Firestore の `accounts/{uid}` を読む。書き込みはサーバー（Cloud Functions・コンソール）だけが行う。
 class AccountRemoteDataSource {

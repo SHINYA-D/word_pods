@@ -5,10 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/legal_remote_data_source.dart';
-import 'package:word_stock/infrastructure/repositories/legal_repository_impl.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/legal_remote_data_source.dart';
+import 'package:word_pods/infrastructure/repositories/legal_repository_impl.dart';
 
 import '../../helpers/fake_infrastructure.dart';
 

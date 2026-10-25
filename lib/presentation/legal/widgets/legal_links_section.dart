@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/di/legal_providers.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/presentation/legal/legal_document_page.dart';
+import 'package:word_pods/core/di/legal_providers.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/presentation/legal/legal_document_page.dart';
 
 enum _Document { terms, privacy }
 

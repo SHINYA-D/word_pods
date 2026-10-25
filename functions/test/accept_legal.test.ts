@@ -3,7 +3,7 @@ import { deleteApp, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { acceptLegal, CONSENT_LOGS, DEFAULT_LEGAL_CONFIG } from "../src/accept_legal";
 
-const app = initializeApp({ projectId: "demo-word-stock" }, "accept-legal-test");
+const app = initializeApp({ projectId: "demo-word-pods" }, "accept-legal-test");
 const db = getFirestore(app);
 
 async function logsOf(uid: string) {

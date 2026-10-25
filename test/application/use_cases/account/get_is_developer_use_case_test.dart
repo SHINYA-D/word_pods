@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/account/get_is_developer_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/repositories/account_repository.dart';
+import 'package:word_pods/application/use_cases/account/get_is_developer_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/repositories/account_repository.dart';
 
 class _FakeAccountRepository implements AccountRepository {
   _FakeAccountRepository({required this.fetchIsDeveloperResult});

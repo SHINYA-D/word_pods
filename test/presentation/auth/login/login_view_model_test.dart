@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/auth/sign_in_with_email_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/sign_in_with_google_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/sync_status_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/presentation/auth/login/login_view_model.dart';
+import 'package:word_pods/application/use_cases/auth/sign_in_with_email_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/sign_in_with_google_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/sync_status_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/presentation/auth/login/login_view_model.dart';
 
 const _testAppUser = AppUser(id: 'user-1', email: 'user@example.com');
 

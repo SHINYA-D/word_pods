@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/app_lifecycle_observer.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/local_data_source_providers.dart';
-import 'package:word_stock/core/di/sync_providers.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/core/theme/app_theme.dart';
-import 'package:word_stock/presentation/legal/legal_consent_gate.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
-import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/settings_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_gate.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/app_lifecycle_observer.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/local_data_source_providers.dart';
+import 'package:word_pods/core/di/sync_providers.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/core/theme/app_theme.dart';
+import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/settings_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -108,7 +108,7 @@ class _AppState extends ConsumerState<App> {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'WordStock',
+      title: 'WordPods',
       theme: AppTheme.light(seedColor: seedColor),
       darkTheme: AppTheme.dark(seedColor: seedColor),
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,

@@ -1,15 +1,15 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/domain/repositories/word_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/folder_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/word_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/word_local_data_source.dart';
-import 'package:word_stock/infrastructure/sync/sync_service.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/domain/repositories/word_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/word_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/word_local_data_source.dart';
+import 'package:word_pods/infrastructure/sync/sync_service.dart';
 
 /// 読み取りはローカルだけから行う。登録・編集・削除は、オンライン・オフラインに関係なく
 /// ローカルへの保存とキューへの登録を同じトランザクションで行い、その後に送信を依頼する。

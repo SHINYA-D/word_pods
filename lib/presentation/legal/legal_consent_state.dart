@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
 
 part 'legal_consent_state.freezed.dart';
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/core/utils/folder_name_validator.dart';
-import 'package:word_stock/core/widgets/error_screen.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/presentation/home/home_view_model.dart';
-import 'package:word_stock/presentation/home/widgets/folder_list_tile.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/core/utils/folder_name_validator.dart';
+import 'package:word_pods/core/widgets/error_screen.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/presentation/home/home_view_model.dart';
+import 'package:word_pods/presentation/home/widgets/folder_list_tile.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -17,7 +17,7 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WordStock'),
+        title: const Text('WordPods'),
       ),
       body: state.folders.when(
         loading: () => const Center(child: CircularProgressIndicator()),

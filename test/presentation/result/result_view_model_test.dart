@@ -1,15 +1,15 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/flashcard_result/get_flashcard_results_use_case.dart';
-import 'package:word_stock/application/use_cases/folder/get_folders_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/flashcard_result_providers.dart';
-import 'package:word_stock/core/di/folder_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/presentation/result/result_view_model.dart';
+import 'package:word_pods/application/use_cases/flashcard_result/get_flashcard_results_use_case.dart';
+import 'package:word_pods/application/use_cases/folder/get_folders_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/flashcard_result_providers.dart';
+import 'package:word_pods/core/di/folder_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/presentation/result/result_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
 

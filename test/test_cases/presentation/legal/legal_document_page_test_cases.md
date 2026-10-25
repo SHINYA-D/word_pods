@@ -18,7 +18,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 
 | # | テスト名 | 仕様ID | カテゴリ | 対象メソッド | 状態 |
 |---|---------|--------|---------|-----------|------|
-| 1 | 未同意の状態でアプリを起動した場合、ホーム画面の上に同意ダイアログが表示され、2つのチェックは未チェックで「同意する」は無効・「ログアウト」は有効になる [LGL-D01] | LGL-D01 #53ddab | 正常系 | LegalConsentGate / LegalConsentDialog | ✅ |
+| 1 | 未同意の状態でアプリを起動した場合、ホーム画面の上に同意ダイアログが表示され、2つのチェックは未チェックで「同意する」は無効・「ログアウト」は有効になる [LGL-D01] | LGL-D01 #7cde65 | 正常系 | LegalConsentGate / LegalConsentDialog | ✅ |
 | 2 | プライバシーポリシーだけ版数が古い状態でアプリを起動した場合、プライバシーポリシーの行だけの同意ダイアログが表示される [LGL-D02] | LGL-D02 #942bbb | 正常系 | LegalConsentGate / LegalConsentDialog | ✅ |
 | 3 | 利用規約だけ版数が古い状態でアプリを起動した場合、利用規約の行だけの同意ダイアログが表示される [LGL-D03] | LGL-D03 #b8b198 | 正常系 | LegalConsentGate / LegalConsentDialog | ✅ |
 | 4 | 同意済みの版数が現行の版数と一致する状態でアプリを起動した場合、ホーム画面が表示され同意ダイアログは表示されない [LGL-D04] | LGL-D04 #1a889a | 正常系 | LegalConsentGate / LegalConsentDialog | ✅ |
@@ -174,10 +174,10 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 | 154 | 設定画面で「プライバシーポリシー」から閲覧画面を開いて戻るボタンをタップした場合、閲覧画面が閉じ設定画面が表示され同意ダイアログは表示されない [LGL-B39] | LGL-B39 #ce58ea | 正常系 | LegalLinksSection / LegalDocumentPage | ✅ |
 | 155 | 設定画面で「利用規約」をタップして読み取りの応答を待っている場合、「利用規約」の項目にローディングが表示される [LGL-B40] | LGL-B40 #e18d19 | 境界値 | LegalLinksSection / LegalDocumentPage | ✅ |
 | 156 | 設定画面で「プライバシーポリシー」をタップして読み取りの応答を待っている場合、「プライバシーポリシー」の項目にローディングが表示される [LGL-B41] | LGL-B41 #09fbdb | 境界値 | LegalLinksSection / LegalDocumentPage | ✅ |
-| 157 | app_config/legal が無い状態で設定画面の「利用規約」をタップした場合、閲覧画面が開き既定値の利用規約の URL の読み込みが指示されスナックバーは表示されない [LGL-B42] | LGL-B42 #3e21f4 | 正常系 | LegalLinksSection / LegalDocumentPage | ✅ |
-| 158 | app_config/legal が無い状態で設定画面の「プライバシーポリシー」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示されスナックバーは表示されない [LGL-B43] | LGL-B43 #bd3d06 | 正常系 | LegalLinksSection / LegalDocumentPage | ✅ |
-| 159 | app_config/legal が無く未同意の状態で起動し「利用規約を読む」をタップした場合、閲覧画面が開き既定値の利用規約の URL の読み込みが指示される [LGL-B44] | LGL-B44 #90334f | 正常系 | LegalDocumentPage / LegalConsentGate | ✅ |
-| 160 | app_config/legal が無く未同意の状態で起動し「プライバシーポリシーを読む」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示される [LGL-B45] | LGL-B45 #187613 | 正常系 | LegalDocumentPage / LegalConsentGate | ✅ |
+| 157 | app_config/legal が無い状態で設定画面の「利用規約」をタップした場合、閲覧画面が開き既定値の利用規約の URL の読み込みが指示されスナックバーは表示されない [LGL-B42] | LGL-B42 #7a3fe7 | 正常系 | LegalLinksSection / LegalDocumentPage | ✅ |
+| 158 | app_config/legal が無い状態で設定画面の「プライバシーポリシー」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示されスナックバーは表示されない [LGL-B43] | LGL-B43 #51a55f | 正常系 | LegalLinksSection / LegalDocumentPage | ✅ |
+| 159 | app_config/legal が無く未同意の状態で起動し「利用規約を読む」をタップした場合、閲覧画面が開き既定値の利用規約の URL の読み込みが指示される [LGL-B44] | LGL-B44 #c04088 | 正常系 | LegalDocumentPage / LegalConsentGate | ✅ |
+| 160 | app_config/legal が無く未同意の状態で起動し「プライバシーポリシーを読む」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示される [LGL-B45] | LGL-B45 #669240 | 正常系 | LegalDocumentPage / LegalConsentGate | ✅ |
 | 161 | 設定画面で「利用規約」をタップして読み取りの応答を待っている間に「プライバシーポリシー」をタップした場合、読み取りが成功すると閲覧画面が1つだけ開きタイトルは「利用規約」である [LGL-B46] | LGL-B46 #767668 | 境界値 | LegalLinksSection / LegalDocumentPage | ✅ |
 | 162 | 同意済みの版数の読み取りが NetworkFailure で失敗する状態で起動した場合、ホーム画面が表示され同意ダイアログも「通信エラー」ダイアログも表示されない [LGL-E02] | LGL-E02 #bd2ac1 | 異常系 | LegalConsentGate / LegalConsentDialog | ✅ |
 | 163 | 同意済みの版数の読み取りが UnknownFailure で失敗する状態で起動した場合、ホーム画面が表示され同意ダイアログも失敗の表示も出ない [LGL-E03] | LGL-E03 #ddb05d | 異常系 | LegalConsentGate / LegalConsentDialog | ✅ |
@@ -198,7 +198,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線。起動時の確認、復帰時の確認）で起動し、手書き Fake（LegalRepository・認証・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。既定の現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、ログイン中の uid は A
 - **入力値・テスト条件**: 未同意の状態でアプリを起動した
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・同意済みの版数・現行の版数と URL・送信/ログアウトの結果と応答待ち・退会処理の記録・退会済みの記録・強制ログアウトの記録）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知・WebView の読み込み通知を pump で進める
-- **期待結果**: ホーム画面（`/home`）の上に同意ダイアログが表示される。タイトル「同意のお願い」、本文「WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、「利用規約を読む」「利用規約に同意する」「プライバシーポリシーを読む」「プライバシーポリシーに同意する」「同意する」「ログアウト」が表示される。2つのチェックボックスは未チェック。「同意する」ボタンは無効。「ログアウト」ボタンは有効
+- **期待結果**: ホーム画面（`/home`）の上に同意ダイアログが表示される。タイトル「同意のお願い」、本文「WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」、「利用規約を読む」「利用規約に同意する」「プライバシーポリシーを読む」「プライバシーポリシーに同意する」「同意する」「ログアウト」が表示される。2つのチェックボックスは未チェック。「同意する」ボタンは無効。「ログアウト」ボタンは有効
 
 ### テストケース2: プライバシーポリシーだけ版数が古い状態でアプリを起動した場合、プライバシーポリシーの行だけの同意ダイアログが表示される [LGL-D02]
 - **カテゴリ**: 正常系
@@ -1446,7 +1446,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線。起動時の確認、復帰時の確認）で起動し、手書き Fake（LegalRepository・認証・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。既定の現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、ログイン中の uid は A
 - **入力値・テスト条件**: `app_config/legal` が無い状態で、設定画面（`/settings`）で「利用規約」をタップした
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・同意済みの版数・現行の版数と URL・送信/ログアウトの結果と応答待ち・退会処理の記録・退会済みの記録・強制ログアウトの記録）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知・WebView の読み込み通知を pump で進める
-- **期待結果**: 閲覧画面が開き、上部のバーに「利用規約」が表示される。WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される。スナックバーは表示されない
+- **期待結果**: 閲覧画面が開き、上部のバーに「利用規約」が表示される。WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される。スナックバーは表示されない
 
 ### テストケース158: app_config/legal が無い状態で設定画面の「プライバシーポリシー」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示されスナックバーは表示されない [LGL-B43]
 - **カテゴリ**: 正常系
@@ -1454,7 +1454,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線。起動時の確認、復帰時の確認）で起動し、手書き Fake（LegalRepository・認証・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。既定の現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、ログイン中の uid は A
 - **入力値・テスト条件**: `app_config/legal` が無い状態で、設定画面（`/settings`）で「プライバシーポリシー」をタップした
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・同意済みの版数・現行の版数と URL・送信/ログアウトの結果と応答待ち・退会処理の記録・退会済みの記録・強制ログアウトの記録）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知・WebView の読み込み通知を pump で進める
-- **期待結果**: 閲覧画面が開き、上部のバーに「プライバシーポリシー」が表示される。WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される。スナックバーは表示されない
+- **期待結果**: 閲覧画面が開き、上部のバーに「プライバシーポリシー」が表示される。WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される。スナックバーは表示されない
 
 ### テストケース159: app_config/legal が無く未同意の状態で起動し「利用規約を読む」をタップした場合、閲覧画面が開き既定値の利用規約の URL の読み込みが指示される [LGL-B44]
 - **カテゴリ**: 正常系
@@ -1462,7 +1462,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線。起動時の確認、復帰時の確認）で起動し、手書き Fake（LegalRepository・認証・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。既定の現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、ログイン中の uid は A
 - **入力値・テスト条件**: `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「利用規約を読む」をタップした
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・同意済みの版数・現行の版数と URL・送信/ログアウトの結果と応答待ち・退会処理の記録・退会済みの記録・強制ログアウトの記録）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知・WebView の読み込み通知を pump で進める
-- **期待結果**: 閲覧画面が開き、WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される
+- **期待結果**: 閲覧画面が開き、WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される
 
 ### テストケース160: app_config/legal が無く未同意の状態で起動し「プライバシーポリシーを読む」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示される [LGL-B45]
 - **カテゴリ**: 正常系
@@ -1470,7 +1470,7 @@ ViewModel（LegalConsentViewModel）のロジック網羅は `legal_consent_view
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線。起動時の確認、復帰時の確認）で起動し、手書き Fake（LegalRepository・認証・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。既定の現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、ログイン中の uid は A
 - **入力値・テスト条件**: `app_config/legal` が無く未同意の状態で起動し、同意ダイアログの「プライバシーポリシーを読む」をタップした
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・同意済みの版数・現行の版数と URL・送信/ログアウトの結果と応答待ち・退会処理の記録・退会済みの記録・強制ログアウトの記録）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知・WebView の読み込み通知を pump で進める
-- **期待結果**: 閲覧画面が開き、WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される
+- **期待結果**: 閲覧画面が開き、WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される
 
 ### テストケース161: 設定画面で「利用規約」をタップして読み取りの応答を待っている間に「プライバシーポリシー」をタップした場合、読み取りが成功すると閲覧画面が1つだけ開きタイトルは「利用規約」である [LGL-B46]
 - **カテゴリ**: 境界値

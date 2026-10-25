@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/domain/entities/user_settings.dart';
-import 'package:word_stock/domain/entities/sample.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/domain/repositories/sample_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/firestore_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/domain/entities/user_settings.dart';
+import 'package:word_pods/domain/entities/sample.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/domain/repositories/sample_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/firestore_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
 
 /// [FirestoreDataSource] の実装を Firebase 無しで検証するためのフェイク。
 ///

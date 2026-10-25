@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
+import 'package:word_pods/infrastructure/data_sources/sync_record.dart';
 import 'database_helper.dart';
 import 'local_date.dart';
 import 'tables/flashcard_result_table.dart';

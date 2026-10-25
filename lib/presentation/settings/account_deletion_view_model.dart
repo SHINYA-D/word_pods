@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/application/use_cases/auth/delete_account_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/application/use_cases/auth/delete_account_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
 
 part 'account_deletion_view_model.g.dart';
 

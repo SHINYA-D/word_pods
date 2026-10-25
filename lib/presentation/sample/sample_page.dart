@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/core/utils/folder_name_validator.dart';
-import 'package:word_stock/core/widgets/error_screen.dart';
-import 'package:word_stock/core/widgets/network_error_dialog.dart';
-import 'package:word_stock/domain/entities/sample.dart';
-import 'package:word_stock/presentation/sample/sample_state.dart';
-import 'package:word_stock/presentation/sample/sample_view_model.dart';
-import 'package:word_stock/presentation/sample/widgets/sample_list_tile.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/core/utils/folder_name_validator.dart';
+import 'package:word_pods/core/widgets/error_screen.dart';
+import 'package:word_pods/core/widgets/network_error_dialog.dart';
+import 'package:word_pods/domain/entities/sample.dart';
+import 'package:word_pods/presentation/sample/sample_state.dart';
+import 'package:word_pods/presentation/sample/sample_view_model.dart';
+import 'package:word_pods/presentation/sample/widgets/sample_list_tile.dart';
 
 /// テストパイプライン検証用の画面。HomePage（フォルダ一覧）と同じ構成。
 class SamplePage extends ConsumerStatefulWidget {

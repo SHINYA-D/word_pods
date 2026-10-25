@@ -1,5 +1,5 @@
 {
-  "name": "word-stock-functions",
+  "name": "word-pods-functions",
   "private": true,
   "main": "lib/index.js",
   "engines": {
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest --runInBand",
-    "test:emulator": "firebase emulators:exec --only firestore,auth --project demo-word-stock \"npm test\""
+    "test:emulator": "firebase emulators:exec --only firestore,auth --project demo-word-pods \"npm test\""
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

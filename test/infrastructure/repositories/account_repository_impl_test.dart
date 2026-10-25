@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
-import 'package:word_stock/infrastructure/repositories/account_repository_impl.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/account_remote_data_source.dart';
+import 'package:word_pods/infrastructure/repositories/account_repository_impl.dart';
 
 /// [AccountRemoteDataSource] の手書きフェイク。結果を順に返し、例外が指定されていれば投げる。
 class _FakeAccountRemoteDataSource implements AccountRemoteDataSource {

@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
 import 'database_helper.dart';
 import 'local_date.dart';
 import 'tables/account_deletion_table.dart';

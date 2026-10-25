@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/auth/sign_up_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/sync_status_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_auth_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_legal_repository.dart';
-import 'package:word_stock/presentation/auth/sign_up/sign_up_view_model.dart';
+import 'package:word_pods/application/use_cases/auth/sign_up_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/sync_status_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_auth_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_legal_repository.dart';
+import 'package:word_pods/presentation/auth/sign_up/sign_up_view_model.dart';
 
 import '../../../helpers/fake_auth_use_case_repositories.dart';
 

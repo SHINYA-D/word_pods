@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});

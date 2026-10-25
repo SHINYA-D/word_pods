@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/folder.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/folder.dart';
 
 abstract class FolderRepository {
   Future<Either<Failure, List<Folder>>> getFolders({

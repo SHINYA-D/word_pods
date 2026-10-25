@@ -1,10 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/auth/reset_password_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/presentation/auth/password_reset/password_reset_view_model.dart';
+import 'package:word_pods/application/use_cases/auth/reset_password_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/presentation/auth/password_reset/password_reset_view_model.dart';
 
 /// ResetPasswordUseCase の手書き Fake。
 /// `call()` が呼ばれるたびに引数を記録し、あらかじめ渡された結果を返す。

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/widgets/account_deletion_dialogs.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/widgets/account_deletion_dialogs.dart';
 
 /// 退会処理が途中で止まっている間、どの画面の上にも再開ダイアログを出し続ける。
 ///

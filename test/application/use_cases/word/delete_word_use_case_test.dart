@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/word/delete_word_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/domain/repositories/word_repository.dart';
+import 'package:word_pods/application/use_cases/word/delete_word_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/domain/repositories/word_repository.dart';
 
 class _FakeWordRepository implements WordRepository {
   _FakeWordRepository({this.deleteWordResult});

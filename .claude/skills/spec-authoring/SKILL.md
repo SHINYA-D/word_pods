@@ -1,9 +1,9 @@
 ---
 name: spec-authoring
-description: WordStockの機能・画面ごとの振る舞い仕様書（詳細設計書、docs/detailed_design/ 配下。画面が主体なら presentation/ と同じ階層に画面のファイル名で、画面が主体でなければ機能名フォルダに機能名で置く）を作成・改訂するときの手順と書き方の規約。人間が書いた対象の概要設計書（docs/high_level_design/ 配下の high_*.md）を正とし、requirements.md・CLAUDE.md・共通原則は補助として使う。単体テスト・Widgetテストの期待値の根拠になる「あるべき動作」を、ID・根拠・確定度付きで定義する。「〇〇画面の仕様書を作って」「詳細設計書を書いて」「仕様書を直して」等の依頼で使う。
+description: WordPodsの機能・画面ごとの振る舞い仕様書（詳細設計書、docs/detailed_design/ 配下。画面が主体なら presentation/ と同じ階層に画面のファイル名で、画面が主体でなければ機能名フォルダに機能名で置く）を作成・改訂するときの手順と書き方の規約。人間が書いた対象の概要設計書（docs/high_level_design/ 配下の high_*.md）を正とし、requirements.md・CLAUDE.md・共通原則は補助として使う。単体テスト・Widgetテストの期待値の根拠になる「あるべき動作」を、ID・根拠・確定度付きで定義する。「〇〇画面の仕様書を作って」「詳細設計書を書いて」「仕様書を直して」等の依頼で使う。
 ---
 
-# 振る舞い仕様書の書き方（WordStock）
+# 振る舞い仕様書の書き方（WordPods）
 
 ## 目的と大原則
 

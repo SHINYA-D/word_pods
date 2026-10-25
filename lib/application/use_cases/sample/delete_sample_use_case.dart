@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/repositories/sample_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/repositories/sample_repository.dart';
 
 class DeleteSampleUseCase {
   const DeleteSampleUseCase(this._repository);

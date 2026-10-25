@@ -1,6 +1,6 @@
 ---
 name: high_sample_page
-description: WordStockのサンプル画面の概要設計書。この画面はテスト専用の画面となる。
+description: WordPodsのサンプル画面の概要設計書。この画面はテスト専用の画面となる。
 ---
 
 # サンプル画面 概要設計書

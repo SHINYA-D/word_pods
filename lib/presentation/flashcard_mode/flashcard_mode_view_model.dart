@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/core/di/flashcard_result_providers.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_state.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/core/di/flashcard_result_providers.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_state.dart';
 
 part 'flashcard_mode_view_model.g.dart';
 

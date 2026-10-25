@@ -15,8 +15,8 @@ export interface AcceptLegalInput {
 export const DEFAULT_LEGAL_CONFIG = {
   termsVersion: "2026-10-12",
   privacyVersion: "2026-10-12",
-  termsUrl: "https://word-stock-web.web.app/terms",
-  privacyUrl: "https://word-stock-web.web.app/privacy",
+  termsUrl: "https://word-pods-web.web.app/terms",
+  privacyUrl: "https://word-pods-web.web.app/privacy",
 } as const;
 
 /** Firestore の ALREADY_EXISTS（gRPC のステータスコード 6） */

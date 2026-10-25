@@ -4,32 +4,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/app_lifecycle_observer.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/local_data_source_providers.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/legal_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_folder_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_settings_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_word_repository.dart';
-import 'package:word_stock/presentation/legal/legal_consent_gate.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
-import 'package:word_stock/presentation/legal/legal_document_page.dart';
-import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_gate.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/app_lifecycle_observer.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/local_data_source_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
+import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/legal/legal_document_page.dart';
+import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 /// 仕様書（docs/detailed_design/legal_consent/legal_consent.md）3章の
 /// 同意ダイアログ・閲覧画面・設定画面の「このアプリについて」のテスト。期待値は仕様書から作っている。
@@ -538,7 +538,7 @@ const _privacyLabel = 'プライバシーポリシーに同意する';
 
 final _title = find.text('同意のお願い');
 final _body = find.text(
-    'WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。');
+    'WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。');
 final _agree = find.widgetWithText(FilledButton, '同意する');
 final _logout = find.widgetWithText(TextButton, 'ログアウト');
 final _termsLink = find.widgetWithText(TextButton, '利用規約を読む');
@@ -2696,7 +2696,7 @@ void _browseTests() {
       await _tap(t, _settingsItem('利用規約'));
 
       _expectDocument('利用規約');
-      expect(env.web.loadCount('https://word-stock-web.web.app/terms'), 1);
+      expect(env.web.loadCount('https://word-pods-web.web.app/terms'), 1);
       expect(find.byType(SnackBar), findsNothing);
     });
 
@@ -2712,7 +2712,7 @@ void _browseTests() {
       await _tap(t, _settingsItem('プライバシーポリシー'));
 
       _expectDocument('プライバシーポリシー');
-      expect(env.web.loadCount('https://word-stock-web.web.app/privacy'), 1);
+      expect(env.web.loadCount('https://word-pods-web.web.app/privacy'), 1);
       expect(find.byType(SnackBar), findsNothing);
     });
 
@@ -2723,7 +2723,7 @@ void _browseTests() {
       await _tap(t, _termsLink);
 
       expect(_document, findsOneWidget);
-      expect(env.web.loadCount('https://word-stock-web.web.app/terms'), 1);
+      expect(env.web.loadCount('https://word-pods-web.web.app/terms'), 1);
     });
 
     spec('LGL-B45', 'app_config/legal が無く未同意の状態で起動し「プライバシーポリシーを読む」をタップした場合、閲覧画面が開き既定値のプライバシーポリシーの URL の読み込みが指示される',
@@ -2733,7 +2733,7 @@ void _browseTests() {
       await _tap(t, _privacyLink);
 
       expect(_document, findsOneWidget);
-      expect(env.web.loadCount('https://word-stock-web.web.app/privacy'), 1);
+      expect(env.web.loadCount('https://word-pods-web.web.app/privacy'), 1);
     });
 
     spec('LGL-B46', '設定画面で「利用規約」をタップして読み取りの応答を待っている間に「プライバシーポリシー」をタップした場合、読み取りが成功すると閲覧画面が1つだけ開きタイトルは「利用規約」である',

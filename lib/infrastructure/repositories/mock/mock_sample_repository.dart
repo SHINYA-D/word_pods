@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/sample.dart';
-import 'package:word_stock/domain/repositories/sample_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/sample.dart';
+import 'package:word_pods/domain/repositories/sample_repository.dart';
 
 /// テストパイプライン検証用のインメモリサンプルリポジトリ。
 /// 本実装（SQLite / Firestore）は持たず、通常モードでもこのクラスを使う。

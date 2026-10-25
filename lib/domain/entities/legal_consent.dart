@@ -11,8 +11,8 @@ abstract class LegalConfig with _$LegalConfig {
   static const defaults = LegalConfig(
     termsVersion: '2026-10-12',
     privacyVersion: '2026-10-12',
-    termsUrl: 'https://word-stock-web.web.app/terms',
-    privacyUrl: 'https://word-stock-web.web.app/privacy',
+    termsUrl: 'https://word-pods-web.web.app/terms',
+    privacyUrl: 'https://word-pods-web.web.app/privacy',
   );
 
   const factory LegalConfig({

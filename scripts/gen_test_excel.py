@@ -8,7 +8,7 @@
                                      旧 coverage/test_loop_state.json も後方互換で読む
 
 出力:
-  ~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx   （--out で変更可）
+  ~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx   （--out で変更可）
 
 シート構成（左から）:
   表紙            … タイトル・基本情報・実施状況サマリ（自動集計数式）
@@ -287,7 +287,7 @@ def build_cover_sheet(wb, generated_at: str, total_cases: int):
     for r in list(range(3, 4)) + list(range(5, 14)):
         ws.row_dimensions[r].height = 15
 
-    ws["B2"] = "WordStock テスト項目書"
+    ws["B2"] = "WordPods テスト項目書"
     ws["B2"].font = TITLE_FONT
     ws.merge_cells("B2:F2")
 
@@ -303,8 +303,8 @@ def build_cover_sheet(wb, generated_at: str, total_cases: int):
     ws.merge_cells("E5:F5")
 
     basic_info = [
-        ("プロジェクト名", "WordStock"),
-        ("対象システム名", "WordStock"),
+        ("プロジェクト名", "WordPods"),
+        ("対象システム名", "WordPods"),
         ("対象モジュール／機能", ""),
         ("版数", "1.0"),
         ("作成者", ""),
@@ -699,7 +699,7 @@ def build_summary_sheet(ws, files, report, warnings):
     cov = (report or {}).get("coverage", {})
     tests = (report or {}).get("tests", {})
     threshold = cov.get("threshold", 90.0)
-    ws.append(["WordStock テスト項目書", ""])
+    ws.append(["WordPods テスト項目書", ""])
     ws.cell(row=1, column=1).font = Font(bold=True, size=14)
     ws.append(["生成日時", datetime.now().strftime("%Y-%m-%d %H:%M")])
     if report:
@@ -1090,7 +1090,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     default_out = os.path.join(
         os.path.expanduser("~/Desktop"),
-        f"WordStock_テスト項目書_{datetime.now():%Y%m%d}.xlsx",
+        f"WordPods_テスト項目書_{datetime.now():%Y%m%d}.xlsx",
     )
     ap.add_argument("--out", default=default_out)
     ap.add_argument("--cases-dir", default=TEST_CASES_DIR)

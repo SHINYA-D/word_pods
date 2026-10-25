@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/domain/repositories/flashcard_result_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/domain/repositories/flashcard_result_repository.dart';
 
 class GetFlashcardResultsUseCase {
   const GetFlashcardResultsUseCase(this._repository);

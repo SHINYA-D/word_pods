@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
 
 part 'withdrawn_elsewhere_view_model.g.dart';
 

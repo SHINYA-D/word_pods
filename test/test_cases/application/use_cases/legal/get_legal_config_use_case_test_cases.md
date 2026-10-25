@@ -15,7 +15,7 @@
 | 2 | fetchLegalConfig が Left(NotFoundFailure) を返す場合、既定値の LegalConfig の Right になる [LGL-G02] | LGL-G02 #31acd3 | 異常系 | call() | ✅ |
 | 3 | fetchLegalConfig が Left(NetworkFailure) を返す場合、Left(NetworkFailure) になる [LGL-G03] | LGL-G03 #780a52 | 異常系 | call() | ✅ |
 | 4 | fetchLegalConfig が Left(UnknownFailure) を返す場合、Left(UnknownFailure) になる [LGL-G04] | LGL-G04 #390879 | 異常系 | call() | ✅ |
-| 5 | privacyUrl だけが欠けて fetchLegalConfig が Left(NotFoundFailure) を返す場合、4項目すべて既定値の Right になる [LGL-G05] | LGL-G05 #29c35c | 境界値 | call() | ✅ |
+| 5 | privacyUrl だけが欠けて fetchLegalConfig が Left(NotFoundFailure) を返す場合、4項目すべて既定値の Right になる [LGL-G05] | LGL-G05 #a87123 | 境界値 | call() | ✅ |
 
 ## テストケース詳細
 

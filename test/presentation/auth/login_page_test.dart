@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/presentation/auth/auth_state.dart';
-import 'package:word_stock/presentation/auth/login/login_page.dart';
-import 'package:word_stock/presentation/auth/login/login_view_model.dart';
+import 'package:word_pods/presentation/auth/auth_state.dart';
+import 'package:word_pods/presentation/auth/login/login_page.dart';
+import 'package:word_pods/presentation/auth/login/login_view_model.dart';
 
 void main() {
   group('LoginPage', () {
@@ -12,7 +12,7 @@ void main() {
         const ProviderScope(child: MaterialApp(home: LoginPage())),
       );
 
-      expect(find.text('WordStock'), findsOneWidget);
+      expect(find.text('WordPods'), findsOneWidget);
       expect(find.byIcon(Icons.email_outlined), findsOneWidget);
       expect(find.byIcon(Icons.lock_outlined), findsOneWidget);
       expect(find.text('ログイン'), findsOneWidget);

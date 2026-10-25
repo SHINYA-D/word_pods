@@ -1,16 +1,16 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/legal_providers.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_status_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/presentation/legal/legal_consent_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/legal_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_status_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/presentation/legal/legal_consent_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 part 'legal_consent_view_model.g.dart';
 

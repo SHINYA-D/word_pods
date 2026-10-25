@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
 
 class SignOutUseCase {
   const SignOutUseCase(this._repository, this._syncRepository);

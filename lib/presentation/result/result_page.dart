@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:word_stock/core/widgets/error_screen.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/presentation/result/result_view_model.dart';
+import 'package:word_pods/core/widgets/error_screen.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/presentation/result/result_view_model.dart';
 
 class ResultPage extends ConsumerWidget {
   const ResultPage({super.key});

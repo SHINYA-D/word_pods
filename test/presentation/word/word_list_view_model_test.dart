@@ -1,15 +1,15 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/word/create_word_use_case.dart';
-import 'package:word_stock/application/use_cases/word/delete_word_use_case.dart';
-import 'package:word_stock/application/use_cases/word/get_words_use_case.dart';
-import 'package:word_stock/application/use_cases/word/update_word_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/word_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/presentation/word/word_list_view_model.dart';
+import 'package:word_pods/application/use_cases/word/create_word_use_case.dart';
+import 'package:word_pods/application/use_cases/word/delete_word_use_case.dart';
+import 'package:word_pods/application/use_cases/word/get_words_use_case.dart';
+import 'package:word_pods/application/use_cases/word/update_word_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/word_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/presentation/word/word_list_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
 

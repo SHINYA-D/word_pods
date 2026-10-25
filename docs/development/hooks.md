@@ -1,4 +1,4 @@
-# Claude Code hooks 解説（WordStock）
+# Claude Code hooks 解説（WordPods）
 
 ## このドキュメントについて
 

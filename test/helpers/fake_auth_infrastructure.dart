@@ -11,7 +11,7 @@
 // 最小限のフェイクを用意し、AuthRepositoryImpl が実際に参照する
 // `uid` / `email` / `displayName` / `user` のみを override する。
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:word_stock/infrastructure/data_sources/firebase_auth_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
 
 class FakeUser implements User {
   FakeUser({required this.uid, this.email, this.displayName});

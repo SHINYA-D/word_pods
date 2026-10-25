@@ -1,12 +1,12 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/user_settings.dart';
-import 'package:word_stock/domain/repositories/settings_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/settings_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/settings_table.dart';
-import 'package:word_stock/infrastructure/sync/sync_service.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/user_settings.dart';
+import 'package:word_pods/domain/repositories/settings_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/settings_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/settings_table.dart';
+import 'package:word_pods/infrastructure/sync/sync_service.dart';
 
 /// 読み取りはローカルだけから行う。変更は、オンライン・オフラインに関係なく
 /// ローカルへの保存とキューへの登録を同じトランザクションで行い、その後に送信を依頼する。

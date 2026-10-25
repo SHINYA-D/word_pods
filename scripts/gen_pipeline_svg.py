@@ -107,7 +107,7 @@ def main() -> int:
     y = 96
 
     # ── ヘッダ ──
-    text(30, 40, "WordStock テスト自動生成 全体図", 22, "#111827", bold=True)
+    text(30, 40, "WordPods テスト自動生成 全体図", 22, "#111827", bold=True)
     text(30, 64, "ユーザー入力から Excel 項目書の生成・セッション破棄まで ／ "
                  "Skill・サブエージェント・Hooks の発火位置つき", 12, "#6b7280")
     text(30, 82, "定義の正: .claude/skills/test-loop/SKILL.md ・ .claude/settings.json　｜　"
@@ -410,7 +410,7 @@ def main() -> int:
              "　 → state.json に completed_at / excel_path を記録（工程完了の唯一の証拠）"])
     fh = box(LEFT_X, ey, LEFT_W, "file", "最終成果物",
              ["~/Desktop/",
-              "WordStock_テスト項目書_YYYYMMDD.xlsx",
+              "WordPods_テスト項目書_YYYYMMDD.xlsx",
               "（要確認一覧: 理由なし未達 / バグ /",
               " テスト失敗 / テスト漏れ /",
               " 項目書との不一致 / 仕様のずれ /",
