@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # CI が成功したコミットをデプロイする（実行中に main が進んでも未テストのルールを出さない）
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -38,7 +38,7 @@ jobs:
       # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
       # functions/package.json の engines.node と揃える
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -78,7 +78,7 @@ jobs:
       # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
       # functions/package.json の engines.node と揃える
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
