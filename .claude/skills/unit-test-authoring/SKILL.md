@@ -1,9 +1,9 @@
 ---
 name: unit-test-authoring
-description: WordStockでビジネスロジック層（UseCase / Repository実装 / Entity / ViewModel / core/utils）のDart単体テスト（test()）を書くときの作法・雛形集。fpdartのEither検証、ProviderContainerでのViewModelテスト、sqflite_common_ffiのセットアップ、境界値の洗い出し方を含む。単体テストの新規作成・修正時に参照する。
+description: WordPodsでビジネスロジック層（UseCase / Repository実装 / Entity / ViewModel / core/utils）のDart単体テスト（test()）を書くときの作法・雛形集。fpdartのEither検証、ProviderContainerでのViewModelテスト、sqflite_common_ffiのセットアップ、境界値の洗い出し方を含む。単体テストの新規作成・修正時に参照する。
 ---
 
-# 単体テストの書き方（WordStock）
+# 単体テストの書き方（WordPods）
 
 CLAUDE.md「## テスト方針」の実装ガイド。`test()` のみ使用（`testWidgets()` 不可）。
 
@@ -86,7 +86,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 setUpAll(() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
-  // DatabaseHelper は 'wordstock.db' 固定名 → テストファイル専用の一時ディレクトリでロック競合回避
+  // DatabaseHelper は 'wordpods.db' 固定名 → テストファイル専用の一時ディレクトリでロック競合回避
   final tempDir = await Directory.systemTemp.createTemp('xxx_repository_test_');
   await databaseFactory.setDatabasesPath(tempDir.path);
 });

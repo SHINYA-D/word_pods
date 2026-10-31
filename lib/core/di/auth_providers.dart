@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/application/use_cases/auth/delete_account_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/reset_password_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/sign_in_with_email_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/sign_in_with_google_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/sign_out_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/sign_up_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_providers.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
+import 'package:word_pods/application/use_cases/auth/delete_account_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/reset_password_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/sign_in_with_email_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/sign_in_with_google_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/sign_out_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/sign_up_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_providers.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
 
 part 'auth_providers.g.dart';
 

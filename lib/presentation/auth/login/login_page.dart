@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/presentation/auth/auth_state.dart';
-import 'package:word_stock/presentation/auth/login/login_view_model.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/widgets/account_deletion_dialogs.dart';
+import 'package:word_pods/presentation/auth/auth_state.dart';
+import 'package:word_pods/presentation/auth/login/login_view_model.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/widgets/account_deletion_dialogs.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -79,7 +79,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const Icon(Icons.menu_book, size: 64),
                   const SizedBox(height: 8),
                   Text(
-                    'WordStock',
+                    'WordPods',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,

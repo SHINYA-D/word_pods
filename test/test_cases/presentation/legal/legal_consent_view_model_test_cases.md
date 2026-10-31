@@ -34,7 +34,7 @@
 | 19 | phase が networkError の状態で check を呼んだ場合、phase が networkError のままで fetchLegalConfig の呼び出し回数が増えない [LGL-V44] | LGL-V44 #aa4d71 | 境界値 | check() | ✅ |
 | 20 | 他の端末での退会の phase が confirming の状態で check を呼んだ場合、phase が idle のままで fetchLegalConfig と fetchConsents は呼ばれない [LGL-V62] | LGL-V62 #f41230 | 異常系 | check() | ✅ |
 | 21 | phase が signingOut の状態で check を呼んだ場合、phase が signingOut のままで fetchLegalConfig の呼び出し回数が増えない [LGL-V72] | LGL-V72 #8e9dd3 | 境界値 | check() | ✅ |
-| 22 | `app_config/legal` が無く未同意の状態で check を呼んだ場合、phase が required で両方の行が表示対象になり config は既定値になる [LGL-V82] | LGL-V82 #3ceb47 | 正常系 | check() | ✅ |
+| 22 | `app_config/legal` が無く未同意の状態で check を呼んだ場合、phase が required で両方の行が表示対象になり config は既定値になる [LGL-V82] | LGL-V82 #fe183b | 正常系 | check() | ✅ |
 | 23 | `app_config/legal` が無く既定値と同じ版数に同意済みの状態で check を呼んだ場合、phase が idle のままになる [LGL-V83] | LGL-V83 #d8cb4b | 正常系 | check() | ✅ |
 | 24 | 初回の同期の間にログイン中の uid が A で check を呼んだ場合、phase が idle のままで fetchLegalConfig は呼ばれない [LGL-V87] | LGL-V87 #8f8520 | 境界値 | check() | ✅ |
 | 25 | start の後にログイン中の uid が null から A に変わった場合、fetchLegalConfig が1回呼ばれ phase が required になる [LGL-V15] | LGL-V15 #6eca3b | 正常系 | build()（uid の変化） | ✅ |
@@ -278,7 +278,7 @@
 - **事前条件**: オンライン、ログイン中の uid は A、現行の版数は 2026-01-01、退会処理の記録・退会済みの記録・強制ログアウトの記録は無く、他の端末での退会の phase は idle
 - **入力値・テスト条件**: `app_config/legal` が無く（`fetchLegalConfig` が `NotFoundFailure`）、未同意の状態で `check` を呼んだ
 - **操作手順**: ProviderContainer に Fake を差し込み、上記条件どおりに ViewModel を操作する
-- **期待結果**: `phase` は `required`、`termsRequired` と `privacyRequired` は true、`config` は既定値（`2026-10-12`・`2026-10-12`・`https://word-stock-web.web.app/terms`・`https://word-stock-web.web.app/privacy`）
+- **期待結果**: `phase` は `required`、`termsRequired` と `privacyRequired` は true、`config` は既定値（`2026-10-12`・`2026-10-12`・`https://word-pods-web.web.app/terms`・`https://word-pods-web.web.app/privacy`）
 
 ### テストケース23: `app_config/legal` が無く既定値と同じ版数に同意済みの状態で check を呼んだ場合、phase が idle のままになる [LGL-V83]
 - **カテゴリ**: 正常系

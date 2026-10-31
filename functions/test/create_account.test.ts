@@ -5,7 +5,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { backfillAccounts } from "../src/backfill_accounts";
 import { createAccountDoc } from "../src/create_account";
 
-const app = initializeApp({ projectId: "demo-word-stock" }, "test-create-account");
+const app = initializeApp({ projectId: "demo-word-pods" }, "test-create-account");
 const db = getFirestore(app);
 const auth = getAuth(app);
 

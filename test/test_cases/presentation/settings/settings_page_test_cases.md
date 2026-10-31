@@ -90,7 +90,7 @@ ViewModel / UseCase の分岐網羅は `withdrawn_elsewhere_view_model_test.dart
 | 68 | ログイン中で端末内にデータが1件も無く A が退会済みの状態でアプリを起動した場合、ホーム画面の上にお知らせダイアログが表示される [ACD-W24] | ACD-W24 #a684ce | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 69 | ログイン中で端末内に A のデータがあり退会処理の記録が無い状態で起動し退会済みの記録の確認の応答を待っている場合、ホーム画面が表示される [ACD-W25] | ACD-W25 #6bc074 | 境界値 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 70 | ログインしていない状態で端末内に A のデータがある状態で起動し退会済みの記録の確認の応答を待っている場合、ログイン画面が表示される [ACD-W39] | ACD-W39 #b80343 | 境界値 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
-| 71 | お知らせダイアログの「OK」をタップしてログアウトが成功した場合、お知らせが閉じてログイン画面に移動し、その上にデータの削除ダイアログ（「OK」だけ）が表示される [ACD-W26] | ACD-W26 #f2adf8 | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
+| 71 | お知らせダイアログの「OK」をタップしてログアウトが成功した場合、お知らせが閉じてログイン画面に移動し、その上にデータの削除ダイアログ（「OK」だけ）が表示される [ACD-W26] | ACD-W26 #1ae42c | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 72 | お知らせダイアログの「OK」をタップし1回目のログアウトが UnknownFailure で失敗し2回目が成功した場合、お知らせが閉じてログイン画面に移動しデータの削除ダイアログが表示される [ACD-W27] | ACD-W27 #64552c | 異常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 73 | お知らせダイアログが表示されている状態でダイアログの外側をタップした場合、お知らせは表示されたままで signOut は0回である [ACD-W28] | ACD-W28 #b081cc | 境界値 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 74 | お知らせダイアログが表示されている状態で戻る操作をした場合、お知らせは表示されたままで signOut は0回である [ACD-W29] | ACD-W29 #95e07f | 境界値 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
@@ -701,7 +701,7 @@ ViewModel / UseCase の分岐網羅は `withdrawn_elsewhere_view_model_test.dart
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate + WithdrawnElsewhereGate（app.dart と同じ配線。起動時の initialize()→check()、復帰時の check()）で起動し、手書き Fake（退会用リポジトリ・認証）と Mock Repository を注入
 - **入力値・テスト条件**: ログイン中の uid が `A`、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録がある状態で起動し、ホーム画面（`/home`）の上にお知らせダイアログが表示されている状態で、「OK」をタップし、ログアウトが成功した
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・端末内の uid・退会済みの記録・強制ログアウトの記録・削除/ログアウトの結果・オフライン）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知を pump で進める
-- **期待結果**: お知らせダイアログが閉じ、ログイン画面（`/login`）に移動し、その上にタイトル「データの削除」、本文「このアカウントは他の端末で退会済みです。この端末に残っている WordStock のデータをすべて削除します。」、「OK」ボタンのダイアログが表示される。ほかのボタンは表示されない
+- **期待結果**: お知らせダイアログが閉じ、ログイン画面（`/login`）に移動し、その上にタイトル「データの削除」、本文「このアカウントは他の端末で退会済みです。この端末に残っている WordPods のデータをすべて削除します。」、「OK」ボタンのダイアログが表示される。ほかのボタンは表示されない
 
 ### テストケース72: お知らせダイアログの「OK」をタップし1回目のログアウトが UnknownFailure で失敗し2回目が成功した場合、お知らせが閉じてログイン画面に移動しデータの削除ダイアログが表示される [ACD-W27]
 - **カテゴリ**: 異常系

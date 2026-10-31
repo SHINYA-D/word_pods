@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/domain/repositories/folder_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/domain/repositories/folder_repository.dart';
 
 /// `lib/application/use_cases/folder/**` の単体テスト用の手書きフェイク。
 ///

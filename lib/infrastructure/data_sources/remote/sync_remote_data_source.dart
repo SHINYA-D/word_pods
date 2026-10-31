@@ -1,4 +1,4 @@
-import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
+import 'package:word_pods/infrastructure/data_sources/sync_record.dart';
 
 /// 同期で使うリモートの読み書き。
 ///

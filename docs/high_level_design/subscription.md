@@ -1,6 +1,6 @@
 ---
 name: subscription
-description: WordStockのサブスクリプション（有料プラン）の概要設計書。未実装の将来機能。
+description: WordPodsのサブスクリプション（有料プラン）の概要設計書。未実装の将来機能。
 ---
 
 # サブスクリプション 概要設計書

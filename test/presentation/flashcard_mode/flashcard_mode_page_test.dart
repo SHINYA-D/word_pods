@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_page.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_page.dart';
 
 import '../../helpers/test_helpers.dart';
 

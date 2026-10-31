@@ -3,19 +3,19 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 /// 仕様書（docs/detailed_design/presentation/settings/settings_page.md）4.2 の
 /// WithdrawnElsewhereViewModel のテスト。期待値は仕様書から作っている。

@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/application/use_cases/sample/create_sample_use_case.dart';
-import 'package:word_stock/application/use_cases/sample/delete_sample_use_case.dart';
-import 'package:word_stock/application/use_cases/sample/get_samples_use_case.dart';
-import 'package:word_stock/application/use_cases/sample/update_sample_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/sample_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/entities/sample.dart';
-import 'package:word_stock/presentation/sample/sample_view_model.dart';
+import 'package:word_pods/application/use_cases/sample/create_sample_use_case.dart';
+import 'package:word_pods/application/use_cases/sample/delete_sample_use_case.dart';
+import 'package:word_pods/application/use_cases/sample/get_samples_use_case.dart';
+import 'package:word_pods/application/use_cases/sample/update_sample_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/sample_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/entities/sample.dart';
+import 'package:word_pods/presentation/sample/sample_view_model.dart';
 
 /// 仕様書（docs/detailed_design/presentation/sample/sample_page.md）4章の
 /// 「条件のログイン中のユーザーは id が u1 のユーザーとする」に合わせたテスト用ユーザー。

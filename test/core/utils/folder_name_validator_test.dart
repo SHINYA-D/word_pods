@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/core/utils/folder_name_validator.dart';
+import 'package:word_pods/core/utils/folder_name_validator.dart';
 
 void main() {
   group('calculateTextWidth', () {

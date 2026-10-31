@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
+import 'package:word_pods/core/error/failure.dart';
 
 /// アカウント情報（Firestore の `accounts/{uid}`。クライアントは読み取りのみ）。
 abstract class AccountRepository {

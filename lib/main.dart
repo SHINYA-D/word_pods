@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/app.dart';
-import 'package:word_stock/core/firebase/options/firebase_options_dev.dart'
+import 'package:word_pods/app.dart';
+import 'package:word_pods/core/firebase/options/firebase_options_dev.dart'
     as dev;
-import 'package:word_stock/core/firebase/options/firebase_options_prod.dart'
+import 'package:word_pods/core/firebase/options/firebase_options_prod.dart'
     as prod;
 
 Future<void> main() async {

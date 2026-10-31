@@ -1,4 +1,4 @@
-# WordStock
+# WordPods
 
 単語を自分で登録して学習できるフラッシュカード型単語帳アプリです。
 フォルダ分けで教科や目的ごとに整理し、カードめくり形式のテストで記憶の定着をサポートします。
@@ -7,7 +7,7 @@
 <p align="center">
   <em>📱 アプリのスクリーンショット（ログイン・単語一覧・テスト・設定）</em>
   <br>
-  <img src="docs/images/readme_top_wordstock.png" alt="WordStock アプリ画面" width="800">
+  <img src="docs/images/readme_top_wordpods.png" alt="WordPods アプリ画面" width="800">
 </p>
 
 ## 設計思想
@@ -131,7 +131,7 @@ Claude Code から実行する場合は、フックで `fvm flutter test` の直
 ```
 /test-loop [<lib/ 配下の対象ファイル>...]
 ```
-対象を省略すると全対象を消化します。完了すると `~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx` が生成されます。
+対象を省略すると全対象を消化します。完了すると `~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx` が生成されます。
 Excel 生成には `pip install -r scripts/requirements.txt`（openpyxl）が必要です。
 
 ## 要件定義書
@@ -207,7 +207,7 @@ fvm flutter run --dart-define=USE_MOCKS=true
 ```
 
 **VS Code から起動する場合（推奨）:**
-実行とデバッグパネル（▶）→「WordStock (Dev - Mock)」を選択して実行
+実行とデバッグパネル（▶）→「WordPods (Dev - Mock)」を選択して実行
 
 ### Firebase対応の環境構築
 ① Flutterの環境構築が完了していること
@@ -239,22 +239,26 @@ fvm dart pub global activate flutterfire_cli
 
 ⑨ Firebase にログインし、環境（フレーバー）ごとに設定ファイルを生成する
 
-| フレーバー | Firebase プロジェクト |
-|-----------|----------------------|
-| `dev` | `word-stock-2026-test` |
-| `prod` | `word-stock-prod` |
+| フレーバー | Firebase プロジェクト | applicationId / Bundle ID |
+|-----------|----------------------|---------------------------|
+| `dev` | `word-pods-dev` | `jp.co.shinya.word.pods.dev` |
+| `prod` | `word-pods-prod` | `jp.co.shinya.word.pods` |
+
+> dev のパッケージ名を分けているのは、Google ログインの「パッケージ名＋SHA-1 の組み合わせは全プロジェクトで一意」という制約のため。同じ SHA-1（同じ PC の debug 鍵）を dev・prod 両方の Firebase に登録できる。
 
 ```
 firebase login
 
 # 開発
-flutterfire configure --project=word-stock-2026-test --platforms=android,ios \
+flutterfire configure --project=word-pods-dev --platforms=android,ios \
+  --android-package-name=jp.co.shinya.word.pods.dev --ios-bundle-id=jp.co.shinya.word.pods.dev \
   --out=lib/core/firebase/options/firebase_options_dev.dart \
   --android-out=android/app/src/dev/google-services.json \
   --ios-out=ios/config/dev/GoogleService-Info.plist
 
 # 本番
-flutterfire configure --project=word-stock-prod --platforms=android,ios \
+flutterfire configure --project=word-pods-prod --platforms=android,ios \
+  --android-package-name=jp.co.shinya.word.pods --ios-bundle-id=jp.co.shinya.word.pods \
   --out=lib/core/firebase/options/firebase_options_prod.dart \
   --android-out=android/app/src/prod/google-services.json \
   --ios-out=ios/config/prod/GoogleService-Info.plist
@@ -282,10 +286,10 @@ fvm flutter pub get
 
 ⑬ フレーバーを指定してビルドを実行する（`--flavor` を省略すると `dev` になる）
 ```
-# 開発（word-stock-2026-test に接続）
+# 開発（word-pods-dev に接続）
 fvm flutter run --flavor dev
 
-# 本番（word-stock-prod に接続）
+# 本番（word-pods-prod に接続）
 fvm flutter run --flavor prod
 ```
 

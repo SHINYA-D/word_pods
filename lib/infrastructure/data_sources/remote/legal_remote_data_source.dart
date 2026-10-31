@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:word_stock/core/firebase/firestore_path.dart';
+import 'package:word_pods/core/firebase/firestore_path.dart';
 
 /// 規約の現行の版数（`app_config/legal`）・同意済みの版数（`accounts/{uid}.consents`）を読み、
 /// Cloud Functions の関数 `acceptLegal` で同意を送る。値の解釈は Repository が行う。

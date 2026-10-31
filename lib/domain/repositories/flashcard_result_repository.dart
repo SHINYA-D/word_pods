@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
 
 abstract class FlashcardResultRepository {
   Future<Either<Failure, List<FlashcardResult>>> getFlashcardResults({

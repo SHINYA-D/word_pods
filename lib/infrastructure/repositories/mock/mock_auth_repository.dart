@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
 
 /// 開発用インメモリ認証リポジトリ。
 /// Firebase なしでアプリを起動・動作確認できる。

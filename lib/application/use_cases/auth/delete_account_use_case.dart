@@ -1,8 +1,8 @@
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
 
 /// 退会処理の結果。
 enum AccountDeletionOutcome {

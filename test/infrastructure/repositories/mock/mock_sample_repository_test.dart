@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/sample.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_sample_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/sample.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_sample_repository.dart';
 
 // 仕様書: docs/detailed_design/presentation/sample/sample_page.md
 // 対象: 5章「リポジトリ契約（SampleRepository）」 SMP-R01〜SMP-R12

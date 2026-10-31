@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
 
 class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
   AccountDeletionRepositoryImpl({

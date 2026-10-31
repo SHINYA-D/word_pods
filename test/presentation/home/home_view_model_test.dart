@@ -1,16 +1,16 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/folder/create_folder_use_case.dart';
-import 'package:word_stock/application/use_cases/folder/delete_folder_use_case.dart';
-import 'package:word_stock/application/use_cases/folder/get_folders_use_case.dart';
-import 'package:word_stock/application/use_cases/folder/update_folder_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/folder_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/entities/folder.dart';
-import 'package:word_stock/presentation/home/home_view_model.dart';
+import 'package:word_pods/application/use_cases/folder/create_folder_use_case.dart';
+import 'package:word_pods/application/use_cases/folder/delete_folder_use_case.dart';
+import 'package:word_pods/application/use_cases/folder/get_folders_use_case.dart';
+import 'package:word_pods/application/use_cases/folder/update_folder_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/folder_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/entities/folder.dart';
+import 'package:word_pods/presentation/home/home_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
 

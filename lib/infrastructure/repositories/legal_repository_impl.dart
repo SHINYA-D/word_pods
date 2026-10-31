@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/domain/repositories/legal_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/legal_remote_data_source.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/legal_remote_data_source.dart';
 
 /// 規約への同意は同期の対象外のため、SQLite を通さず Firestore・Cloud Functions と直接やり取りする。
 class LegalRepositoryImpl implements LegalRepository {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/core/widgets/network_error_dialog.dart';
-import 'package:word_stock/presentation/legal/legal_consent_state.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
-import 'package:word_stock/presentation/legal/legal_document_page.dart';
-import 'package:word_stock/presentation/legal/widgets/legal_consent_dialog.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/core/widgets/network_error_dialog.dart';
+import 'package:word_pods/presentation/legal/legal_consent_state.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/legal/legal_document_page.dart';
+import 'package:word_pods/presentation/legal/widgets/legal_consent_dialog.dart';
 
 enum _DialogKind { consent, networkError }
 

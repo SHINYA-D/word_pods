@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:word_stock/core/firebase/firestore_path.dart';
-import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
+import 'package:word_pods/core/firebase/firestore_path.dart';
+import 'package:word_pods/infrastructure/data_sources/sync_record.dart';
 import 'sync_remote_data_source.dart';
 
 /// [SyncRemoteDataSource] の Firestore 実装。

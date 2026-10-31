@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/folder_table.dart';
-import 'package:word_stock/infrastructure/data_sources/local/tables/sync_queue_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/folder_table.dart';
+import 'package:word_pods/infrastructure/data_sources/local/tables/sync_queue_table.dart';
 
 void main() {
   const userId = 'user-1';

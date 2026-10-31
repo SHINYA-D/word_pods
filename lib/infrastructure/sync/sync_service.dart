@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:word_stock/domain/repositories/sync_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/network/connectivity_monitor.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/sync_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/sync_record.dart';
 
 /// ローカル（SQLite）とリモートの同期。
 ///

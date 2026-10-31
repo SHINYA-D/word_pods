@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
 
 /// 開発用インメモリ実装。サーバー・端末内の削除は常に成功する。他の端末で退会したアカウントは無い。
 class MockAccountDeletionRepository implements AccountDeletionRepository {

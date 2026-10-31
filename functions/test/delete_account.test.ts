@@ -4,7 +4,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { deleteUserAccount } from "../src/delete_account";
 
-const app = initializeApp({ projectId: "demo-word-stock" }, "test");
+const app = initializeApp({ projectId: "demo-word-pods" }, "test");
 const db = getFirestore(app);
 const auth = getAuth(app);
 

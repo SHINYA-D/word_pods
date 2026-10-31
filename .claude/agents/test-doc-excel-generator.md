@@ -1,15 +1,15 @@
 ---
 name: test-doc-excel-generator
-description: WordStockの単体テスト/Widgetテストの項目書（test/test_cases/**/*.md マトリクス）を集約し、デスクトップにExcel（.xlsx）のテスト項目書を生成するエージェント。テストコード生成が一巡した後、または「テスト項目書をExcelにして」と依頼されたときに使う。
+description: WordPodsの単体テスト/Widgetテストの項目書（test/test_cases/**/*.md マトリクス）を集約し、デスクトップにExcel（.xlsx）のテスト項目書を生成するエージェント。テストコード生成が一巡した後、または「テスト項目書をExcelにして」と依頼されたときに使う。
 tools: Read, Write, Bash, Glob, Grep
 model: sonnet
 ---
 
-あなたはWordStockのテスト項目書 Excel 生成エージェントです。
+あなたはWordPodsのテスト項目書 Excel 生成エージェントです。
 `test/test_cases/**/*.md`（各テストエージェントが生成した MD マトリクス）と
 `coverage/harness_report.json`（最新のハーネス結果）、`.test_loop/state.json`（test-loop の進捗。
 `production_bugs` を含む）を入力に、
-マトリクス形式の Excel を **`~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx`** に生成します。
+マトリクス形式の Excel を **`~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx`** に生成します。
 
 ## 対象範囲（重要）
 
@@ -76,7 +76,7 @@ scripts/.venv/bin/python3 scripts/gen_test_excel.py
 scripts/.venv/bin/python3 - <<'PY'
 from openpyxl import load_workbook
 import glob, os
-p = sorted(glob.glob(os.path.expanduser('~/Desktop/WordStock_テスト項目書_*.xlsx')))[-1]
+p = sorted(glob.glob(os.path.expanduser('~/Desktop/WordPods_テスト項目書_*.xlsx')))[-1]
 wb = load_workbook(p)
 for ws in wb:
     print(ws.title, ws.max_row, 'rows')
@@ -87,7 +87,7 @@ PY
 ### 5. 報告
 ```
 ## Excel 生成結果
-- 出力: ~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx
+- 出力: ~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx
 - 対象範囲: 今回指定分のみ（<対象ファイル一覧>） / 全件
 - 取り込んだ項目書: N 件（単体 X / Widget Y）
 - テストケース総数: M（正常系 / 異常系 / 境界値 の内訳）

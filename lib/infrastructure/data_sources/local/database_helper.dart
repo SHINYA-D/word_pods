@@ -14,7 +14,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
-  static const String _dbName = 'wordstock.db';
+  static const String _dbName = 'wordpods.db';
   static const int _dbVersion = 3;
 
   Future<Database> get database async {

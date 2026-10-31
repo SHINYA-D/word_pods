@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/folder_providers.dart';
-import 'package:word_stock/core/di/flashcard_result_providers.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/folder_providers.dart';
+import 'package:word_pods/core/di/flashcard_result_providers.dart';
 
 part 'result_view_model.g.dart';
 

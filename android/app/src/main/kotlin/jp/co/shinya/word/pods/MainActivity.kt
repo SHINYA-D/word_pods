@@ -1,4 +1,4 @@
-package jp.co.shinya.word.stock
+package jp.co.shinya.word.pods
 
 import android.os.Bundle
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen

@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
 
 /// 利用規約・プライバシーポリシーへの同意（Firestore の `app_config/legal`・`accounts/{uid}.consents`、
 /// Cloud Functions の `acceptLegal`）。同期の対象外のため、SQLite を通さずサーバーと直接やり取りする。

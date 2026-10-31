@@ -1,9 +1,9 @@
 ---
 name: excel-testdoc-authoring
-description: WordStockのテスト項目書MD（test/test_cases/**/*_test_cases.md）のフォーマット規約と、scripts/gen_test_excel.pyでExcel（デスクトップ）に変換する手順。テスト項目書を書く/直すとき、またはExcel項目書を生成するときに参照する。
+description: WordPodsのテスト項目書MD（test/test_cases/**/*_test_cases.md）のフォーマット規約と、scripts/gen_test_excel.pyでExcel（デスクトップ）に変換する手順。テスト項目書を書く/直すとき、またはExcel項目書を生成するときに参照する。
 ---
 
-# テスト項目書 MD → Excel（WordStock）
+# テスト項目書 MD → Excel（WordPods）
 
 テストコードと**ペア**で作る項目書 MD のフォーマットと、Excel 変換手順。
 `scripts/gen_test_excel.py` はこの規約に依存してパースするので、**構造を崩さないこと**。
@@ -147,7 +147,7 @@ scripts/.venv/bin/pip install -r scripts/requirements.txt
 # 最新のハーネス結果を反映したい場合は先に（終了コードが非 0 でも Excel 生成は続けてよい）
 bash scripts/test_harness.sh
 
-# 生成（~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx）
+# 生成（~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx）
 scripts/.venv/bin/python3 scripts/gen_test_excel.py
 # 出力先変更: --out <path>  /  MD 位置変更: --cases-dir <dir>
 

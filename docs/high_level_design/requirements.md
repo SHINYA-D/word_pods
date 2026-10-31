@@ -1,10 +1,10 @@
-# WordStock — 要件定義書
+# WordPods — 要件定義書
 
 ## 1. アプリ概要
 
 | 項目 | 内容 |
 |------|------|
-| アプリ名 | WordStock |
+| アプリ名 | WordPods |
 | 概要 | テスト機能付きスマートフォン向け単語帳アプリ |
 | 対応プラットフォーム | iOS / Android（クロスプラットフォーム） |
 | フロントエンド | Flutter |
@@ -830,7 +830,7 @@ service cloud.firestore {
 ## 12. pubspec.yaml（パッケージ構成）
 
 ```yaml
-name: word_stock
+name: word_pods
 description: テスト機能付き単語帳アプリ
 publish_to: 'none'
 

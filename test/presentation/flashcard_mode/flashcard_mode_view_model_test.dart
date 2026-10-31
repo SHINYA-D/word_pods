@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/flashcard_result/save_flashcard_result_use_case.dart';
-import 'package:word_stock/core/di/flashcard_result_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_view_model.dart';
+import 'package:word_pods/application/use_cases/flashcard_result/save_flashcard_result_use_case.dart';
+import 'package:word_pods/core/di/flashcard_result_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
 

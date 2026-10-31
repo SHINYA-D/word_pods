@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/core/theme/app_theme.dart';
-import 'package:word_stock/core/widgets/error_screen.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/presentation/legal/widgets/legal_links_section.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/settings_view_model.dart';
-import 'package:word_stock/presentation/settings/widgets/account_deletion_dialogs.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/core/theme/app_theme.dart';
+import 'package:word_pods/core/widgets/error_screen.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/presentation/legal/widgets/legal_links_section.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/settings_view_model.dart';
+import 'package:word_pods/presentation/settings/widgets/account_deletion_dialogs.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});

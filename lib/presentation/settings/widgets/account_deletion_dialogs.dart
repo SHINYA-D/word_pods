@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/presentation/settings/account_deletion_state.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 /// 確認ダイアログと最終確認ダイアログを順に出し、両方で「OK」を押したら true を返す。
 Future<bool> confirmAccountDeletion(BuildContext context) async {
@@ -208,7 +208,7 @@ class WithdrawnDeleteDialog extends ConsumerWidget {
           children: [
             const Text(
               'このアカウントは他の端末で退会済みです。'
-              'この端末に残っている WordStock のデータをすべて削除します。',
+              'この端末に残っている WordPods のデータをすべて削除します。',
             ),
             if (deleting) ...[
               const SizedBox(height: 16),

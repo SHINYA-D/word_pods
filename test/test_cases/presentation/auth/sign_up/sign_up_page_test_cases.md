@@ -40,7 +40,7 @@ SignUpViewModel・SignUpUseCase のロジック網羅は別の単体テスト（
 | 20 | 規約の情報の読み取りが UnknownFailure で失敗する状態で2つチェックして「アカウント作成」をタップし作成が成功した場合、同意の送信が既定値の版数で1回呼ばれる [LGL-S16] | LGL-S16 #6adead | 異常系 | SignUpPage.build() | ✅ |
 | 21 | メールアドレスを入力して「利用規約に同意する」をチェックし「利用規約を読む」から閲覧画面を開いて戻るボタンで戻った場合、入力とチェックはそのまま残る [LGL-S17] | LGL-S17 #8cc289 | 正常系 | SignUpPage.build() | ✅ |
 | 22 | 「プライバシーポリシーを読む」をタップした場合、閲覧画面が開き「プライバシーポリシー」の見出しで privacyUrl の読み込みが指示される [LGL-S18] | LGL-S18 #d1ee1e | 正常系 | SignUpPage.build() | ✅ |
-| 23 | `app_config/legal` が無い状態で「利用規約を読む」をタップした場合、既定値の利用規約の URL の読み込みが指示される [LGL-S19] | LGL-S19 #510996 | 異常系 | SignUpPage.build() | ✅ |
+| 23 | `app_config/legal` が無い状態で「利用規約を読む」をタップした場合、既定値の利用規約の URL の読み込みが指示される [LGL-S19] | LGL-S19 #a75402 | 異常系 | SignUpPage.build() | ✅ |
 | 24 | メールアドレスを空のままパスワードを入力し2つチェックして「アカウント作成」をタップした場合、「メールアドレスを入力してください」が表示され作成と送信は0回になる [LGL-S20] | LGL-S20 #39240a | 異常系 | SignUpPage.build() | ✅ |
 | 25 | 2つチェックして「アカウント作成」をタップし作成の応答を待っている間にもう一度タップした場合、アカウントの作成は1回だけ呼ばれる [LGL-S21] | LGL-S21 #d7c9cd | 境界値 | SignUpPage.build() | ✅ |
 | 26 | 幅320・高さ480の端末で新規登録画面を開いた場合、はみ出しが起きずスクロールすると「アカウント作成」ボタンが表示される [LGL-S22] | LGL-S22 #7a3d52 | 境界値 | SignUpPage.build() | ✅ |
@@ -48,8 +48,8 @@ SignUpViewModel・SignUpUseCase のロジック網羅は別の単体テスト（
 | 28 | 2つチェックして「アカウント作成」をタップし、作成が成功して同意の送信が AuthFailure で失敗した場合、ホーム画面の上に同意ダイアログが表示され「通信エラー」ダイアログは表示されない [LGL-S24] | LGL-S24 #9fe183 | 異常系 | SignUpPage.build() | ✅ |
 | 29 | 2つチェックして「アカウント作成」をタップし、作成が NetworkFailure で失敗した場合、「通信エラーが発生しました」が表示され新規登録画面のまま入力とチェックが残り送信は0回になる [LGL-S25] | LGL-S25 #c277a7 | 異常系 | SignUpPage.build() | ✅ |
 | 30 | 2つチェックして「アカウント作成」をタップし、作成が UnknownFailure（メッセージ x）で失敗した場合、「エラーが発生しました: x」が表示され新規登録画面のままチェックが残り送信は0回になる [LGL-S26] | LGL-S26 #74002a | 異常系 | SignUpPage.build() | ✅ |
-| 31 | `app_config/legal` が無い状態で「プライバシーポリシーを読む」をタップした場合、既定値のプライバシーポリシーの URL の読み込みが指示される [LGL-S27] | LGL-S27 #a30763 | 異常系 | SignUpPage.build() | ✅ |
-| 32 | 規約の情報の読み取りが NetworkFailure で失敗する状態で「利用規約を読む」をタップした場合、既定値の利用規約の URL の読み込みが指示される [LGL-S28] | LGL-S28 #52cca1 | 異常系 | SignUpPage.build() | ✅ |
+| 31 | `app_config/legal` が無い状態で「プライバシーポリシーを読む」をタップした場合、既定値のプライバシーポリシーの URL の読み込みが指示される [LGL-S27] | LGL-S27 #e0faa8 | 異常系 | SignUpPage.build() | ✅ |
+| 32 | 規約の情報の読み取りが NetworkFailure で失敗する状態で「利用規約を読む」をタップした場合、既定値の利用規約の URL の読み込みが指示される [LGL-S28] | LGL-S28 #7d552a | 異常系 | SignUpPage.build() | ✅ |
 | 33 | 「利用規約を読む」を素早く2回タップした場合、閲覧画面は1つだけ開き戻るボタン1回で新規登録画面が表示される [LGL-S29] | LGL-S29 #e23394 | 境界値 | SignUpPage.build() | ✅ |
 | 34 | 規約の情報の読み取りの応答を待っている間に「利用規約を読む」をタップした場合、閲覧画面は開かない [LGL-S30] | LGL-S30 #938120 | 境界値 | SignUpPage.build() | ✅ |
 | 35 | 「プライバシーポリシーに同意する」をチェックして閲覧画面を開き戻るボタンで戻った場合、新規登録画面に戻りチェックはそのまま残る [LGL-S31] | LGL-S31 #2f35ad | 正常系 | SignUpPage.build() | ✅ |
@@ -243,7 +243,7 @@ SignUpViewModel・SignUpUseCase のロジック網羅は別の単体テスト（
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線）のテスト用アプリを、ログインしていない状態で起動し、ログイン画面（/login）の「新規登録」から新規登録画面（/sign-up）を開く。手書き Fake（LegalRepository・AuthRepository・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、規約の情報の読み取りは成功
 - **入力値・テスト条件**: `app_config/legal` が無い状態で新規登録画面を開き、「利用規約を読む」をタップした
 - **操作手順**: Fake の状態（規約の情報の読み取り結果と応答待ち・同意済みの版数・新規登録と同意の送信の結果）を作り、入力・チェック・タップ・戻る操作を pump で進める
-- **期待結果**: WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される
+- **期待結果**: WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される
 
 ### テストケース24: メールアドレスを空のままパスワードを入力し2つチェックして「アカウント作成」をタップした場合、「メールアドレスを入力してください」が表示され作成と送信は0回になる [LGL-S20]
 - **カテゴリ**: 異常系
@@ -307,7 +307,7 @@ SignUpViewModel・SignUpUseCase のロジック網羅は別の単体テスト（
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線）のテスト用アプリを、ログインしていない状態で起動し、ログイン画面（/login）の「新規登録」から新規登録画面（/sign-up）を開く。手書き Fake（LegalRepository・AuthRepository・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、規約の情報の読み取りは成功
 - **入力値・テスト条件**: `app_config/legal` が無い状態で新規登録画面を開き、「プライバシーポリシーを読む」をタップした
 - **操作手順**: Fake の状態（規約の情報の読み取り結果と応答待ち・同意済みの版数・新規登録と同意の送信の結果）を作り、入力・チェック・タップ・戻る操作を pump で進める
-- **期待結果**: WebView に `https://word-stock-web.web.app/privacy` の読み込みが指示される
+- **期待結果**: WebView に `https://word-pods-web.web.app/privacy` の読み込みが指示される
 
 ### テストケース32: 規約の情報の読み取りが NetworkFailure で失敗する状態で「利用規約を読む」をタップした場合、既定値の利用規約の URL の読み込みが指示される [LGL-S28]
 - **カテゴリ**: 異常系
@@ -315,7 +315,7 @@ SignUpViewModel・SignUpUseCase のロジック網羅は別の単体テスト（
 - **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate → WithdrawnElsewhereGate → LegalConsentGate（app.dart と同じ配線）のテスト用アプリを、ログインしていない状態で起動し、ログイン画面（/login）の「新規登録」から新規登録画面（/sign-up）を開く。手書き Fake（LegalRepository・AuthRepository・退会用リポジトリ）・Mock Repository・WebView の Fake（legalWebViewBuilderProvider）を注入。現行の版数は 2026-01-01、URL は https://example.com/terms・https://example.com/privacy、規約の情報の読み取りは成功
 - **入力値・テスト条件**: 現行の規約の情報の読み取りが `NetworkFailure` で失敗する状態で新規登録画面を開き、「利用規約を読む」をタップした
 - **操作手順**: Fake の状態（規約の情報の読み取り結果と応答待ち・同意済みの版数・新規登録と同意の送信の結果）を作り、入力・チェック・タップ・戻る操作を pump で進める
-- **期待結果**: WebView に `https://word-stock-web.web.app/terms` の読み込みが指示される
+- **期待結果**: WebView に `https://word-pods-web.web.app/terms` の読み込みが指示される
 
 ### テストケース33: 「利用規約を読む」を素早く2回タップした場合、閲覧画面は1つだけ開き戻るボタン1回で新規登録画面が表示される [LGL-S29]
 - **カテゴリ**: 境界値

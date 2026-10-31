@@ -1,6 +1,6 @@
 ---
 name: online_offline
-description: WordStockのオンライン・オフライン同期の概要設計書。SQLiteを正の読み取り元とし、sync_queue経由でリモート（現在はFirestore）と同期する。
+description: WordPodsのオンライン・オフライン同期の概要設計書。SQLiteを正の読み取り元とし、sync_queue経由でリモート（現在はFirestore）と同期する。
 updated: 2026-09-27
 ---
 

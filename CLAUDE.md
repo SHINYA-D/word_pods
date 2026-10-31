@@ -1,4 +1,4 @@
-# WordStock
+# WordPods
 Claude Code がこのリポジトリで事故らないための最小限の運用ルール集。
 
 ## 言語
@@ -144,7 +144,7 @@ fvm flutter run --dart-define=USE_MOCKS=true
 - 仕様書の ID を振り直す編集（既存 ID の内容が別の ID に移る）は `scripts/hooks/check_spec_id_stability.py` が拒否する。
   項目追加は種別ごとの末尾の連番で行う（`.claude/skills/spec-authoring/SKILL.md`）
 - 項目書 Excel は `.claude/agents/test-doc-excel-generator` が `scripts/gen_test_excel.py` 経由で
-  `~/Desktop/WordStock_テスト項目書_YYYYMMDD.xlsx` に生成する
+  `~/Desktop/WordPods_テスト項目書_YYYYMMDD.xlsx` に生成する
 
 ## Freezed 3.x 構文
 

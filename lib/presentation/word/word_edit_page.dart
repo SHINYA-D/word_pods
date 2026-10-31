@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/presentation/word/widgets/animated_word_card.dart';
-import 'package:word_stock/presentation/word/word_list_view_model.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/presentation/word/widgets/animated_word_card.dart';
+import 'package:word_pods/presentation/word/word_list_view_model.dart';
 
 enum _Side { front, back }
 

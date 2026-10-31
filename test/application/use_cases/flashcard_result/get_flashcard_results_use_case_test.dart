@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/flashcard_result/get_flashcard_results_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
-import 'package:word_stock/domain/repositories/flashcard_result_repository.dart';
+import 'package:word_pods/application/use_cases/flashcard_result/get_flashcard_results_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
+import 'package:word_pods/domain/repositories/flashcard_result_repository.dart';
 
 class _FakeFlashcardResultRepository implements FlashcardResultRepository {
   _FakeFlashcardResultRepository({this.getFlashcardResultsResult});

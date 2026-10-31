@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/settings/get_settings_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/user_settings.dart';
-import 'package:word_stock/domain/repositories/settings_repository.dart';
+import 'package:word_pods/application/use_cases/settings/get_settings_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/user_settings.dart';
+import 'package:word_pods/domain/repositories/settings_repository.dart';
 
 class _FakeSettingsRepository implements SettingsRepository {
   _FakeSettingsRepository({this.getSettingsResult});

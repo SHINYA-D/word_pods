@@ -1,6 +1,6 @@
 ---
 name: legal_consent
-description: WordStockの利用規約・プライバシーポリシーへの同意の概要設計書。ログイン後に同意が必要なら、閉じられない同意ダイアログを出し、同意するまでアプリを使えないようにする。本文はWEBで公開し、アプリはWebViewで表示する。
+description: WordPodsの利用規約・プライバシーポリシーへの同意の概要設計書。ログイン後に同意が必要なら、閉じられない同意ダイアログを出し、同意するまでアプリを使えないようにする。本文はWEBで公開し、アプリはWebViewで表示する。
 ---
 
 # 利用規約・プライバシーポリシーへの同意 概要設計書
@@ -19,8 +19,8 @@ description: WordStockの利用規約・プライバシーポリシーへの同�
 - プライバシーポリシー
 - 本文は WEB で公開する。アプリは本文を持たず、WEB のページを WebView で表示する（WEB と同じ文言を保つため）
 - 公開 URL は `app_config/legal` の `termsUrl` / `privacyUrl` に置く（ユーザー決定 2026-10-15）
-  - 利用規約: `https://word-stock-web.web.app/terms`
-  - プライバシーポリシー: `https://word-stock-web.web.app/privacy`
+  - 利用規約: `https://word-pods-web.web.app/terms`
+  - プライバシーポリシー: `https://word-pods-web.web.app/privacy`
 
 ## 版数の管理
 
@@ -37,8 +37,8 @@ description: WordStockの利用規約・プライバシーポリシーへの同�
 |-----|-------|
 | `termsVersion` | `2026-10-12`（WEB の利用規約の最終更新日） |
 | `privacyVersion` | `2026-10-12`（WEB のプライバシーポリシーの最終更新日） |
-| `termsUrl` | `https://word-stock-web.web.app/terms` |
-| `privacyUrl` | `https://word-stock-web.web.app/privacy` |
+| `termsUrl` | `https://word-pods-web.web.app/terms` |
+| `privacyUrl` | `https://word-pods-web.web.app/privacy` |
 
 - 項目の一部だけが欠けているときも、4項目すべてを既定値に置き換える（欠けた項目だけを補うと、版数と URL の組み合わせが食い違うおそれがあるため）
 - 既定値は、アプリと関数 `acceptLegal` の両方に同じ値で持つ
@@ -103,7 +103,7 @@ description: WordStockの利用規約・プライバシーポリシーへの同�
 同意が必要と分かったら、今の画面の上に表示する。スプラッシュ画面の間は、移動先の画面が決まってから表示する。
 
 1. タイトル「同意のお願い」
-2. 本文「WordStock を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」
+2. 本文「WordPods を利用するには、次の内容への同意が必要です。リンクから内容を確認し、チェックを入れてください。」
 3. 利用規約の行: リンク「利用規約を読む」、チェックボックス「利用規約に同意する」
 4. プライバシーポリシーの行: リンク「プライバシーポリシーを読む」、チェックボックス「プライバシーポリシーに同意する」
 5. 「同意する」ボタン

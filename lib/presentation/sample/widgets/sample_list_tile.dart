@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:word_stock/domain/entities/sample.dart';
+import 'package:word_pods/domain/entities/sample.dart';
 
 class SampleListTile extends StatelessWidget {
   const SampleListTile({

@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/repositories/account_repository.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/repositories/account_repository.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/account_remote_data_source.dart';
 
 /// 開発者フラグは同期の対象外のため、SQLite を通さず Firestore から直接読む。
 class AccountRepositoryImpl implements AccountRepository {

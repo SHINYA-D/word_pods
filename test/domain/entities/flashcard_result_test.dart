@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/domain/entities/flashcard_result.dart';
+import 'package:word_pods/domain/entities/flashcard_result.dart';
 
 FlashcardResult _result({required int totalCount, required int correctCount}) {
   final now = DateTime(2026, 1, 1);

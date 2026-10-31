@@ -4,14 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:word_stock/infrastructure/data_sources/firebase_auth_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/firestore_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/account_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/legal_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/firestore_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/account_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/legal_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/sync_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
 
 part 'firebase_providers.g.dart';
 

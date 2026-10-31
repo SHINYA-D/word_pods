@@ -3,21 +3,21 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/application/use_cases/auth/sign_out_use_case.dart';
-import 'package:word_stock/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_status_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/legal_repository.dart';
-import 'package:word_stock/presentation/legal/legal_consent_state.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_state.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/application/use_cases/auth/sign_out_use_case.dart';
+import 'package:word_pods/application/use_cases/auth/withdrawn_elsewhere_use_case.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_status_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/presentation/legal/legal_consent_state.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 import '../../helpers/fake_auth_use_case_repositories.dart';
 
@@ -482,8 +482,8 @@ void main() {
       expect(e.s.privacyRequired, isTrue);
       expect(e.s.config?.termsVersion, '2026-10-12');
       expect(e.s.config?.privacyVersion, '2026-10-12');
-      expect(e.s.config?.termsUrl, 'https://word-stock-web.web.app/terms');
-      expect(e.s.config?.privacyUrl, 'https://word-stock-web.web.app/privacy');
+      expect(e.s.config?.termsUrl, 'https://word-pods-web.web.app/terms');
+      expect(e.s.config?.privacyUrl, 'https://word-pods-web.web.app/privacy');
     });
 
     spec('LGL-V83', '`app_config/legal` が無く既定値と同じ版数に同意済みの状態で check を呼んだ場合、phase が idle のままになる',

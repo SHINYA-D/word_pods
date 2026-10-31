@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/presentation/flashcard_mode/flashcard_mode_result_page.dart';
+import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_result_page.dart';
 
 // FlashcardModeResultPage はコンストラクタ引数のみで完結する純粋な StatelessWidget
 // Provider / Firebase 依存なし

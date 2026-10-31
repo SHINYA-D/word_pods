@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:word_stock/domain/entities/word.dart';
+import 'package:word_pods/domain/entities/word.dart';
 
 part 'flashcard_mode_state.freezed.dart';
 

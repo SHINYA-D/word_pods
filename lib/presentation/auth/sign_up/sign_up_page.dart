@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:word_stock/core/di/legal_providers.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/presentation/auth/auth_state.dart';
-import 'package:word_stock/presentation/auth/sign_up/sign_up_view_model.dart';
-import 'package:word_stock/presentation/legal/legal_document_page.dart';
+import 'package:word_pods/core/di/legal_providers.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/presentation/auth/auth_state.dart';
+import 'package:word_pods/presentation/auth/sign_up/sign_up_view_model.dart';
+import 'package:word_pods/presentation/legal/legal_document_page.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});

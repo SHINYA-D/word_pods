@@ -4,7 +4,7 @@
 // 実行方法（functions/ で）:
 //   gcloud auth application-default login   # 初回のみ。対象プロジェクトの権限があるアカウントで
 //   npm run build
-//   node scripts/backfill_accounts.js <projectId>   # 例: word-stock-2026-test / word-stock-prod
+//   node scripts/backfill_accounts.js <projectId>   # 例: word-pods-dev / word-pods-prod
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");

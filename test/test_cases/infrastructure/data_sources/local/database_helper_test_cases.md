@@ -12,7 +12,7 @@
 ## 実行環境・観測方法について
 
 - `sqflite_common_ffi` を使い、テスト専用の一時ディレクトリに実際の SQLite ファイル
-  `wordstock.db` を作る。
+  `wordpods.db` を作る。
 - **移行の再現方法**: まずバージョン1のテーブル定義（`deletedAt` 列・`sync_queue.user_id`
   列が無い。git の `main` ブランチの `lib/infrastructure/data_sources/local/tables/*.dart`
   と同じ）で、本番と同じ物理パスに直接 DB ファイルを作ってデータを入れ、そのファイルを

@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/application/use_cases/auth/sign_out_use_case.dart';
-import 'package:word_stock/core/error/failure.dart';
+import 'package:word_pods/application/use_cases/auth/sign_out_use_case.dart';
+import 'package:word_pods/core/error/failure.dart';
 
 import '../../../helpers/fake_auth_use_case_repositories.dart';
 

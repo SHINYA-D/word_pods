@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_stock/domain/entities/word.dart';
-import 'package:word_stock/presentation/word/widgets/animated_word_card.dart';
-import 'package:word_stock/presentation/word/word_edit_page.dart';
+import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/presentation/word/widgets/animated_word_card.dart';
+import 'package:word_pods/presentation/word/word_edit_page.dart';
 
 import '../../helpers/test_helpers.dart';
 

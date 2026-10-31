@@ -6,7 +6,7 @@
 // 移行の再現方法:
 // バージョン1のテーブル定義（deletedAt 列・sync_queue.user_id 列が無い。main ブランチの
 // lib/infrastructure/data_sources/local/tables/*.dart と同じ）で、本番と同じ物理パス
-// （wordstock.db）に直接 SQLite ファイルを作ってデータを入れ、そのファイルを閉じてから
+// （wordpods.db）に直接 SQLite ファイルを作ってデータを入れ、そのファイルを閉じてから
 // `DatabaseHelper().database` を初めて呼ぶ。これにより sqflite が実際に
 // `onUpgrade`（oldVersion=1, newVersion=2）を呼び、`DatabaseHelper.migrateToV2` が
 // 本番と同じ経路で実行される。DatabaseHelper はシングルトンでパスが固定なため、
@@ -17,20 +17,20 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:word_stock/infrastructure/data_sources/local/database_helper.dart';
-import 'package:word_stock/infrastructure/data_sources/local/flashcard_result_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/folder_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/settings_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/sync_queue_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/local/word_local_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/remote/sync_remote_data_source.dart';
-import 'package:word_stock/infrastructure/data_sources/sync_record.dart';
-import 'package:word_stock/infrastructure/repositories/flashcard_result_repository_impl.dart';
-import 'package:word_stock/infrastructure/repositories/folder_repository_impl.dart';
-import 'package:word_stock/infrastructure/repositories/settings_repository_impl.dart';
-import 'package:word_stock/infrastructure/repositories/word_repository_impl.dart';
-import 'package:word_stock/infrastructure/sync/sync_service.dart';
+import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
+import 'package:word_pods/infrastructure/data_sources/local/flashcard_result_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/settings_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/local/word_local_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/sync_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/sync_record.dart';
+import 'package:word_pods/infrastructure/repositories/flashcard_result_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/folder_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/settings_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/word_repository_impl.dart';
+import 'package:word_pods/infrastructure/sync/sync_service.dart';
 
 import '../../../helpers/fake_infrastructure.dart';
 
@@ -81,7 +81,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     tempDir = await Directory.systemTemp.createTemp('database_helper_test_');
     await databaseFactory.setDatabasesPath(tempDir.path);
-    final dbPath = join(tempDir.path, 'wordstock.db');
+    final dbPath = join(tempDir.path, 'wordpods.db');
 
     // ---- 1) バージョン1のテーブル定義・データで DB ファイルを直接作る ----
     final v1Db = await openDatabase(

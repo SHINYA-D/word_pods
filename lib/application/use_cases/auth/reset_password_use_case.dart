@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
 
 class ResetPasswordUseCase {
   const ResetPasswordUseCase(this._repository);

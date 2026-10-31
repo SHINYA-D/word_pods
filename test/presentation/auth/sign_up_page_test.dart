@@ -4,31 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:word_stock/core/app_lifecycle_observer.dart';
-import 'package:word_stock/core/di/auth_providers.dart';
-import 'package:word_stock/core/di/repository_providers.dart';
-import 'package:word_stock/core/di/sync_providers.dart';
-import 'package:word_stock/core/error/failure.dart';
-import 'package:word_stock/core/router/router.dart';
-import 'package:word_stock/domain/entities/account_deletion_request.dart';
-import 'package:word_stock/domain/entities/app_user.dart';
-import 'package:word_stock/domain/entities/legal_consent.dart';
-import 'package:word_stock/domain/repositories/account_deletion_repository.dart';
-import 'package:word_stock/domain/repositories/auth_repository.dart';
-import 'package:word_stock/domain/repositories/legal_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_folder_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_settings_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_sync_repository.dart';
-import 'package:word_stock/infrastructure/repositories/mock/mock_word_repository.dart';
-import 'package:word_stock/presentation/auth/sign_up/sign_up_page.dart';
-import 'package:word_stock/presentation/legal/legal_consent_gate.dart';
-import 'package:word_stock/presentation/legal/legal_consent_view_model.dart';
-import 'package:word_stock/presentation/legal/legal_document_page.dart';
-import 'package:word_stock/presentation/settings/account_deletion_gate.dart';
-import 'package:word_stock/presentation/settings/account_deletion_view_model.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_gate.dart';
-import 'package:word_stock/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/app_lifecycle_observer.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/di/sync_providers.dart';
+import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/router/router.dart';
+import 'package:word_pods/domain/entities/account_deletion_request.dart';
+import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/domain/entities/legal_consent.dart';
+import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_sync_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
+import 'package:word_pods/presentation/auth/sign_up/sign_up_page.dart';
+import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
+import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
+import 'package:word_pods/presentation/legal/legal_document_page.dart';
+import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
+import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
+import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 /// 仕様書（docs/detailed_design/legal_consent/legal_consent.md）3.6 節
 /// 「新規登録画面での同意（SignUpPage）」の Widget テスト。期待値は仕様書から作っている。
@@ -54,8 +54,8 @@ const Failure _unknown = Failure.unknown('x');
 
 const _termsUrl = 'https://example.com/terms';
 const _privacyUrl = 'https://example.com/privacy';
-const _defaultTermsUrl = 'https://word-stock-web.web.app/terms';
-const _defaultPrivacyUrl = 'https://word-stock-web.web.app/privacy';
+const _defaultTermsUrl = 'https://word-pods-web.web.app/terms';
+const _defaultPrivacyUrl = 'https://word-pods-web.web.app/privacy';
 
 /// 仕様 ID を付けたテスト。テスト名は「○○の場合、△△になる [ID]」。
 void spec(String id, String name, Future<void> Function(WidgetTester tester) body) =>

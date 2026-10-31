@@ -1,6 +1,6 @@
 {
-    "name": "word_stock",
-    "short_name": "word_stock",
+    "name": "word_pods",
+    "short_name": "word_pods",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

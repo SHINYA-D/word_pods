@@ -1,4 +1,4 @@
-import 'package:word_stock/domain/repositories/sync_repository.dart';
+import 'package:word_pods/domain/repositories/sync_repository.dart';
 
 /// 開発用の同期リポジトリ。モックモードではリモートがないので何もしない。
 class MockSyncRepository implements SyncRepository {
