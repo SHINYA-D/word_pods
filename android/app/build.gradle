@@ -59,6 +59,8 @@ android {
     productFlavors {
         dev {
             dimension "env"
+            // prod と同じ SHA-1 を Firebase に登録できるよう、dev はパッケージ名を分ける
+            applicationIdSuffix ".dev"
         }
         prod {
             dimension "env"

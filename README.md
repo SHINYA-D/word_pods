@@ -239,22 +239,26 @@ fvm dart pub global activate flutterfire_cli
 
 ⑨ Firebase にログインし、環境（フレーバー）ごとに設定ファイルを生成する
 
-| フレーバー | Firebase プロジェクト |
-|-----------|----------------------|
-| `dev` | `word-pods-dev` |
-| `prod` | `word-pods-prod` |
+| フレーバー | Firebase プロジェクト | applicationId / Bundle ID |
+|-----------|----------------------|---------------------------|
+| `dev` | `word-pods-dev` | `jp.co.shinya.word.pods.dev` |
+| `prod` | `word-pods-prod` | `jp.co.shinya.word.pods` |
+
+> dev のパッケージ名を分けているのは、Google ログインの「パッケージ名＋SHA-1 の組み合わせは全プロジェクトで一意」という制約のため。同じ SHA-1（同じ PC の debug 鍵）を dev・prod 両方の Firebase に登録できる。
 
 ```
 firebase login
 
 # 開発
 flutterfire configure --project=word-pods-dev --platforms=android,ios \
+  --android-package-name=jp.co.shinya.word.pods.dev --ios-bundle-id=jp.co.shinya.word.pods.dev \
   --out=lib/core/firebase/options/firebase_options_dev.dart \
   --android-out=android/app/src/dev/google-services.json \
   --ios-out=ios/config/dev/GoogleService-Info.plist
 
 # 本番
 flutterfire configure --project=word-pods-prod --platforms=android,ios \
+  --android-package-name=jp.co.shinya.word.pods --ios-bundle-id=jp.co.shinya.word.pods \
   --out=lib/core/firebase/options/firebase_options_prod.dart \
   --android-out=android/app/src/prod/google-services.json \
   --ios-out=ios/config/prod/GoogleService-Info.plist

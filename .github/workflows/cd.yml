@@ -13,7 +13,7 @@ jobs:
   deploy-dev:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -34,6 +34,19 @@ jobs:
 
       - name: Deploy Firestore Security Rules
         run: firebase deploy --only firestore:rules --project "${{ secrets.FIREBASE_PROJECT_ID }}"
+
+      # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
+      # functions/package.json の engines.node と揃える
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Deploy Cloud Functions
+        run: firebase deploy --only functions --project "${{ secrets.FIREBASE_PROJECT_ID }}"
 
   # 本番環境（prod）: Environment「prod」の secrets（同名で本番の値）を使う
   # dev へのデプロイが成功したときだけ実行する
@@ -62,8 +75,7 @@ jobs:
       - name: Deploy Firestore Security Rules
         run: firebase deploy --only firestore:rules --project "${{ secrets.FIREBASE_PROJECT_ID }}"
 
-      # 退会（deleteAccount）の関数。Cloud Functions は Blaze プランが必要なため、
-      # Blaze にしている prod にだけデプロイする（dev は Spark プランのまま）
+      # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
       # functions/package.json の engines.node と揃える
       - name: Setup Node.js
         uses: actions/setup-node@v4
