@@ -112,11 +112,17 @@ class _DocumentRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 12),
+        // リンクとチェック欄が同じ文書の組だと分かるよう、間の余白を詰める
         TextButton(
+          style: TextButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
           onPressed: enabled ? onOpen : null,
           child: Text(linkLabel),
         ),
         CheckboxListTile(
+          visualDensity: VisualDensity.compact,
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           value: checked,
