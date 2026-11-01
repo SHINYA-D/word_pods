@@ -37,16 +37,6 @@ class _WordListPageState extends ConsumerState<WordListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.folderName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.play_arrow),
-            tooltip: 'テストを開始',
-            onPressed: () => FlashcardModeSettingsRoute(
-              folderId: widget.folderId,
-              $extra: widget.folderName,
-            ).push(context),
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
@@ -111,9 +101,28 @@ class _WordListPageState extends ConsumerState<WordListPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => WordCreateRoute(folderId: widget.folderId).push(context),
-        child: const Icon(Icons.add),
+      // テストの開始を、片手で押しやすい右下（単語の追加の上）に置く
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            // 同じ画面に FAB が2つあるため、画面遷移のアニメーション用のタグを分ける
+            heroTag: 'word_list_start_test',
+            tooltip: 'テストを開始',
+            onPressed: () => FlashcardModeSettingsRoute(
+              folderId: widget.folderId,
+              $extra: widget.folderName,
+            ).push(context),
+            child: const Icon(Icons.play_arrow),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'word_list_add_word',
+            tooltip: '単語を追加',
+            onPressed: () => WordCreateRoute(folderId: widget.folderId).push(context),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
