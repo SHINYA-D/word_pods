@@ -1,5 +1,11 @@
 # 依存パッケージ（アプリ・Cloud Functions）と GitHub Actions の更新を、週に1回 PR で届ける。
 # 同じ種類の更新は1つの PR にまとめ、公開から7日たった版だけを提案する（公開直後に乗っ取られた版を避けるため）
+#
+# pub と npm は、大きなバージョンアップ（メジャー）を提案させない。
+# メジャーはコードの書き直しを伴う（Riverpod 3・google_sign_in 7・Firebase の新しい版など）ため、
+# マージするだけでは済まない。必要になったら専用のブランチで1つずつ手作業で上げる。
+# groups の update-types は「どの更新を1つの PR にまとめるか」を決めるだけで、提案を止めないため、ignore で止める。
+# 依存パッケージの既知の脆弱性は、OSV-Scanner（.github/workflows/security.yml）が別に検出する
 version: 2
 updates:
   - package-ecosystem: pub
@@ -8,6 +14,15 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
+      # 0.x の版は、Dependabot ではマイナー扱いでも互換性が壊れることがあるため、手作業で上げる
+      # （firebase_app_check は firebase_core のメジャーと組で上がる）
+      - dependency-name: firebase_app_check
+        update-types: [version-update:semver-minor]
+      - dependency-name: intl
+        update-types: [version-update:semver-minor]
     groups:
       pub-minor-and-patch:
         update-types: [minor, patch]
@@ -18,10 +33,14 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
 
+  # GitHub Actions はメジャーも提案させる（ワークフローの書き換えはほぼ不要で、CI がそのまま確かめるため）
   - package-ecosystem: github-actions
     directory: /
     schedule:
