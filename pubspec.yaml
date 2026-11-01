@@ -40,7 +40,7 @@ dependencies:
   # ローカルDB・ネットワーク監視
   sqflite: ^2.3.0
   path: ^1.8.0
-  connectivity_plus: ^5.0.0
+  connectivity_plus: ^7.3.2
   uuid: ^4.3.3
 
   # スプラッシュ画面
