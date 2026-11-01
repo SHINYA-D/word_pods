@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 # テスト（Flutter・Cloud Functions・Firestore ルール）がすべて通ったときだけ、main への push で dev → prod の順にデプロイする。
 # デプロイを同じワークフローの後続ジョブにして、テストしたコミットそのものを出す
