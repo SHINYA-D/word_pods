@@ -23,6 +23,7 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result
 import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_reauthentication_repository.dart';
 import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
 import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
 import 'package:word_pods/presentation/legal/legal_document_page.dart';
@@ -503,6 +504,9 @@ Future<_Env> _launch(
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.deletion),
+      // 退会の前の本人確認は成功するものとする（退会を始めるテストのため）
+      reauthenticationRepositoryProvider
+          .overrideWithValue(MockReauthenticationRepository()),
       legalRepositoryProvider.overrideWithValue(env.legal),
       legalWebViewBuilderProvider.overrideWithValue(env.web.build),
       folderRepositoryProvider.overrideWithValue(MockFolderRepository()),

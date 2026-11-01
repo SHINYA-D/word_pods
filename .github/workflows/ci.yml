@@ -5,6 +5,11 @@ on:
     branches:
       - '**'
 
+# 外部のアクションはタグではなくコミット SHA で固定する（タグの付け替えで中身を差し替えられないようにするため）
+# GITHUB_TOKEN はリポジトリを読むだけにする
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,13 +17,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: fvm-config-action
-        uses: kuhnroyal/flutter-fvm-config-action@v3
+        uses: kuhnroyal/flutter-fvm-config-action@c378498f1d1962d33039c3989411093ef8a17b2c # v3.3
 
       - id: flutter-action
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ steps.fvm-config-action.outputs.FLUTTER_VERSION }}
           channel: ${{ steps.fvm-config-action.outputs.FLUTTER_CHANNEL }}

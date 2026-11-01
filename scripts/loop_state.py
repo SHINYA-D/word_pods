@@ -956,7 +956,8 @@ def doc_test_sync(target: str, tests: dict) -> dict | None:
         key = norm_test_name(c["name"])
         hit = None
         for idx, (rn, t) in enumerate(ran_norm):
-            if not key or not rn:
+            # 同じ名前のテストが別のグループにあるとき、照合済みのテストに重ねて当てない
+            if idx in used or not key or not rn:
                 continue
             if key in rn or rn in key:
                 hit = (idx, t)

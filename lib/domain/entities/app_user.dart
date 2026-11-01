@@ -8,5 +8,9 @@ abstract class AppUser with _$AppUser {
     required String id,
     required String email,
     String? displayName,
+
+    /// メールアドレスとパスワードでログインできるか（本人確認でパスワードを求めるか）。
+    /// false なら Google で本人確認する
+    @Default(false) bool hasPassword,
   }) = _AppUser;
 }

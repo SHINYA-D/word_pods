@@ -742,7 +742,8 @@ accounts/
       privacy: { version: string, agreedAt: timestamp }
 
 consent_logs/
-  {userId}/
+  {userId}/                        // クライアントは読み書き不可。退会後も削除しない
+    email: string                  // 退会したユーザーのメールアドレス。退会時に関数 deleteAccount が書く（メールアドレスの無いユーザーは無し）
     logs/
       {logId}/                     // 同意の履歴（追記のみ）。クライアントは読み書き不可。退会後も削除しない
         document: string           // 'terms' | 'privacy'

@@ -105,6 +105,8 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
         return const Failure.network();
       case 'unauthenticated':
         return const Failure.auth();
+      case 'failed-precondition':
+        return const Failure.recentLoginRequired();
       default:
         return Failure.unknown(e.message ?? e.code);
     }

@@ -198,10 +198,12 @@ class LegalConsentViewModel extends _$LegalConsentViewModel {
       case AccountDeletionPhase.processing:
       case AccountDeletionPhase.completed:
       case AccountDeletionPhase.pendingRetry:
+      case AccountDeletionPhase.reauthRequired:
         return true;
       case AccountDeletionPhase.checking:
       case AccountDeletionPhase.idle:
       case AccountDeletionPhase.notSent:
+      case AccountDeletionPhase.reauthRejected:
         break;
     }
     try {

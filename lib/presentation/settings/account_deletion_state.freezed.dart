@@ -22,6 +22,12 @@ mixin _$AccountDeletionState {
   /// 再開ダイアログからの処理か（処理中の表示を再開ダイアログの中に出すため）
   bool get isRetry;
 
+  /// 本人確認のし直しを待っていて、直前の本人確認でパスワードが違った（別のアカウントを選んだ）か
+  bool get reauthRejected;
+
+  /// 直前の本人確認が、試行回数の上限を超えて失敗したか
+  bool get tooManyAttempts;
+
   /// Create a copy of AccountDeletionState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -38,15 +44,20 @@ mixin _$AccountDeletionState {
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.retryFailed, retryFailed) ||
                 other.retryFailed == retryFailed) &&
-            (identical(other.isRetry, isRetry) || other.isRetry == isRetry));
+            (identical(other.isRetry, isRetry) || other.isRetry == isRetry) &&
+            (identical(other.reauthRejected, reauthRejected) ||
+                other.reauthRejected == reauthRejected) &&
+            (identical(other.tooManyAttempts, tooManyAttempts) ||
+                other.tooManyAttempts == tooManyAttempts));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, phase, retryFailed, isRetry);
+  int get hashCode => Object.hash(runtimeType, phase, retryFailed, isRetry,
+      reauthRejected, tooManyAttempts);
 
   @override
   String toString() {
-    return 'AccountDeletionState(phase: $phase, retryFailed: $retryFailed, isRetry: $isRetry)';
+    return 'AccountDeletionState(phase: $phase, retryFailed: $retryFailed, isRetry: $isRetry, reauthRejected: $reauthRejected, tooManyAttempts: $tooManyAttempts)';
   }
 }
 
@@ -56,7 +67,12 @@ abstract mixin class $AccountDeletionStateCopyWith<$Res> {
           $Res Function(AccountDeletionState) _then) =
       _$AccountDeletionStateCopyWithImpl;
   @useResult
-  $Res call({AccountDeletionPhase phase, bool retryFailed, bool isRetry});
+  $Res call(
+      {AccountDeletionPhase phase,
+      bool retryFailed,
+      bool isRetry,
+      bool reauthRejected,
+      bool tooManyAttempts});
 }
 
 /// @nodoc
@@ -75,6 +91,8 @@ class _$AccountDeletionStateCopyWithImpl<$Res>
     Object? phase = null,
     Object? retryFailed = null,
     Object? isRetry = null,
+    Object? reauthRejected = null,
+    Object? tooManyAttempts = null,
   }) {
     return _then(_self.copyWith(
       phase: null == phase
@@ -88,6 +106,14 @@ class _$AccountDeletionStateCopyWithImpl<$Res>
       isRetry: null == isRetry
           ? _self.isRetry
           : isRetry // ignore: cast_nullable_to_non_nullable
+              as bool,
+      reauthRejected: null == reauthRejected
+          ? _self.reauthRejected
+          : reauthRejected // ignore: cast_nullable_to_non_nullable
+              as bool,
+      tooManyAttempts: null == tooManyAttempts
+          ? _self.tooManyAttempts
+          : tooManyAttempts // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -186,15 +212,16 @@ extension AccountDeletionStatePatterns on AccountDeletionState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(
-            AccountDeletionPhase phase, bool retryFailed, bool isRetry)?
+    TResult Function(AccountDeletionPhase phase, bool retryFailed, bool isRetry,
+            bool reauthRejected, bool tooManyAttempts)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _AccountDeletionState() when $default != null:
-        return $default(_that.phase, _that.retryFailed, _that.isRetry);
+        return $default(_that.phase, _that.retryFailed, _that.isRetry,
+            _that.reauthRejected, _that.tooManyAttempts);
       case _:
         return orElse();
     }
@@ -215,13 +242,15 @@ extension AccountDeletionStatePatterns on AccountDeletionState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(AccountDeletionPhase phase, bool retryFailed, bool isRetry)
+    TResult Function(AccountDeletionPhase phase, bool retryFailed, bool isRetry,
+            bool reauthRejected, bool tooManyAttempts)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _AccountDeletionState():
-        return $default(_that.phase, _that.retryFailed, _that.isRetry);
+        return $default(_that.phase, _that.retryFailed, _that.isRetry,
+            _that.reauthRejected, _that.tooManyAttempts);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -241,14 +270,15 @@ extension AccountDeletionStatePatterns on AccountDeletionState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(
-            AccountDeletionPhase phase, bool retryFailed, bool isRetry)?
+    TResult? Function(AccountDeletionPhase phase, bool retryFailed,
+            bool isRetry, bool reauthRejected, bool tooManyAttempts)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _AccountDeletionState() when $default != null:
-        return $default(_that.phase, _that.retryFailed, _that.isRetry);
+        return $default(_that.phase, _that.retryFailed, _that.isRetry,
+            _that.reauthRejected, _that.tooManyAttempts);
       case _:
         return null;
     }
@@ -259,7 +289,11 @@ extension AccountDeletionStatePatterns on AccountDeletionState {
 
 class _AccountDeletionState implements AccountDeletionState {
   const _AccountDeletionState(
-      {required this.phase, this.retryFailed = false, this.isRetry = false});
+      {required this.phase,
+      this.retryFailed = false,
+      this.isRetry = false,
+      this.reauthRejected = false,
+      this.tooManyAttempts = false});
 
   @override
   final AccountDeletionPhase phase;
@@ -273,6 +307,16 @@ class _AccountDeletionState implements AccountDeletionState {
   @override
   @JsonKey()
   final bool isRetry;
+
+  /// 本人確認のし直しを待っていて、直前の本人確認でパスワードが違った（別のアカウントを選んだ）か
+  @override
+  @JsonKey()
+  final bool reauthRejected;
+
+  /// 直前の本人確認が、試行回数の上限を超えて失敗したか
+  @override
+  @JsonKey()
+  final bool tooManyAttempts;
 
   /// Create a copy of AccountDeletionState
   /// with the given fields replaced by the non-null parameter values.
@@ -291,15 +335,20 @@ class _AccountDeletionState implements AccountDeletionState {
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.retryFailed, retryFailed) ||
                 other.retryFailed == retryFailed) &&
-            (identical(other.isRetry, isRetry) || other.isRetry == isRetry));
+            (identical(other.isRetry, isRetry) || other.isRetry == isRetry) &&
+            (identical(other.reauthRejected, reauthRejected) ||
+                other.reauthRejected == reauthRejected) &&
+            (identical(other.tooManyAttempts, tooManyAttempts) ||
+                other.tooManyAttempts == tooManyAttempts));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, phase, retryFailed, isRetry);
+  int get hashCode => Object.hash(runtimeType, phase, retryFailed, isRetry,
+      reauthRejected, tooManyAttempts);
 
   @override
   String toString() {
-    return 'AccountDeletionState(phase: $phase, retryFailed: $retryFailed, isRetry: $isRetry)';
+    return 'AccountDeletionState(phase: $phase, retryFailed: $retryFailed, isRetry: $isRetry, reauthRejected: $reauthRejected, tooManyAttempts: $tooManyAttempts)';
   }
 }
 
@@ -311,7 +360,12 @@ abstract mixin class _$AccountDeletionStateCopyWith<$Res>
       __$AccountDeletionStateCopyWithImpl;
   @override
   @useResult
-  $Res call({AccountDeletionPhase phase, bool retryFailed, bool isRetry});
+  $Res call(
+      {AccountDeletionPhase phase,
+      bool retryFailed,
+      bool isRetry,
+      bool reauthRejected,
+      bool tooManyAttempts});
 }
 
 /// @nodoc
@@ -330,6 +384,8 @@ class __$AccountDeletionStateCopyWithImpl<$Res>
     Object? phase = null,
     Object? retryFailed = null,
     Object? isRetry = null,
+    Object? reauthRejected = null,
+    Object? tooManyAttempts = null,
   }) {
     return _then(_AccountDeletionState(
       phase: null == phase
@@ -343,6 +399,14 @@ class __$AccountDeletionStateCopyWithImpl<$Res>
       isRetry: null == isRetry
           ? _self.isRetry
           : isRetry // ignore: cast_nullable_to_non_nullable
+              as bool,
+      reauthRejected: null == reauthRejected
+          ? _self.reauthRejected
+          : reauthRejected // ignore: cast_nullable_to_non_nullable
+              as bool,
+      tooManyAttempts: null == tooManyAttempts
+          ? _self.tooManyAttempts
+          : tooManyAttempts // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }

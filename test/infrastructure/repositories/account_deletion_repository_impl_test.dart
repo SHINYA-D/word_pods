@@ -391,6 +391,17 @@ void main() {
       expect(result, const Left<Failure, Unit>(Failure.auth()));
     });
 
+    test('オンラインで関数が failed-precondition で失敗した場合、Left(RecentLoginRequiredFailure) になる [ACD-R51]',
+        () async {
+      remote.error = FirebaseFunctionsException(
+          code: 'failed-precondition', message: 'm');
+
+      final result = await repo.requestServerDeletion();
+
+      expect(result,
+          const Left<Failure, Unit>(Failure.recentLoginRequired()));
+    });
+
     test('オンラインで関数が internal で失敗した場合、Left(UnknownFailure) になる [ACD-R12]',
         () async {
       remote.error = FirebaseFunctionsException(code: 'internal', message: 'm');

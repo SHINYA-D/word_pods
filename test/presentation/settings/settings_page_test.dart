@@ -15,12 +15,14 @@ import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/entities/user_settings.dart';
 import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/reauthentication_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_sync_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
 import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
+import 'package:word_pods/presentation/settings/account_deletion_state.dart';
 import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_pods/presentation/settings/settings_page.dart';
 import 'package:word_pods/presentation/settings/settings_view_model.dart';
@@ -108,6 +110,7 @@ void main() {
 
   _withdrawalTests();
   _withdrawnElsewhereTests();
+  _reauthenticationTests();
 }
 
 class LoadingSettingsViewModel extends SettingsViewModel {
@@ -127,9 +130,15 @@ class DataSettingsViewModel extends SettingsViewModel {
 const _userA = AppUser(id: 'A', email: 'a@example.com');
 const _userB = AppUser(id: 'B', email: 'b@example.com');
 
+/// メールアドレスとパスワードで登録したユーザー（hasPassword が true）
+const _userAWithPassword =
+    AppUser(id: 'A', email: 'a@example.com', hasPassword: true);
+
 const Failure _network = Failure.network();
 const Failure _auth = Failure.auth();
 const Failure _unknown = Failure.unknown('x');
+const Failure _recentLogin = Failure.recentLoginRequired();
+const Failure _tooMany = Failure.tooManyRequests();
 
 /// 退会用の手書き Fake。呼び出しを記録し、Failure の注入と Completer による応答待ちができる。
 class _FakeAccountDeletionRepository implements AccountDeletionRepository {
@@ -140,6 +149,9 @@ class _FakeAccountDeletionRepository implements AccountDeletionRepository {
   Failure? markServerDoneFailure;
   Failure? clearRequestFailure;
   Failure? requestFailure;
+
+  /// requestServerDeletion の結果を呼び出し順に差し込む（尽きたら requestFailure）
+  List<Failure?> requestResults = [];
   Failure? deleteLocalFailure;
 
   Completer<void>? findPendingGate;
@@ -192,10 +204,11 @@ class _FakeAccountDeletionRepository implements AccountDeletionRepository {
 
   @override
   Future<Either<Failure, Unit>> requestServerDeletion() async {
+    final call = requestCount;
     requestCount++;
     final gate = requestGate;
     if (gate != null) await gate.future;
-    final f = requestFailure;
+    final f = call < requestResults.length ? requestResults[call] : requestFailure;
     return f != null ? Left(f) : const Right(unit);
   }
 
@@ -298,6 +311,47 @@ class _FakeAccountDeletionRepository implements AccountDeletionRepository {
   }
 }
 
+/// 本人確認用の手書き Fake。成功・キャンセル・Failure・応答待ちを設定でき、呼び出しの回数と引数を記録する。
+/// 既定は「本人確認は成功する」（仕様書 3章冒頭）。
+class _FakeReauthenticationRepository implements ReauthenticationRepository {
+  Failure? passwordFailure;
+  Failure? googleFailure;
+
+  /// true なら Google の本人確認がキャンセルされる（`Right(false)`）
+  bool googleCancelled = false;
+
+  /// reauthenticateWithPassword の結果を呼び出し順に差し込む（尽きたら passwordFailure）
+  List<Failure?> passwordResults = [];
+
+  /// 設定すると、完了するまで応答しない
+  Completer<void>? gate;
+
+  /// reauthenticateWithPassword に渡されたパスワード（呼び出し順）
+  final List<String> passwordCalls = [];
+  int googleCount = 0;
+
+  @override
+  Future<Either<Failure, Unit>> reauthenticateWithPassword(
+      String password) async {
+    final call = passwordCalls.length;
+    passwordCalls.add(password);
+    final g = gate;
+    if (g != null) await g.future;
+    final f = call < passwordResults.length ? passwordResults[call] : passwordFailure;
+    return f != null ? Left(f) : const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, bool>> reauthenticateWithGoogle() async {
+    googleCount++;
+    final g = gate;
+    if (g != null) await g.future;
+    final f = googleFailure;
+    if (f != null) return Left(f);
+    return Right(!googleCancelled);
+  }
+}
+
 /// ログイン状態を持つ Fake。signOut に成功するとログアウト状態（null）を流す。
 class _FakeAuthRepository implements AuthRepository {
   _FakeAuthRepository(this.user);
@@ -339,6 +393,7 @@ class _Env {
     AccountDeletionStatus? status,
   }) {
     auth = _FakeAuthRepository(user);
+    reauth = _FakeReauthenticationRepository();
     repo = _FakeAccountDeletionRepository()
       ..record = status == null
           ? null
@@ -351,6 +406,7 @@ class _Env {
 
   late final _FakeAuthRepository auth;
   late final _FakeAccountDeletionRepository repo;
+  late final _FakeReauthenticationRepository reauth;
   late ProviderContainer container;
 
   String get path => container
@@ -398,6 +454,7 @@ Future<_Env> _launch(
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.repo),
+      reauthenticationRepositoryProvider.overrideWithValue(env.reauth),
       folderRepositoryProvider.overrideWithValue(MockFolderRepository()),
       wordRepositoryProvider.overrideWithValue(MockWordRepository()),
       settingsRepositoryProvider.overrideWithValue(MockSettingsRepository()),
@@ -438,9 +495,10 @@ Future<void> _withdrawToFinalOk(WidgetTester tester) async {
 /// ログイン中の設定画面を開く。
 Future<_Env> _launchSettings(
   WidgetTester tester, {
+  AppUser? user = _userA,
   void Function(_Env env)? configure,
 }) async {
-  final env = await _launch(tester, configure: configure);
+  final env = await _launch(tester, user: user, configure: configure);
   await _openSettingsTab(tester);
   return env;
 }
@@ -1303,6 +1361,7 @@ Future<void> _startApp(WidgetTester tester, _Env env) async {
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.repo),
+      reauthenticationRepositoryProvider.overrideWithValue(env.reauth),
       folderRepositoryProvider.overrideWithValue(MockFolderRepository()),
       wordRepositoryProvider.overrideWithValue(MockWordRepository()),
       settingsRepositoryProvider.overrideWithValue(MockSettingsRepository()),
@@ -2133,6 +2192,986 @@ void _withdrawnElsewhereTests() {
 
       expect(find.text('最終確認'), findsNothing);
       expect(_noticeTitle, findsOneWidget);
+    });
+  });
+}
+
+// ─── 退会の前の本人確認（仕様書 3.2 ACD-X24〜X53 / 3.3 ACD-T16〜T41 / 3.4 ACD-E03・E04 / 3.6 ACD-W54・W55 / 2.2 ACD-N01・N02） ───
+
+final _reauthTitle = find.text('本人確認');
+final _reauthBody = find.text('退会するには、パスワードを入力してください。');
+final _reauthRejectedTitle = find.text('本人確認できませんでした');
+final _wrongPasswordText = find.text('パスワードが正しくありません。もう一度入力してください。');
+final _notSentTitle = find.text('退会できませんでした');
+final _guidancePassword = find.text('続けるには本人確認が必要です。パスワードを入力してください。');
+final _guidanceGoogle =
+    find.text('続けるには本人確認が必要です。「再試行」を押して、Google で本人確認してください。');
+final _inlineRejectedText =
+    find.text('本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。');
+final _tooManyText =
+    find.text('本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。');
+
+Finder get _dialogField => find.descendant(
+    of: find.byType(AlertDialog), matching: find.byType(TextField));
+
+String _fieldText(WidgetTester tester) =>
+    tester.widget<TextField>(_dialogField).controller!.text;
+
+bool _retryEnabled(WidgetTester tester) =>
+    tester.widget<FilledButton>(_retryButton).onPressed != null;
+
+Future<void> _enterPassword(WidgetTester tester, String value) async {
+  await tester.enterText(_dialogField, value);
+  await tester.pump();
+}
+
+Future<void> _tapDialogOk(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(FilledButton, 'OK'));
+  await _settle(tester);
+}
+
+/// 本人確認ダイアログでパスワードを入力して「OK」をタップする。
+Future<void> _enterPasswordAndOk(WidgetTester tester, String value) async {
+  await _enterPassword(tester, value);
+  await _tapDialogOk(tester);
+}
+
+/// メール登録のユーザーで、最終確認の「OK」まで進めて本人確認ダイアログを表示する。
+Future<_Env> _launchToPasswordDialog(
+  WidgetTester tester, {
+  void Function(_Env env)? configure,
+}) async {
+  final env = await _launchSettings(tester,
+      user: _userAWithPassword, configure: configure);
+  await _withdrawToFinalOk(tester);
+  return env;
+}
+
+/// Google のユーザーで、本人確認が AuthFailure で失敗して「本人確認できませんでした」ダイアログを表示する。
+Future<_Env> _launchToRejectedDialog(WidgetTester tester) async {
+  final env = await _launchSettings(tester,
+      configure: (e) => e.reauth.googleFailure = _auth);
+  await _withdrawToFinalOk(tester);
+  return env;
+}
+
+/// 記録が requested で「再試行」をタップし、関数が RecentLoginRequiredFailure で失敗して本人確認の案内を表示する。
+Future<_Env> _launchToGuidance(
+  WidgetTester tester, {
+  AppUser? user = _userA,
+  void Function(_Env env)? configure,
+}) async {
+  final env = await _launch(tester,
+      user: user,
+      status: AccountDeletionStatus.requested,
+      configure: (e) {
+        e.repo.requestResults = [_recentLogin];
+        configure?.call(e);
+      });
+  await tester.tap(find.text('再試行'));
+  await _settle(tester);
+  return env;
+}
+
+Future<void> _tapRetry(WidgetTester tester) async {
+  await tester.tap(find.text('再試行'));
+  await _settle(tester);
+}
+
+void _expectNotSent(_Env env) {
+  expect(_processingText, findsNothing);
+  expect(_notSentTitle, findsOneWidget);
+  expect(env.repo.requestCount, 0);
+  expect(env.repo.record, isNull);
+}
+
+void _reauthenticationTests() {
+  group('SettingsPage 退会の前の本人確認：本人確認ダイアログ（メール登録のユーザー）', () {
+    testWidgets(
+        'メール登録のユーザーで最終確認ダイアログの「OK」をタップした場合、「本人確認」ダイアログに本文・パスワード欄・「キャンセル」「OK」が並び、欄は空で「OK」は無効、本人確認と関数は呼ばれない [ACD-X24]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester);
+
+      expect(find.text('最終確認'), findsNothing);
+      expect(_reauthTitle, findsOneWidget);
+      expect(_reauthBody, findsOneWidget);
+      expect(find.text('パスワード'), findsOneWidget);
+      final cancel = tester.getCenter(find.text('キャンセル'));
+      final ok = tester.getCenter(find.text('OK'));
+      expect(cancel.dx < ok.dx, isTrue);
+      expect((cancel.dy - ok.dy).abs() < 1, isTrue);
+      expect(_fieldText(tester), '');
+      expect(_okEnabled(tester), isFalse);
+      expect(env.reauth.passwordCalls, isEmpty);
+      expect(env.reauth.googleCount, 0);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '本人確認ダイアログでパスワード欄に「p」を入力した場合、「OK」が有効になり入力欄の文字は伏せ字で表示される [ACD-X25]',
+        (tester) async {
+      await _launchToPasswordDialog(tester);
+
+      await _enterPassword(tester, 'p');
+
+      expect(_okEnabled(tester), isTrue);
+      expect(tester.widget<TextField>(_dialogField).obscureText, isTrue);
+    });
+
+    testWidgets(
+        '本人確認ダイアログで「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X26]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester);
+
+      await tester.tap(find.text('キャンセル'));
+      await _settle(tester);
+
+      expect(_reauthTitle, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.text('アカウント'), findsOneWidget);
+      expect(env.reauth.passwordCalls, isEmpty);
+      expect(env.reauth.googleCount, 0);
+      expect(env.repo.requestCount, 0);
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        '本人確認ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X27]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester);
+
+      await _tapOutside(tester);
+
+      expect(_reauthTitle, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.text('アカウント'), findsOneWidget);
+      expect(env.reauth.passwordCalls, isEmpty);
+      expect(env.reauth.googleCount, 0);
+      expect(env.repo.requestCount, 0);
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        'メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、パスワードで1回・Google で0回本人確認される [ACD-X28]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester);
+
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      _expectCompletedOnLogin(env);
+      expect(env.reauth.passwordCalls, ['pass1234']);
+      expect(env.reauth.googleCount, 0);
+    });
+
+    testWidgets(
+        'メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認の応答を待っている場合、本人確認ダイアログが閉じて「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X29]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      expect(_reauthTitle, findsNothing);
+      expect(_processingText, findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        'メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認が AuthFailure で失敗した場合、本人確認ダイアログが入力を残したまま誤りの文言付きで開き直され、関数は呼ばれず記録も無い [ACD-X30]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(
+          tester, configure: (e) => e.reauth.passwordFailure = _auth);
+
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      expect(_processingText, findsNothing);
+      expect(_reauthTitle, findsOneWidget);
+      expect(_fieldText(tester), 'pass1234');
+      expect(_fieldText(tester).length, 8);
+      expect(_wrongPasswordText, findsOneWidget);
+      expect(_okEnabled(tester), isTrue);
+      expect(_reauthRejectedTitle, findsNothing);
+      expect(env.repo.requestCount, 0);
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        '「本人確認できませんでした」ダイアログで「OK」をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X31]',
+        (tester) async {
+      final env = await _launchToRejectedDialog(tester);
+      expect(_reauthRejectedTitle, findsOneWidget);
+
+      await _tapOk(tester);
+
+      expect(_reauthRejectedTitle, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.text('アカウント'), findsOneWidget);
+    });
+
+    testWidgets(
+        '「本人確認できませんでした」ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X32]',
+        (tester) async {
+      final env = await _launchToRejectedDialog(tester);
+      expect(_reauthRejectedTitle, findsOneWidget);
+
+      await _tapOutside(tester);
+
+      expect(_reauthRejectedTitle, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.text('アカウント'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Google のユーザーで最終確認ダイアログの「OK」をタップした場合、本人確認ダイアログは表示されず Google で1回・パスワードで0回本人確認される [ACD-X33]',
+        (tester) async {
+      final env = await _launchSettings(tester);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_reauthTitle, findsNothing);
+      expect(_dialogField, findsNothing);
+      expect(env.reauth.googleCount, 1);
+      expect(env.reauth.passwordCalls, isEmpty);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし Google の本人確認がキャンセルされた場合、「退会処理中です」が消えて設定画面が表示されダイアログは出ず、関数は呼ばれず記録も無い [ACD-X34]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.googleCancelled = true);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_processingText, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(env.repo.requestCount, 0);
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし Google の本人確認が AuthFailure で失敗した場合、「退会処理中です」が消えて「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X35]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.googleFailure = _auth);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_processingText, findsNothing);
+      expect(_reauthRejectedTitle, findsOneWidget);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X36]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.googleFailure = _network);
+
+      await _withdrawToFinalOk(tester);
+
+      _expectNotSent(env);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、設定画面から移動せず記録も無い [ACD-X37]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.repo.requestFailure = _recentLogin);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_processingText, findsNothing);
+      expect(_notSentTitle, findsOneWidget);
+      expect(env.path, '/settings');
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし Google の本人確認の応答を待っている場合、「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X38]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_processingText, findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '本人確認の応答待ちに戻る操作をした場合、「退会処理中です」とインジケーターが表示されたままで設定画面から移動しない [ACD-X39]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+      await _withdrawToFinalOk(tester);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_processingText, findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(env.path, '/settings');
+    });
+
+    testWidgets(
+        '本人確認の応答待ちにローディングの下にある「退会」の位置をタップした場合、確認ダイアログは表示されず本人確認は1回のままで関数は呼ばれない [ACD-X40]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+      await _withdrawToFinalOk(tester);
+
+      await _tapBlocked(tester, find.text('退会'));
+
+      expect(find.text('このアプリから退会いたしますか？'), findsNothing);
+      expect(env.reauth.googleCount, 1);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '本人確認の応答待ちにローディングの下にあるボトムナビ「ホーム」の位置をタップした場合、「退会処理中です」が表示されたままで画面のパスは設定画面のままである [ACD-X41]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+      await _withdrawToFinalOk(tester);
+
+      await _tapBlocked(tester, _navLabel('ホーム'));
+
+      expect(_processingText, findsOneWidget);
+      expect(env.path, '/settings');
+    });
+
+    testWidgets(
+        '本人確認の応答待ちにローディングの下にある「ログアウト」の位置をタップした場合、ログアウトの確認ダイアログは表示されず signOut は0回のままである [ACD-X42]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.gate = Completer<void>());
+      await _withdrawToFinalOk(tester);
+
+      await _tapBlocked(tester, find.text('ログアウト'));
+
+      expect(find.text('ログアウトしますか？'), findsNothing);
+      expect(env.auth.signOutCount, 0);
+    });
+
+    testWidgets(
+        'メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X43]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(
+          tester, configure: (e) => e.reauth.passwordFailure = _network);
+
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      _expectNotSent(env);
+    });
+
+    testWidgets(
+        '本人確認ダイアログでパスワード欄に「 」（半角スペース1文字）を入力した場合、「OK」が有効になる [ACD-X44]',
+        (tester) async {
+      await _launchToPasswordDialog(tester);
+
+      await _enterPassword(tester, ' ');
+
+      expect(_okEnabled(tester), isTrue);
+    });
+
+    testWidgets(
+        'メール登録のユーザーで本人確認ダイアログに「 pass 」（前後に半角スペース）を入力して「OK」をタップした場合、空白を含んだまま1回本人確認される [ACD-X45]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester);
+
+      await _enterPasswordAndOk(tester, ' pass ');
+
+      expect(env.reauth.passwordCalls, [' pass ']);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗し記録の削除（clearRequest）が UnknownFailure で失敗した場合、再開ダイアログと「再試行」が表示される [ACD-X46]',
+        (tester) async {
+      await _launchSettings(tester, configure: (e) {
+        e.repo.requestFailure = _recentLogin;
+        e.repo.clearRequestFailure = _unknown;
+      });
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_retryButton, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認ダイアログでパスワード欄に「p」を入力したあとその1文字を消した場合、「OK」が無効になる [ACD-X47]',
+        (tester) async {
+      await _launchToPasswordDialog(tester);
+      await _enterPassword(tester, 'p');
+      expect(_okEnabled(tester), isTrue);
+
+      await _enterPassword(tester, '');
+
+      expect(_okEnabled(tester), isFalse);
+    });
+
+    testWidgets(
+        '本人確認ダイアログで「pass1234」を入力して「キャンセル」をタップしたあともう一度最終確認の「OK」まで進めた場合、パスワード欄は空で「OK」は無効である [ACD-X48]',
+        (tester) async {
+      await _launchToPasswordDialog(tester);
+      await _enterPassword(tester, 'pass1234');
+      await tester.tap(find.text('キャンセル'));
+      await _settle(tester);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_reauthTitle, findsOneWidget);
+      expect(_fieldText(tester), '');
+      expect(_okEnabled(tester), isFalse);
+    });
+
+    testWidgets(
+        'パスワード違いで本人確認ダイアログが開き直された状態でもう一度「OK」をタップし本人確認がまた AuthFailure で失敗した場合、入力を残したまま誤りの文言付きで開き直され、本人確認は「pass1234」で合計2回呼ばれる [ACD-X49]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester,
+          configure: (e) => e.reauth.passwordFailure = _auth);
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      await _tapDialogOk(tester);
+
+      expect(_reauthTitle, findsOneWidget);
+      expect(_fieldText(tester), 'pass1234');
+      expect(_wrongPasswordText, findsOneWidget);
+      expect(env.reauth.passwordCalls, ['pass1234', 'pass1234']);
+    });
+
+    testWidgets(
+        'パスワード違いで本人確認ダイアログが開き直された状態で「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、関数は呼ばれず記録も無いままである [ACD-X50]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester,
+          configure: (e) => e.reauth.passwordFailure = _auth);
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      await tester.tap(find.text('キャンセル'));
+      await _settle(tester);
+
+      expect(_reauthTitle, findsNothing);
+      expect(env.path, '/settings');
+      expect(find.text('アカウント'), findsOneWidget);
+      expect(env.repo.requestCount, 0);
+      expect(env.repo.record, isNull);
+    });
+
+    testWidgets(
+        'パスワード違いで本人確認ダイアログが開き直された状態でパスワードを「pass5678」に直して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、最後の本人確認は「pass5678」で呼ばれる [ACD-X51]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(tester,
+          configure: (e) => e.reauth.passwordResults = [_auth]);
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      await _enterPasswordAndOk(tester, 'pass5678');
+
+      _expectCompletedOnLogin(env);
+      expect(env.reauth.passwordCalls.last, 'pass5678');
+    });
+
+    testWidgets(
+        'メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、本人確認ダイアログは出ず関数は呼ばれない [ACD-X52]',
+        (tester) async {
+      final env = await _launchToPasswordDialog(
+          tester, configure: (e) => e.reauth.passwordFailure = _tooMany);
+
+      await _enterPasswordAndOk(tester, 'pass1234');
+
+      expect(_processingText, findsNothing);
+      expect(_reauthRejectedTitle, findsOneWidget);
+      expect(_tooManyText, findsOneWidget);
+      expect(find.text('OK'), findsOneWidget);
+      expect(_reauthBody, findsNothing);
+      expect(_dialogField, findsNothing);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし Google の本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X53]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.googleFailure = _tooMany);
+
+      await _withdrawToFinalOk(tester);
+
+      expect(_processingText, findsNothing);
+      expect(_reauthRejectedTitle, findsOneWidget);
+      expect(_tooManyText, findsOneWidget);
+      expect(env.repo.requestCount, 0);
+    });
+
+    testWidgets(
+        '最終確認ダイアログで「OK」をタップし本人確認が UnknownFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-E03]',
+        (tester) async {
+      final env = await _launchSettings(
+          tester, configure: (e) => e.reauth.googleFailure = _unknown);
+
+      await _withdrawToFinalOk(tester);
+
+      _expectNotSent(env);
+    });
+  });
+
+  group('SettingsPage 退会の前の本人確認：入力ルール（空白は除かず1文字以上）', () {
+    const validValues = [
+      ('p', '「p」'),
+      (' ', '「 」（半角スペース1文字）'),
+      ('　', '「　」（全角スペース1文字）'),
+    ];
+    for (final (value, label) in validValues) {
+      testWidgets(
+          '本人確認ダイアログのパスワード欄に$labelを入力した場合、「OK」が有効になる [ACD-N01]',
+          (tester) async {
+        await _launchToPasswordDialog(tester);
+
+        await _enterPassword(tester, value);
+
+        expect(_okEnabled(tester), isTrue);
+      });
+    }
+
+    testWidgets(
+        '本人確認ダイアログのパスワード欄が「」（空）の場合、「OK」が無効である [ACD-N01]',
+        (tester) async {
+      await _launchToPasswordDialog(tester);
+
+      await _enterPassword(tester, '');
+
+      expect(_okEnabled(tester), isFalse);
+    });
+
+    for (final (value, label) in validValues) {
+      testWidgets(
+          '再開ダイアログの本人確認の案内のパスワード欄に$labelを入力した場合、「再試行」が有効になる [ACD-N02]',
+          (tester) async {
+        await _launchToGuidance(tester, user: _userAWithPassword);
+
+        await _enterPassword(tester, value);
+
+        expect(_retryEnabled(tester), isTrue);
+      });
+    }
+
+    testWidgets(
+        '再開ダイアログの本人確認の案内のパスワード欄が「」（空）の場合、「再試行」が無効である [ACD-N02]',
+        (tester) async {
+      await _launchToGuidance(tester, user: _userAWithPassword);
+
+      await _enterPassword(tester, '');
+
+      expect(_retryEnabled(tester), isFalse);
+    });
+  });
+
+  group('SettingsPage 退会の前の本人確認：再開ダイアログの本人確認の案内', () {
+    testWidgets(
+        'Google のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、Google 用の案内が表示され「再試行」が有効に戻り、パスワード欄・失敗文言は出ず端末内の削除は呼ばれない [ACD-T16]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(find.byType(TextField), findsNothing);
+      expect(_retryFailedText, findsNothing);
+      expect(env.repo.deleteLocalCount, 0);
+    });
+
+    testWidgets(
+        'メール登録のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、パスワード用の案内と空のパスワード欄が表示され「再試行」は無効である [ACD-T17]',
+        (tester) async {
+      await _launchToGuidance(tester, user: _userAWithPassword);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidancePassword, findsOneWidget);
+      expect(find.text('パスワード'), findsOneWidget);
+      expect(_fieldText(tester), '');
+      expect(_retryEnabled(tester), isFalse);
+    });
+
+    testWidgets(
+        '本人確認の案内のパスワード欄に「p」を入力した場合、「再試行」が有効になり入力欄の文字は伏せ字で表示される [ACD-T18]',
+        (tester) async {
+      await _launchToGuidance(tester, user: _userAWithPassword);
+
+      await _enterPassword(tester, 'p');
+
+      expect(_retryEnabled(tester), isTrue);
+      expect(tester.widget<TextField>(_dialogField).obscureText, isTrue);
+    });
+
+    testWidgets(
+        '本人確認の案内のパスワード欄に「pass1234」を入力して「再試行」をタップし本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、パスワード「pass1234」で1回本人確認される [ACD-T19]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      await _enterPassword(tester, 'pass1234');
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsNothing);
+      _expectCompletedOnLogin(env);
+      expect(env.reauth.passwordCalls, ['pass1234']);
+    });
+
+    testWidgets(
+        'Google の本人確認の案内で「再試行」をタップし Google の本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、Google で1回本人確認される [ACD-T20]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsNothing);
+      _expectCompletedOnLogin(env);
+      expect(env.reauth.googleCount, 1);
+    });
+
+    testWidgets(
+        'Google の本人確認の案内で「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示される [ACD-T21]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.gate = Completer<void>();
+
+      await _tapRetry(tester);
+
+      _expectRetryProcessingAndDisabled(tester);
+    });
+
+    testWidgets(
+        'Google の本人確認の案内で「再試行」をタップし Google の本人確認がキャンセルされた場合、案内が表示されたまま「再試行」が有効に戻り、2種類の失敗文言は出ず関数を呼ぶ回数は増えない [ACD-T22]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.googleCancelled = true;
+      final before = env.repo.requestCount;
+
+      await _tapRetry(tester);
+
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(_inlineRejectedText, findsNothing);
+      expect(_retryFailedText, findsNothing);
+      expect(env.repo.requestCount, before);
+    });
+
+    testWidgets(
+        '本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T23]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      env.reauth.passwordFailure = _auth;
+      await _enterPassword(tester, 'pass1234');
+      final before = env.repo.requestCount;
+
+      await _tapRetry(tester);
+
+      expect(_guidancePassword, findsOneWidget);
+      expect(_inlineRejectedText, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(_fieldText(tester).length, 8);
+      expect(env.repo.requestCount, before);
+    });
+
+    testWidgets(
+        '本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が NetworkFailure で失敗した場合、案内と「再試行に失敗しました。」が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T24]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      env.reauth.passwordFailure = _network;
+      await _enterPassword(tester, 'pass1234');
+      final before = env.repo.requestCount;
+
+      await _tapRetry(tester);
+
+      expect(_guidancePassword, findsOneWidget);
+      expect(_retryFailedText, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(_fieldText(tester).length, 8);
+      expect(env.repo.requestCount, before);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T25]',
+        (tester) async {
+      await _launchToGuidance(tester,
+          configure: (e) => e.repo.requestResults = [_recentLogin, _unknown]);
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsNothing);
+      expect(_retryFailedText, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認の案内で戻る操作をした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T26]',
+        (tester) async {
+      await _launchToGuidance(tester);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが NetworkFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T27]',
+        (tester) async {
+      await _launchToGuidance(tester,
+          configure: (e) => e.repo.requestResults = [_recentLogin, _network]);
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsNothing);
+      expect(_retryFailedText, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが AuthFailure で失敗し端末内の削除が成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示される [ACD-T28]',
+        (tester) async {
+      final env = await _launchToGuidance(tester,
+          configure: (e) => e.repo.requestResults = [_recentLogin, _auth]);
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsNothing);
+      _expectCompletedOnLogin(env);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認と関数の呼び出しは成功し端末内の削除が UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T29]',
+        (tester) async {
+      await _launchToGuidance(tester,
+          configure: (e) => e.repo.deleteLocalFailure = _unknown);
+
+      await _tapRetry(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsNothing);
+      expect(_retryFailedText, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認は成功し関数の呼び出しがまた RecentLoginRequiredFailure で失敗した場合、案内が表示されたまま2種類の失敗文言は出ず、入力（8文字）が残って「再試行」は有効である [ACD-T30]',
+        (tester) async {
+      await _launchToGuidance(tester,
+          user: _userAWithPassword,
+          configure: (e) => e.repo.requestResults = [_recentLogin, _recentLogin]);
+      await _enterPassword(tester, 'pass1234');
+
+      await _tapRetry(tester);
+
+      expect(_guidancePassword, findsOneWidget);
+      expect(_inlineRejectedText, findsNothing);
+      expect(_retryFailedText, findsNothing);
+      expect(_fieldText(tester).length, 8);
+      expect(_retryEnabled(tester), isTrue);
+    });
+
+    testWidgets(
+        '本人確認の案内でダイアログの外側をタップした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T31]',
+        (tester) async {
+      await _launchToGuidance(tester);
+
+      await _tapOutside(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsOneWidget);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認の応答を待っているときに戻る操作をした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T32]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.gate = Completer<void>();
+      await _tapRetry(tester);
+      final before = env.path;
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_processingText, findsOneWidget);
+      expect(env.path, before);
+    });
+
+    testWidgets(
+        '本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示され、入力（8文字）が残る [ACD-T33]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      env.reauth.gate = Completer<void>();
+      await _enterPassword(tester, 'pass1234');
+
+      await _tapRetry(tester);
+
+      _expectRetryProcessingAndDisabled(tester);
+      expect(_fieldText(tester).length, 8);
+    });
+
+    testWidgets(
+        '本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗したあともう一度「再試行」をタップした場合、本人確認の失敗文言が消え、本人確認は「pass1234」で合計2回呼ばれる [ACD-T34]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      env.reauth.passwordFailure = _auth;
+      await _enterPassword(tester, 'pass1234');
+      await _tapRetry(tester);
+      expect(_inlineRejectedText, findsOneWidget);
+      env.reauth.gate = Completer<void>();
+
+      await _tapRetry(tester);
+
+      expect(_inlineRejectedText, findsNothing);
+      expect(env.reauth.passwordCalls, ['pass1234', 'pass1234']);
+    });
+
+    testWidgets(
+        '本人確認の応答待ちでダイアログの外側をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで本人確認と関数を呼ぶ回数は増えない [ACD-T35]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.gate = Completer<void>();
+      await _tapRetry(tester);
+      final requests = env.repo.requestCount;
+
+      await _tapOutside(tester);
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_processingText, findsOneWidget);
+      expect(env.reauth.googleCount, 1);
+      expect(env.repo.requestCount, requests);
+    });
+
+    testWidgets(
+        '本人確認の応答待ちでダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T36]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.gate = Completer<void>();
+      await _tapRetry(tester);
+      final before = env.path;
+
+      await _tapBlocked(tester, _navLabel('ホーム'));
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_processingText, findsOneWidget);
+      expect(env.path, before);
+    });
+
+    testWidgets(
+        '本人確認の案内を表示している間にダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと本人確認の案内が表示されたままで画面のパスは変わらない [ACD-T37]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      final before = env.path;
+
+      await _tapBlocked(tester, _navLabel('ホーム'));
+
+      expect(_retryTitle, findsOneWidget);
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(env.path, before);
+    });
+
+    testWidgets(
+        'Google の本人確認の案内で「再試行」をタップし Google の本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、関数を呼ぶ回数は増えない [ACD-T38]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.googleFailure = _auth;
+      final before = env.repo.requestCount;
+
+      await _tapRetry(tester);
+
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(_inlineRejectedText, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(env.repo.requestCount, before);
+    });
+
+    testWidgets(
+        '本人確認の案内のパスワード欄に「　」（全角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-T39]',
+        (tester) async {
+      await _launchToGuidance(tester, user: _userAWithPassword);
+
+      await _enterPassword(tester, '　');
+
+      expect(_retryEnabled(tester), isTrue);
+    });
+
+    testWidgets(
+        '本人確認の案内のパスワード欄に「 pass 」（前後に半角スペース）を入力して「再試行」をタップした場合、空白を含んだまま1回本人確認される [ACD-T40]',
+        (tester) async {
+      final env = await _launchToGuidance(tester, user: _userAWithPassword);
+      await _enterPassword(tester, ' pass ');
+
+      await _tapRetry(tester);
+
+      expect(env.reauth.passwordCalls, [' pass ']);
+    });
+
+    testWidgets(
+        'Google の本人確認の案内で「再試行」をタップし本人確認が TooManyRequestsFailure で失敗した場合、案内と試行回数の上限の文言が表示され「再試行」が有効に戻り、「再試行に失敗しました。」は出ず関数を呼ぶ回数は増えない [ACD-T41]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.googleFailure = _tooMany;
+      final before = env.repo.requestCount;
+
+      await _tapRetry(tester);
+
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(_tooManyText, findsOneWidget);
+      expect(_retryEnabled(tester), isTrue);
+      expect(_retryFailedText, findsNothing);
+      expect(env.repo.requestCount, before);
+    });
+
+    testWidgets(
+        '本人確認の案内で「再試行」をタップし本人確認が UnknownFailure で失敗した場合、案内が表示されたまま「再試行に失敗しました。」が表示される [ACD-E04]',
+        (tester) async {
+      final env = await _launchToGuidance(tester);
+      env.reauth.googleFailure = _unknown;
+
+      await _tapRetry(tester);
+
+      expect(_guidanceGoogle, findsOneWidget);
+      expect(_retryFailedText, findsOneWidget);
+    });
+  });
+
+  group('SettingsPage 退会の前の本人確認：他の端末での退会', () {
+    testWidgets(
+        '「本人確認できませんでした」ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、そのダイアログが閉じてお知らせダイアログが表示され、退会の状態は待機に戻る [ACD-W54]',
+        (tester) async {
+      final env = await _launchW(tester,
+          local: ['A'], configure: (e) => e.reauth.googleFailure = _auth);
+      await _openSettingsTab(tester);
+      await _withdrawToFinalOk(tester);
+      expect(_reauthRejectedTitle, findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(_reauthRejectedTitle, findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+      expect(env.container.read(accountDeletionViewModelProvider).phase,
+          AccountDeletionPhase.idle);
+    });
+
+    testWidgets(
+        'メール登録のユーザーで設定画面の本人確認ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、本人確認ダイアログが閉じてお知らせダイアログが表示され、本人確認と関数は呼ばれない [ACD-W55]',
+        (tester) async {
+      final env = await _launchW(tester,
+          user: _userAWithPassword, local: ['A']);
+      await _openSettingsTab(tester);
+      await _withdrawToFinalOk(tester);
+      expect(_reauthTitle, findsOneWidget);
+      env.repo.withdrawn.add('A');
+
+      await _resume(tester);
+
+      expect(_reauthTitle, findsNothing);
+      expect(_reauthBody, findsNothing);
+      expect(_noticeTitle, findsOneWidget);
+      expect(env.reauth.passwordCalls, isEmpty);
+      expect(env.reauth.googleCount, 0);
+      expect(env.repo.requestCount, 0);
     });
   });
 }

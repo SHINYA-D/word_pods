@@ -293,4 +293,26 @@ fvm flutter run --flavor dev
 fvm flutter run --flavor prod
 ```
 
+⑭ リリースビルド（Android）は本番用の鍵で署名する。`android/key.properties` が無いとリリース版のビルド（`--release`）は止まる
+
+```
+# 鍵を作る（一度だけ。鍵とパスワードは無くさないよう安全な場所に保管する）
+keytool -genkey -v -keystore ~/word-pods-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+`android/key.properties`（git 管理外）に次の4行を書く
+
+```
+storePassword=<鍵ストアのパスワード>
+keyPassword=<鍵のパスワード>
+keyAlias=upload
+storeFile=/Users/<ユーザー名>/word-pods-upload.jks
+```
+
+> Google ログインを使うため、この鍵の SHA-1（`keytool -list -v -keystore ~/word-pods-upload.jks -alias upload`）と、Play App Signing を使う場合は Play Console に表示されるアプリ署名鍵の SHA-1 を、Firebase コンソールの Android アプリに登録する。
+
+```
+fvm flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/symbols
+```
+
 </details>

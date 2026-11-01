@@ -106,8 +106,44 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _withdraw() async {
     if (!await confirmAccountDeletion(context)) return;
-    await ref.read(accountDeletionViewModelProvider.notifier).withdraw();
+    if (!mounted) return;
+    final vm = ref.read(accountDeletionViewModelProvider.notifier);
+    // メールで登録したユーザーはパスワード、Google のユーザーは Google で本人確認する
+    if (ref.read(currentUserProvider)?.hasPassword ?? false) {
+      await _withdrawWithPassword();
+    } else {
+      await vm.withdraw();
+    }
   }
+
+  /// パスワードが違ったら、入力を残したまま本人確認ダイアログを開き直す。
+  Future<void> _withdrawWithPassword({
+    String initialPassword = '',
+    String? error,
+  }) async {
+    final password = await askPasswordForAccountDeletion(
+      context,
+      initialPassword: initialPassword,
+      error: error,
+    );
+    if (password == null || !mounted) return;
+    final vm = ref.read(accountDeletionViewModelProvider.notifier);
+    await vm.withdraw(password: password);
+    if (!mounted || !_isWrongPassword(ref.read(accountDeletionViewModelProvider))) {
+      return;
+    }
+    vm.acknowledgeReauthRejected();
+    await _withdrawWithPassword(
+      initialPassword: password,
+      error: 'パスワードが正しくありません。もう一度入力してください。',
+    );
+  }
+
+  /// メール登録のユーザーのパスワード違いは、ダイアログを出さずに本人確認ダイアログを開き直す
+  bool _isWrongPassword(AccountDeletionState state) =>
+      state.phase == AccountDeletionPhase.reauthRejected &&
+      !state.tooManyAttempts &&
+      (ref.read(currentUserProvider)?.hasPassword ?? false);
 
   void _onAccountDeletionChanged(
     AccountDeletionState? previous,
@@ -130,6 +166,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       showAccountDeletionNotSentDialog(context).then((_) => ref
           .read(accountDeletionViewModelProvider.notifier)
           .acknowledgeNotSent());
+    }
+
+    if (next.phase == AccountDeletionPhase.reauthRejected &&
+        previous?.phase != AccountDeletionPhase.reauthRejected &&
+        !_isWrongPassword(next)) {
+      showAccountDeletionReauthRejectedDialog(
+        context,
+        tooManyAttempts: next.tooManyAttempts,
+      ).then((_) => ref
+          .read(accountDeletionViewModelProvider.notifier)
+          .acknowledgeReauthRejected());
     }
   }
 

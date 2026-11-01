@@ -8,6 +8,7 @@ import 'package:word_pods/domain/repositories/account_repository.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
 import 'package:word_pods/domain/repositories/folder_repository.dart';
 import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/domain/repositories/reauthentication_repository.dart';
 import 'package:word_pods/domain/repositories/sample_repository.dart';
 import 'package:word_pods/domain/repositories/settings_repository.dart';
 import 'package:word_pods/domain/repositories/flashcard_result_repository.dart';
@@ -17,11 +18,13 @@ import 'package:word_pods/infrastructure/repositories/account_repository_impl.da
 import 'package:word_pods/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/folder_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/legal_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/reauthentication_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_account_deletion_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_account_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_auth_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_legal_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_reauthentication_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_sample_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
@@ -103,6 +106,14 @@ AccountDeletionRepository accountDeletionRepository(Ref ref) {
     remoteDataSource: ref.watch(accountDeletionRemoteDataSourceProvider),
     withdrawnRemoteDataSource: ref.watch(withdrawnAccountRemoteDataSourceProvider),
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
+  );
+}
+
+@Riverpod(keepAlive: true)
+ReauthenticationRepository reauthenticationRepository(Ref ref) {
+  if (kUseMocks) return MockReauthenticationRepository();
+  return ReauthenticationRepositoryImpl(
+    ref.watch(reauthenticationRemoteDataSourceProvider),
   );
 }
 

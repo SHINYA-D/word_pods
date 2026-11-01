@@ -18,6 +18,10 @@ mixin _$AppUser {
   String get email;
   String? get displayName;
 
+  /// メールアドレスとパスワードでログインできるか（本人確認でパスワードを求めるか）。
+  /// false なら Google で本人確認する
+  bool get hasPassword;
+
   /// Create a copy of AppUser
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -33,15 +37,18 @@ mixin _$AppUser {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.email, email) || other.email == email) &&
             (identical(other.displayName, displayName) ||
-                other.displayName == displayName));
+                other.displayName == displayName) &&
+            (identical(other.hasPassword, hasPassword) ||
+                other.hasPassword == hasPassword));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, email, displayName);
+  int get hashCode =>
+      Object.hash(runtimeType, id, email, displayName, hasPassword);
 
   @override
   String toString() {
-    return 'AppUser(id: $id, email: $email, displayName: $displayName)';
+    return 'AppUser(id: $id, email: $email, displayName: $displayName, hasPassword: $hasPassword)';
   }
 }
 
@@ -50,7 +57,7 @@ abstract mixin class $AppUserCopyWith<$Res> {
   factory $AppUserCopyWith(AppUser value, $Res Function(AppUser) _then) =
       _$AppUserCopyWithImpl;
   @useResult
-  $Res call({String id, String email, String? displayName});
+  $Res call({String id, String email, String? displayName, bool hasPassword});
 }
 
 /// @nodoc
@@ -68,6 +75,7 @@ class _$AppUserCopyWithImpl<$Res> implements $AppUserCopyWith<$Res> {
     Object? id = null,
     Object? email = null,
     Object? displayName = freezed,
+    Object? hasPassword = null,
   }) {
     return _then(_self.copyWith(
       id: null == id
@@ -82,6 +90,10 @@ class _$AppUserCopyWithImpl<$Res> implements $AppUserCopyWith<$Res> {
           ? _self.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String?,
+      hasPassword: null == hasPassword
+          ? _self.hasPassword
+          : hasPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -179,13 +191,16 @@ extension AppUserPatterns on AppUser {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(String id, String email, String? displayName)? $default, {
+    TResult Function(
+            String id, String email, String? displayName, bool hasPassword)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _AppUser() when $default != null:
-        return $default(_that.id, _that.email, _that.displayName);
+        return $default(
+            _that.id, _that.email, _that.displayName, _that.hasPassword);
       case _:
         return orElse();
     }
@@ -206,12 +221,15 @@ extension AppUserPatterns on AppUser {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(String id, String email, String? displayName) $default,
+    TResult Function(
+            String id, String email, String? displayName, bool hasPassword)
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _AppUser():
-        return $default(_that.id, _that.email, _that.displayName);
+        return $default(
+            _that.id, _that.email, _that.displayName, _that.hasPassword);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -231,12 +249,15 @@ extension AppUserPatterns on AppUser {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(String id, String email, String? displayName)? $default,
+    TResult? Function(
+            String id, String email, String? displayName, bool hasPassword)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _AppUser() when $default != null:
-        return $default(_that.id, _that.email, _that.displayName);
+        return $default(
+            _that.id, _that.email, _that.displayName, _that.hasPassword);
       case _:
         return null;
     }
@@ -246,7 +267,11 @@ extension AppUserPatterns on AppUser {
 /// @nodoc
 
 class _AppUser implements AppUser {
-  const _AppUser({required this.id, required this.email, this.displayName});
+  const _AppUser(
+      {required this.id,
+      required this.email,
+      this.displayName,
+      this.hasPassword = false});
 
   @override
   final String id;
@@ -254,6 +279,12 @@ class _AppUser implements AppUser {
   final String email;
   @override
   final String? displayName;
+
+  /// メールアドレスとパスワードでログインできるか（本人確認でパスワードを求めるか）。
+  /// false なら Google で本人確認する
+  @override
+  @JsonKey()
+  final bool hasPassword;
 
   /// Create a copy of AppUser
   /// with the given fields replaced by the non-null parameter values.
@@ -271,15 +302,18 @@ class _AppUser implements AppUser {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.email, email) || other.email == email) &&
             (identical(other.displayName, displayName) ||
-                other.displayName == displayName));
+                other.displayName == displayName) &&
+            (identical(other.hasPassword, hasPassword) ||
+                other.hasPassword == hasPassword));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, email, displayName);
+  int get hashCode =>
+      Object.hash(runtimeType, id, email, displayName, hasPassword);
 
   @override
   String toString() {
-    return 'AppUser(id: $id, email: $email, displayName: $displayName)';
+    return 'AppUser(id: $id, email: $email, displayName: $displayName, hasPassword: $hasPassword)';
   }
 }
 
@@ -289,7 +323,7 @@ abstract mixin class _$AppUserCopyWith<$Res> implements $AppUserCopyWith<$Res> {
       __$AppUserCopyWithImpl;
   @override
   @useResult
-  $Res call({String id, String email, String? displayName});
+  $Res call({String id, String email, String? displayName, bool hasPassword});
 }
 
 /// @nodoc
@@ -307,6 +341,7 @@ class __$AppUserCopyWithImpl<$Res> implements _$AppUserCopyWith<$Res> {
     Object? id = null,
     Object? email = null,
     Object? displayName = freezed,
+    Object? hasPassword = null,
   }) {
     return _then(_AppUser(
       id: null == id
@@ -321,6 +356,10 @@ class __$AppUserCopyWithImpl<$Res> implements _$AppUserCopyWith<$Res> {
           ? _self.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String?,
+      hasPassword: null == hasPassword
+          ? _self.hasPassword
+          : hasPassword // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }

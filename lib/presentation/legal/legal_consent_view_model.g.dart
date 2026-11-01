@@ -7,7 +7,7 @@ part of 'legal_consent_view_model.dart';
 // **************************************************************************
 
 String _$legalConsentViewModelHash() =>
-    r'c13c8dba84fcdf9c8efea80aabe883c9db16b41b';
+    r'00b42af47b180ba99cc49223134e44768122a7fe';
 
 /// 利用規約・プライバシーポリシーへの同意。
 ///

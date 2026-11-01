@@ -355,5 +355,49 @@ void main() {
 
       expect(emitted, isNull);
     });
+
+    test('ログイン方法に password を含むユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R63]', () async {
+      fakeDataSource.authStateChangesOverride = Stream.value(
+        FakeUser(uid: 'uid-6', email: 'p@example.com', providerIds: const ['password']),
+      );
+      repository = AuthRepositoryImpl(fakeDataSource);
+
+      final emitted = await repository.authStateChanges.first;
+
+      expect(emitted?.hasPassword, isTrue);
+    });
+
+    test('ログイン方法が google.com だけのユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R64]', () async {
+      fakeDataSource.authStateChangesOverride = Stream.value(
+        FakeUser(uid: 'uid-6', email: 'p@example.com', providerIds: const ['google.com']),
+      );
+      repository = AuthRepositoryImpl(fakeDataSource);
+
+      final emitted = await repository.authStateChanges.first;
+
+      expect(emitted?.hasPassword, isFalse);
+    });
+
+    test('ログイン方法に password と google.com の両方を持つユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R71]', () async {
+      fakeDataSource.authStateChangesOverride = Stream.value(
+        FakeUser(uid: 'uid-6', email: 'p@example.com', providerIds: const ['google.com', 'password']),
+      );
+      repository = AuthRepositoryImpl(fakeDataSource);
+
+      final emitted = await repository.authStateChanges.first;
+
+      expect(emitted?.hasPassword, isTrue);
+    });
+
+    test('ログイン方法が1つも無いユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R72]', () async {
+      fakeDataSource.authStateChangesOverride = Stream.value(
+        FakeUser(uid: 'uid-6', email: 'p@example.com', providerIds: const []),
+      );
+      repository = AuthRepositoryImpl(fakeDataSource);
+
+      final emitted = await repository.authStateChanges.first;
+
+      expect(emitted?.hasPassword, isFalse);
+    });
   });
 }

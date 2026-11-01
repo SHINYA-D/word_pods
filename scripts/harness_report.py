@@ -420,18 +420,22 @@ def main() -> int:
 
     # ---- 終了コード ---------------------------------------------------- #
     failed = tests["failed"] > 0
+    # テストが1件も走っていない（テストの実行自体が起動できなかった等）のに合格にしない
+    not_run = tests["total"] == 0
     cov_low = gate_overall and coverage["overall_pct"] < COVERAGE_MIN
     leak_fail = gate_overall and len(untested) > 0
     if cov_low:
         print(f"⚠ 全体カバレッジが閾値 {COVERAGE_MIN}% 未満（合否には影響しない。"
               "90% 未満のファイルは項目書の「## 対象外」の理由を確認すること）")
-    if failed:
+    if not_run:
+        print("結果: ❌ テストが1件も実行されていない（テストの実行のエラー出力を確認すること）")
+    elif failed:
         print("結果: ❌ テスト失敗あり")
     elif leak_fail:
         print("結果: ❌ テスト漏れあり")
     else:
         print("結果: ✅ PASS")
-    return 1 if (failed or leak_fail) else 0
+    return 1 if (not_run or failed or leak_fail) else 0
 
 
 if __name__ == "__main__":

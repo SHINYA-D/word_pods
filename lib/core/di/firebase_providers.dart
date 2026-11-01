@@ -10,6 +10,7 @@ import 'package:word_pods/infrastructure/data_sources/remote/account_deletion_re
 import 'package:word_pods/infrastructure/data_sources/remote/account_remote_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/firestore_sync_remote_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/legal_remote_data_source.dart';
+import 'package:word_pods/infrastructure/data_sources/remote/reauthentication_remote_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/sync_remote_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/withdrawn_account_remote_data_source.dart';
 
@@ -37,6 +38,13 @@ GoogleSignIn googleSignIn(Ref ref) => GoogleSignIn();
 @Riverpod(keepAlive: true)
 FirebaseAuthDataSource firebaseAuthDataSource(Ref ref) =>
     FirebaseAuthDataSource(
+      firebaseAuth: ref.watch(firebaseAuthProvider),
+      googleSignIn: ref.watch(googleSignInProvider),
+    );
+
+@Riverpod(keepAlive: true)
+ReauthenticationRemoteDataSource reauthenticationRemoteDataSource(Ref ref) =>
+    ReauthenticationRemoteDataSource(
       firebaseAuth: ref.watch(firebaseAuthProvider),
       googleSignIn: ref.watch(googleSignInProvider),
     );

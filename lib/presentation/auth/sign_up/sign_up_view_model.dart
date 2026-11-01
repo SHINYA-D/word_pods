@@ -38,6 +38,8 @@ class SignUpViewModel extends _$SignUpViewModel {
           auth: () => 'このメールアドレスはすでに使用されています',
           notFound: () => 'エラーが発生しました',
           unknown: (msg) => 'エラーが発生しました: $msg',
+          recentLoginRequired: () => 'エラーが発生しました',
+          tooManyRequests: () => 'エラーが発生しました',
         ),
       ),
       (_) => state = state.copyWith(isLoading: false, isSuccess: true),

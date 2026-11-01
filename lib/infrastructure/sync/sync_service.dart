@@ -136,7 +136,7 @@ class SyncService implements SyncRepository {
     try {
       return await check(userId);
     } catch (e) {
-      debugPrint('Sync skipped: account deletion check failed: $e');
+      if (kDebugMode) debugPrint('Sync skipped: account deletion check failed: $e');
       return true;
     }
   }
@@ -147,7 +147,7 @@ class SyncService implements SyncRepository {
       await body();
       return true;
     } catch (e, stack) {
-      debugPrint('Sync $label failed: $e\n$stack');
+      if (kDebugMode) debugPrint('Sync $label failed: $e\n$stack');
       return false;
     }
   }

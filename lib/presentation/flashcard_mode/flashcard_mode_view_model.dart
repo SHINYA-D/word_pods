@@ -75,6 +75,8 @@ class FlashcardModeViewModel extends _$FlashcardModeViewModel {
             auth: () => '認証エラーが発生しました',
             notFound: () => 'データが見つかりません',
             unknown: (msg) => 'エラーが発生しました: $msg',
+            recentLoginRequired: () => 'エラーが発生しました',
+            tooManyRequests: () => 'エラーが発生しました',
           ),
         ),
         (_) => state = state.copyWith(

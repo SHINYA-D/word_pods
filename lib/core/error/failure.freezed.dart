@@ -54,6 +54,8 @@ extension FailurePatterns on Failure {
     TResult Function(AuthFailure value)? auth,
     TResult Function(NotFoundFailure value)? notFound,
     TResult Function(UnknownFailure value)? unknown,
+    TResult Function(RecentLoginRequiredFailure value)? recentLoginRequired,
+    TResult Function(TooManyRequestsFailure value)? tooManyRequests,
     required TResult orElse(),
   }) {
     final _that = this;
@@ -66,6 +68,10 @@ extension FailurePatterns on Failure {
         return notFound(_that);
       case UnknownFailure() when unknown != null:
         return unknown(_that);
+      case RecentLoginRequiredFailure() when recentLoginRequired != null:
+        return recentLoginRequired(_that);
+      case TooManyRequestsFailure() when tooManyRequests != null:
+        return tooManyRequests(_that);
       case _:
         return orElse();
     }
@@ -90,6 +96,9 @@ extension FailurePatterns on Failure {
     required TResult Function(AuthFailure value) auth,
     required TResult Function(NotFoundFailure value) notFound,
     required TResult Function(UnknownFailure value) unknown,
+    required TResult Function(RecentLoginRequiredFailure value)
+        recentLoginRequired,
+    required TResult Function(TooManyRequestsFailure value) tooManyRequests,
   }) {
     final _that = this;
     switch (_that) {
@@ -101,6 +110,10 @@ extension FailurePatterns on Failure {
         return notFound(_that);
       case UnknownFailure():
         return unknown(_that);
+      case RecentLoginRequiredFailure():
+        return recentLoginRequired(_that);
+      case TooManyRequestsFailure():
+        return tooManyRequests(_that);
     }
   }
 
@@ -122,6 +135,8 @@ extension FailurePatterns on Failure {
     TResult? Function(AuthFailure value)? auth,
     TResult? Function(NotFoundFailure value)? notFound,
     TResult? Function(UnknownFailure value)? unknown,
+    TResult? Function(RecentLoginRequiredFailure value)? recentLoginRequired,
+    TResult? Function(TooManyRequestsFailure value)? tooManyRequests,
   }) {
     final _that = this;
     switch (_that) {
@@ -133,6 +148,10 @@ extension FailurePatterns on Failure {
         return notFound(_that);
       case UnknownFailure() when unknown != null:
         return unknown(_that);
+      case RecentLoginRequiredFailure() when recentLoginRequired != null:
+        return recentLoginRequired(_that);
+      case TooManyRequestsFailure() when tooManyRequests != null:
+        return tooManyRequests(_that);
       case _:
         return null;
     }
@@ -156,6 +175,8 @@ extension FailurePatterns on Failure {
     TResult Function()? auth,
     TResult Function()? notFound,
     TResult Function(String message)? unknown,
+    TResult Function()? recentLoginRequired,
+    TResult Function()? tooManyRequests,
     required TResult orElse(),
   }) {
     final _that = this;
@@ -168,6 +189,10 @@ extension FailurePatterns on Failure {
         return notFound();
       case UnknownFailure() when unknown != null:
         return unknown(_that.message);
+      case RecentLoginRequiredFailure() when recentLoginRequired != null:
+        return recentLoginRequired();
+      case TooManyRequestsFailure() when tooManyRequests != null:
+        return tooManyRequests();
       case _:
         return orElse();
     }
@@ -192,6 +217,8 @@ extension FailurePatterns on Failure {
     required TResult Function() auth,
     required TResult Function() notFound,
     required TResult Function(String message) unknown,
+    required TResult Function() recentLoginRequired,
+    required TResult Function() tooManyRequests,
   }) {
     final _that = this;
     switch (_that) {
@@ -203,6 +230,10 @@ extension FailurePatterns on Failure {
         return notFound();
       case UnknownFailure():
         return unknown(_that.message);
+      case RecentLoginRequiredFailure():
+        return recentLoginRequired();
+      case TooManyRequestsFailure():
+        return tooManyRequests();
     }
   }
 
@@ -224,6 +255,8 @@ extension FailurePatterns on Failure {
     TResult? Function()? auth,
     TResult? Function()? notFound,
     TResult? Function(String message)? unknown,
+    TResult? Function()? recentLoginRequired,
+    TResult? Function()? tooManyRequests,
   }) {
     final _that = this;
     switch (_that) {
@@ -235,6 +268,10 @@ extension FailurePatterns on Failure {
         return notFound();
       case UnknownFailure() when unknown != null:
         return unknown(_that.message);
+      case RecentLoginRequiredFailure() when recentLoginRequired != null:
+        return recentLoginRequired();
+      case TooManyRequestsFailure() when tooManyRequests != null:
+        return tooManyRequests();
       case _:
         return null;
     }
@@ -362,6 +399,47 @@ class _$UnknownFailureCopyWithImpl<$Res>
           : message // ignore: cast_nullable_to_non_nullable
               as String,
     ));
+  }
+}
+
+/// @nodoc
+
+class RecentLoginRequiredFailure implements Failure {
+  const RecentLoginRequiredFailure();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is RecentLoginRequiredFailure);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() {
+    return 'Failure.recentLoginRequired()';
+  }
+}
+
+/// @nodoc
+
+class TooManyRequestsFailure implements Failure {
+  const TooManyRequestsFailure();
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is TooManyRequestsFailure);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() {
+    return 'Failure.tooManyRequests()';
   }
 }
 

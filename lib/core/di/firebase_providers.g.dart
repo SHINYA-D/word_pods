@@ -94,6 +94,26 @@ final firebaseAuthDataSourceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FirebaseAuthDataSourceRef = ProviderRef<FirebaseAuthDataSource>;
+String _$reauthenticationRemoteDataSourceHash() =>
+    r'54f4a4146aae3dc55ee998681486224f9cc3b649';
+
+/// See also [reauthenticationRemoteDataSource].
+@ProviderFor(reauthenticationRemoteDataSource)
+final reauthenticationRemoteDataSourceProvider =
+    Provider<ReauthenticationRemoteDataSource>.internal(
+  reauthenticationRemoteDataSource,
+  name: r'reauthenticationRemoteDataSourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$reauthenticationRemoteDataSourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ReauthenticationRemoteDataSourceRef
+    = ProviderRef<ReauthenticationRemoteDataSource>;
 String _$firestoreDataSourceHash() =>
     r'57054aa72f7849231d78faeed8dd8510effb0a2a';
 

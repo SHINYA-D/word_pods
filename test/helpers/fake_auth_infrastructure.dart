@@ -14,7 +14,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
 
 class FakeUser implements User {
-  FakeUser({required this.uid, this.email, this.displayName});
+  FakeUser({
+    required this.uid,
+    this.email,
+    this.displayName,
+    this.providerIds = const [],
+  });
 
   @override
   final String uid;
@@ -24,6 +29,20 @@ class FakeUser implements User {
 
   @override
   final String? displayName;
+
+  /// ログイン方法（`password` / `google.com` 等）。`providerData` の providerId になる
+  final List<String> providerIds;
+
+  @override
+  List<UserInfo> get providerData =>
+      providerIds
+          .map((id) => UserInfo.fromJson({
+                'uid': '$uid-$id',
+                'providerId': id,
+                'isAnonymous': false,
+                'isEmailVerified': false,
+              }))
+          .toList();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

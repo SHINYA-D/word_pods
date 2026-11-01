@@ -1,12 +1,21 @@
 // Firebase Emulator（Firestore）上で実行する: npm run test:emulator
-// firebase/firestore.rules のうち、退会に関わるルールを確かめる。
+// firebase/firestore.rules を確かめる（退会・同意・users/ 配下へ書き込めるデータの形）。
 import {
   assertFails,
   assertSucceeds,
   initializeTestEnvironment,
   RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, getDocs, setDoc, collection } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -38,28 +47,146 @@ async function markWithdrawn(uid: string): Promise<void> {
   });
 }
 
+/** アプリの同期（FirestoreSyncRemoteDataSource）が書くフォルダの形。 */
+function folder(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    name: "英単語",
+    parentFolderId: null,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    deletedAt: null,
+    serverUpdatedAt: serverTimestamp(),
+    ...overrides,
+  };
+}
+
 describe("users/{uid} への書き込み", () => {
   test("退会済みの記録が無い本人の場合、書き込める", async () => {
     const db = env.authenticatedContext("A").firestore();
-    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), { name: "英単語" }));
+    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("退会済みの記録がある本人の場合、書き込めない", async () => {
     await markWithdrawn("A");
     const db = env.authenticatedContext("A").firestore();
-    await assertFails(setDoc(doc(db, "users/A/folders/f1"), { name: "英単語" }));
+    await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("別のユーザーが退会済みの場合、自分の users/{uid} には書き込める", async () => {
     await markWithdrawn("B");
     const db = env.authenticatedContext("A").firestore();
-    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), { name: "英単語" }));
+    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("退会済みの記録がある本人の場合でも、読み取りはできる", async () => {
     await markWithdrawn("A");
     const db = env.authenticatedContext("A").firestore();
     await assertSucceeds(getDoc(doc(db, "users/A/folders/f1")));
+  });
+});
+
+describe("users/{uid} 配下へ書き込めるデータの形", () => {
+  const now = () => Timestamp.now();
+
+  test("同期が書く形のフォルダ・単語・結果・設定の場合、書き込める", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
+    await assertSucceeds(
+      setDoc(doc(db, "users/A/folders/f1/words/w1"), {
+        front: "apple",
+        back: "りんご",
+        createdAt: now(),
+        updatedAt: now(),
+        deletedAt: null,
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(db, "users/A/flashcard_results/r1"), {
+        folderId: "f1",
+        totalCount: 10,
+        correctCount: 7,
+        date: now(),
+        updatedAt: now(),
+        deletedAt: null,
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(db, "users/A/settings/config"), {
+        colorTheme: "indigo",
+        darkMode: true,
+        updatedAt: now(),
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("決められていない項目を含む場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder({ extra: "x" })));
+  });
+
+  test("フォルダ名が100文字の場合は書き込め、101文字の場合は書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder({ name: "a".repeat(100) })));
+    await assertFails(setDoc(doc(db, "users/A/folders/f2"), folder({ name: "a".repeat(101) })));
+  });
+
+  test("単語の表面が1001文字の場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(
+      setDoc(doc(db, "users/A/folders/f1/words/w1"), {
+        front: "a".repeat(1001),
+        back: "b",
+        updatedAt: now(),
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("項目の型が違う場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(
+      setDoc(doc(db, "users/A/settings/config"), {
+        colorTheme: "indigo",
+        darkMode: "yes",
+        updatedAt: now(),
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("serverUpdatedAt に端末の時刻を書く場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder({ serverUpdatedAt: now() })));
+  });
+
+  test("決められていないコレクションの場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(setDoc(doc(db, "users/A/others/x"), { a: 1 }));
+  });
+
+  test("設定の config 以外のドキュメントの場合、書き込めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(
+      setDoc(doc(db, "users/A/settings/other"), {
+        colorTheme: "indigo",
+        darkMode: false,
+        updatedAt: now(),
+        serverUpdatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  test("本人の場合、削除できる", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertSucceeds(deleteDoc(doc(db, "users/A/folders/f1")));
+  });
+
+  test("別のユーザーの場合、正しい形でも書き込めない", async () => {
+    const db = env.authenticatedContext("B").firestore();
+    await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 });
 
@@ -110,6 +237,14 @@ describe("consent_logs/{uid}（規約への同意の履歴）", () => {
     await assertFails(
       setDoc(doc(db, "consent_logs/A/logs/l2"), { document: "terms", version: "2026-01-01" }),
     );
+  });
+
+  test("ログインしていない場合、退会者のメールアドレスを持つ consent_logs/{uid} を読めない", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "consent_logs/A"), { email: "a@example.com" });
+    });
+    const db = env.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(db, "consent_logs/A")));
   });
 
   test("本人の場合でも、履歴の一覧を読めない", async () => {

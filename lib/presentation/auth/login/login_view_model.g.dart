@@ -6,7 +6,7 @@ part of 'login_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$loginViewModelHash() => r'018592ebaa7832051a555997dae53a01ecf2175f';
+String _$loginViewModelHash() => r'7ce65fdc09e921bb22f92136bc733f9a5f0d2c72';
 
 /// See also [LoginViewModel].
 @ProviderFor(LoginViewModel)

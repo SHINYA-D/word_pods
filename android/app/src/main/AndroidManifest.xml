@@ -2,7 +2,12 @@
     <application
         android:label="WordPods"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
+        <!-- 端末内の SQLite・ログイン情報を Google のバックアップや端末の引っ越しで持ち出させない。
+             allowBackup は Android 11 以前、dataExtractionRules は Android 12 以降に効く -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
