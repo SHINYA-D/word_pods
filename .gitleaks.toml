@@ -1,0 +1,7 @@
+# Gitleaks の設定（.github/workflows/security.yml）。既定のルールに、誤検知の除外だけを足す
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Podfile.lock の SPEC CHECKSUMS は、ライブラリの中身のハッシュ値で鍵ではない"
+paths = ['''(^|/)Podfile\.lock$''']

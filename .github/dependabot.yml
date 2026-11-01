@@ -1,0 +1,33 @@
+# 依存パッケージ（アプリ・Cloud Functions）と GitHub Actions の更新を、週に1回 PR で届ける。
+# 同じ種類の更新は1つの PR にまとめ、公開から7日たった版だけを提案する（公開直後に乗っ取られた版を避けるため）
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pub-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /functions
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']

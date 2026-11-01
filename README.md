@@ -64,7 +64,9 @@ SQLite（sqflite）をローカルキャッシュとして導入し、UI層は�
 
 ### CI/CD 設計
 - GitHub Secrets に Firebase キーを設定し、本番同等の環境で CI テストを実行
-- CI 通過後、CD で Firebase Security Rules を自動デプロイ
+- CI では Flutter のテストに加え、Cloud Functions のテストと Firestore Security Rules のテストを Firebase Emulator で実行
+- すべてのテストを通ったコミットだけを、main への push で dev → prod の順に自動デプロイ（`.github/workflows/ci.yml`）
+- 依存パッケージの脆弱性（OSV-Scanner）・ワークフローの穴（zizmor）・鍵の誤コミット（Gitleaks）を別のワークフローで検査し（`.github/workflows/security.yml`）、依存パッケージの更新は Dependabot が届ける
 - 個人開発においてもチーム開発を想定したインフラ構成を採用
 
 ## 技術スタック
