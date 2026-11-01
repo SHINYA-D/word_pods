@@ -96,6 +96,7 @@ class AuthRepositoryImpl implements AuthRepository {
       id: user.uid,
       email: user.email ?? '',
       displayName: user.displayName,
+      hasPassword: user.providerData.any((p) => p.providerId == 'password'),
     );
   }
 

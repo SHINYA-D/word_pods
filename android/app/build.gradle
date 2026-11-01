@@ -15,6 +15,15 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+// リリース版の署名鍵。android/key.properties（git管理外）から読む。書き方は README の「リリースビルド」を参照
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
     flutterVersionCode = '1'
@@ -67,17 +76,34 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            // デバッグ用の鍵（誰でも作れる）では署名しない。key.properties が無ければリリース版のビルドを止める
+            signingConfig signingConfigs.release
         }
     }
 }
 
 flutter {
     source '../..'
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def buildsRelease = graph.allTasks.any { it.project == project && it.name.toLowerCase().contains('release') }
+    if (buildsRelease && !keystorePropertiesFile.exists()) {
+        throw new GradleException('android/key.properties がありません。リリース版は本番用の鍵で署名します（README の「リリースビルド」を参照）')
+    }
 }
 
 dependencies {

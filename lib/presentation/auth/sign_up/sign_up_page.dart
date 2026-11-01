@@ -133,6 +133,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       : () => _openDocument('利用規約', legalConfig.termsUrl),
                   onChanged: (v) => setState(() => _termsChecked = v),
                 ),
+                const SizedBox(height: 12),
                 _LegalRow(
                   linkLabel: 'プライバシーポリシーを読む',
                   checkLabel: 'プライバシーポリシーに同意する',
@@ -197,11 +198,20 @@ class _LegalRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // リンクとチェック欄が同じ文書の組だと分かるよう、間の余白を詰める
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton(onPressed: onOpen, child: Text(linkLabel)),
+          child: TextButton(
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: onOpen,
+            child: Text(linkLabel),
+          ),
         ),
         CheckboxListTile(
+          visualDensity: VisualDensity.compact,
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           value: checked,

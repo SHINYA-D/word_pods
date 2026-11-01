@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/presentation/settings/account_deletion_state.dart';
 import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
@@ -89,6 +90,107 @@ Future<void> showAccountDeletionNotSentDialog(BuildContext context) {
   );
 }
 
+/// 本人確認の試行回数の上限を超えたときの文言。
+const accountDeletionTooManyAttemptsMessage =
+    '本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。';
+
+/// 退会の前の本人確認で、パスワードを入力してもらう。「OK」なら入力したパスワード、キャンセルなら null。
+/// パスワードが違ったときは、[initialPassword] に前回の入力を、[error] にエラーの文言を渡して開き直す。
+Future<String?> askPasswordForAccountDeletion(
+  BuildContext context, {
+  String initialPassword = '',
+  String? error,
+}) {
+  return showDialog<String>(
+    context: context,
+    builder: (_) =>
+        _PasswordDialog(initialPassword: initialPassword, error: error),
+  );
+}
+
+class _PasswordDialog extends StatefulWidget {
+  const _PasswordDialog({required this.initialPassword, this.error});
+
+  final String initialPassword;
+  final String? error;
+
+  @override
+  State<_PasswordDialog> createState() => _PasswordDialogState();
+}
+
+class _PasswordDialogState extends State<_PasswordDialog> {
+  late final _password = TextEditingController(text: widget.initialPassword);
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('本人確認'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('退会するには、パスワードを入力してください。'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'パスワード'),
+            onChanged: (_) => setState(() {}),
+          ),
+          if (widget.error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              widget.error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('キャンセル'),
+        ),
+        FilledButton(
+          onPressed: _password.text.isEmpty
+              ? null
+              : () => Navigator.pop(context, _password.text),
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+/// 本人確認できなかったときのダイアログ。[tooManyAttempts] なら試行回数の上限を超えた旨を出す。
+Future<void> showAccountDeletionReauthRejectedDialog(
+  BuildContext context, {
+  required bool tooManyAttempts,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('本人確認できませんでした'),
+      content: Text(tooManyAttempts
+          ? accountDeletionTooManyAttemptsMessage
+          : 'パスワード（Google アカウント）を確認して、もう一度お試しください。'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
+
 Future<void> showAccountDeletionCompletedDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -107,13 +209,41 @@ Future<void> showAccountDeletionCompletedDialog(BuildContext context) {
 }
 
 /// 退会処理の再開ダイアログ。「再試行」だけを置き、閉じられない。
-class AccountDeletionRetryDialog extends ConsumerWidget {
+///
+/// 続きを行うのに本人確認のし直しが必要なときは、その案内を出し、「再試行」で本人確認をしてから続きを行う
+/// （メールで登録したユーザーはダイアログの中でパスワードを入力し、Google のユーザーは Google で本人確認する）。
+class AccountDeletionRetryDialog extends ConsumerStatefulWidget {
   const AccountDeletionRetryDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountDeletionRetryDialog> createState() =>
+      _AccountDeletionRetryDialogState();
+}
+
+class _AccountDeletionRetryDialogState
+    extends ConsumerState<AccountDeletionRetryDialog> {
+  final _password = TextEditingController();
+
+  /// パスワードで本人確認を始めたか。応答を待つ間もパスワード欄を（入力できない状態で）残すために使う
+  bool _sentPassword = false;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(accountDeletionViewModelProvider);
     final processing = state.phase == AccountDeletionPhase.processing;
+    final needsReauth = state.phase == AccountDeletionPhase.reauthRequired;
+    final hasPassword =
+        ref.watch(currentUserProvider.select((u) => u?.hasPassword ?? false));
+    final askPassword = needsReauth && hasPassword;
+    final showPassword = askPassword || (processing && _sentPassword);
+    final errorStyle = TextStyle(color: Theme.of(context).colorScheme.error);
+    final vm = ref.read(accountDeletionViewModelProvider.notifier);
 
     return PopScope(
       canPop: false,
@@ -124,11 +254,38 @@ class AccountDeletionRetryDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('「再試行」を押して、退会処理を完了してください。'),
+            if (needsReauth) ...[
+              const SizedBox(height: 12),
+              Text(hasPassword
+                  ? '続けるには本人確認が必要です。パスワードを入力してください。'
+                  : '続けるには本人確認が必要です。「再試行」を押して、Google で本人確認してください。'),
+            ],
+            if (showPassword) ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _password,
+                enabled: !processing,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'パスワード'),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+            if (state.reauthRejected) ...[
+              const SizedBox(height: 12),
+              Text(
+                '本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。',
+                style: errorStyle,
+              ),
+            ],
+            if (state.tooManyAttempts) ...[
+              const SizedBox(height: 12),
+              Text(accountDeletionTooManyAttemptsMessage, style: errorStyle),
+            ],
             if (state.retryFailed) ...[
               const SizedBox(height: 12),
               Text(
                 '再試行に失敗しました。通信環境を確認して、もう一度お試しください。',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: errorStyle,
               ),
             ],
             if (processing) ...[
@@ -149,10 +306,17 @@ class AccountDeletionRetryDialog extends ConsumerWidget {
         ),
         actions: [
           FilledButton(
-            onPressed: processing
+            onPressed: processing || (askPassword && _password.text.isEmpty)
                 ? null
-                : () =>
-                    ref.read(accountDeletionViewModelProvider.notifier).retry(),
+                : () {
+                    setState(() => _sentPassword = askPassword);
+                    if (!needsReauth) {
+                      vm.retry();
+                    } else {
+                      vm.retryWithReauth(
+                          password: hasPassword ? _password.text : null);
+                    }
+                  },
             child: const Text('再試行'),
           ),
         ],

@@ -15,17 +15,21 @@ targets:
   - lib/presentation/settings/withdrawn_elsewhere_gate.dart
   - lib/application/use_cases/auth/withdrawn_elsewhere_use_case.dart
   - lib/infrastructure/data_sources/local/account_deletion_local_data_source.dart
+  - lib/domain/repositories/reauthentication_repository.dart
+  - lib/infrastructure/repositories/reauthentication_repository_impl.dart
+  - lib/application/use_cases/auth/reauthenticate_use_case.dart
+  - lib/infrastructure/repositories/auth_repository_impl.dart
 kinds:
   T: 退会処理の再試行
   W: 他の端末での退会
-updated: 2026-10-12
+updated: 2026-10-31
 ---
 
 # 設定画面（退会） 振る舞い仕様書
 
 ## 1. 機能概要
 
-設定画面（ボトムナビ「設定」タブ）の「退会」から、確認ダイアログ2回を経て退会する。
+設定画面（ボトムナビ「設定」タブ）の「退会」から、確認ダイアログ2回と本人確認（メール登録のユーザーはパスワード、Google のユーザーは Google）を経て退会する。
 Firestore と Firebase Authentication の削除は Cloud Functions の関数 `deleteAccount` を1回呼んで行い、成功を受け取ってから端末内（SQLite）のそのユーザーのデータを削除する。
 退会処理の進み具合を端末内に記録し、途中で止まった場合はアプリの起動時に再開ダイアログを表示して、再試行で最後まで終わらせる。
 他の端末で退会したアカウントのデータがこの端末に残っている場合は、起動時と復帰時に退会済みの記録（Firestore の `deleted_accounts/{uid}`）で見つける。ログイン中のアカウントが退会済みなら、お知らせダイアログの OK でログアウトしてログイン画面に移り、データの削除ダイアログの OK で端末内のデータを削除する。ログアウト済みのアカウントが退会済みなら、何も表示せずに端末内のデータを削除する。
@@ -46,7 +50,10 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 
 ### 2.2 入力ルール
 
-該当なし（入力欄が無い）。
+| ID | ルール | 守る層 | 境界値（有効 ／ 無効） | 根拠 | 確定度 |
+|----|--------|--------|------------------------|------|--------|
+| ACD-N01 | 本人確認ダイアログのパスワードは1文字以上。空白は除かず、そのまま本人確認に渡す | 画面（空の間は「OK」を押せない）。ViewModel に空文字は渡されない前提（テスト対象外） | 有効: 「p」 ／ 「 」 ／ 「　」 無効: 「」 | 概要 §本人確認ダイアログ | 確定 |
+| ACD-N02 | 再開ダイアログの本人確認の案内のパスワードは1文字以上。空白は除かず、そのまま本人確認に渡す | 画面（空の間は「再試行」を押せない）。ViewModel に空文字は渡されない前提（テスト対象外） | 有効: 「p」 ／ 「 」 ／ 「　」 無効: 「」 | 概要 §退会処理の再開ダイアログ | 確定 |
 
 ### 2.3 退会済みの記録（Firestore `deleted_accounts/{uid}`）
 
@@ -55,7 +62,8 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | 項目 | 型 | 説明 |
 |------|----|------|
 | deletedAt | Timestamp | 退会した日時（サーバーの時刻） |
-| email | string | 退会したユーザーのメールアドレス（Authentication から取る）。メールアドレスの無いユーザーは持たない |
+
+ログインしていない端末からも読めるため、メールアドレスなどの個人情報は持たない。退会したユーザーのメールアドレスは、関数がサーバーしか読めない `consent_logs/{uid}` の `email` に書く（概要 §退会済みの記録）。
 
 記録があることは「その uid は退会済み」を表す。アプリは記録の有無だけを見て、フィールドは読まない。
 
@@ -66,6 +74,9 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 条件は「前提データ＋操作」、期待される動作は観測点で書く。
 「関数を呼ぶ」は `AccountDeletionRepository.requestServerDeletion`、「端末内の削除」は `AccountDeletionRepository.deleteLocalData` を指す。
 ログイン中のユーザーは、特に書かない限り記録と同じ uid `A` とする。
+ログイン中のユーザーは、特に書かない限り Google で登録したユーザー（`AppUser.hasPassword` が false）とし、退会の前の本人確認は成功するものとする。メールアドレスとパスワードで登録したユーザー（`hasPassword` が true）の場合は、そう書く。
+「本人確認」は、パスワードなら `ReauthenticationRepository.reauthenticateWithPassword`、Google なら `ReauthenticationRepository.reauthenticateWithGoogle` を指す。
+「本人確認の案内」は、再開ダイアログの中の、メール登録のユーザーには「続けるには本人確認が必要です。パスワードを入力してください。」とパスワードの入力欄（ラベル「パスワード」）、Google のユーザーには「続けるには本人確認が必要です。「再試行」を押して、Google で本人確認してください。」の表示を指す。
 
 ### 3.1 表示
 
@@ -115,6 +126,36 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | ACD-X21 | 最終確認ダイアログで「OK」をタップし、記録の書き込み（`markRequested`）が `UnknownFailure` で失敗した | 「退会できませんでした」ダイアログが表示される。設定画面から移動しない。関数を呼ぶ回数は0回 | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
 | ACD-X22 | 最終確認ダイアログで「OK」をタップし、関数の呼び出しが `NetworkFailure` で失敗し、記録の削除（`clearRequest`）が `UnknownFailure` で失敗した | 「退会処理が完了していません」ダイアログと「再試行」ボタンが表示される | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
 | ACD-X23 | 最終確認ダイアログで「OK」をタップし、関数の呼び出しは成功し、記録の更新（`markServerDone`）が `UnknownFailure` で失敗し、端末内の削除は成功した | ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
+| ACD-X24 | メール登録のユーザーで、最終確認ダイアログで「OK」をタップした | 最終確認ダイアログが閉じ、タイトル「本人確認」、本文「退会するには、パスワードを入力してください。」、ラベル「パスワード」の入力欄、「キャンセル」「OK」ボタンがこの順で横に並ぶダイアログが表示される。入力欄は空で、「OK」ボタンは無効。本人確認・関数を呼ぶ回数は0回 | 概要 §本人確認ダイアログ, 概要 §退会の流れ 3 | 確定 |
+| ACD-X25 | 本人確認ダイアログ（ACD-X24 の状態）でパスワード欄に「p」を入力した | 「OK」ボタンが有効になる。入力欄の文字は伏せ字で表示される | 概要 §本人確認ダイアログ | 確定 |
+| ACD-X26 | 本人確認ダイアログで「キャンセル」をタップした | ダイアログが閉じ、設定画面が表示される。本人確認・関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ, 原則-7 | 確定 |
+| ACD-X27 | 本人確認ダイアログの外側をタップした | ダイアログが閉じ、設定画面が表示される。本人確認・関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ, 原則-7 | 確定 |
+| ACD-X28 | メール登録のユーザーで、本人確認ダイアログに「pass1234」を入力して「OK」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した | ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithPassword` が「pass1234」で1回呼ばれる。`reauthenticateWithGoogle` は0回 | 概要 §退会の流れ 3・4, 概要 §本人確認ダイアログ | 確定 |
+| ACD-X29 | メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認の応答を待っている | 本人確認ダイアログが閉じ、「退会処理中です」とローディングのインジケーターが表示される。関数を呼ぶ回数は0回 | 概要 §退会の流れ 4, 原則-5 | 確定 |
+| ACD-X30 | メール登録のユーザーで、本人確認ダイアログに「pass1234」を入力して「OK」をタップし、本人確認が `AuthFailure` で失敗した | 「退会処理中です」が消え、本人確認ダイアログがもう一度表示される。パスワード欄には「pass1234」（8文字）が入ったまま、「パスワードが正しくありません。もう一度入力してください。」が表示され、「OK」ボタンは有効。「本人確認できませんでした」ダイアログは表示されない。関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ（本人確認の結果）, ユーザー決定 2026-10-31（ACD-Q13）, 原則-3 | 確定 |
+| ACD-X31 | 「本人確認できませんでした」ダイアログで「OK」をタップした | ダイアログが閉じ、設定画面が表示される | 概要 §本人確認できなかったときのダイアログ | 確定 |
+| ACD-X32 | 「本人確認できませんでした」ダイアログの外側をタップした | ダイアログが閉じ、設定画面が表示される | ユーザー決定 2026-10-03（ACD-Q03）, ACD-X20 | 確定 |
+| ACD-X33 | 最終確認ダイアログで「OK」をタップした（Google のユーザー） | 本人確認ダイアログは表示されない。`reauthenticateWithGoogle` が1回呼ばれる。`reauthenticateWithPassword` は0回 | 概要 §退会の流れ 3, 概要 §本人確認ダイアログ | 確定 |
+| ACD-X34 | 最終確認ダイアログで「OK」をタップし、Google の本人確認がキャンセルされた（`Right(false)`） | 「退会処理中です」が消え、設定画面が表示される。ダイアログは表示されない。関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-X35 | 最終確認ダイアログで「OK」をタップし、Google の本人確認が `AuthFailure` で失敗した（ログイン中と別のアカウントを選んだ） | 「退会処理中です」が消え、「本人確認できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回 | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-X36 | 最終確認ダイアログで「OK」をタップし、本人確認が `NetworkFailure` で失敗した | 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-X37 | 最終確認ダイアログで「OK」をタップし、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した | 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。設定画面から移動しない。退会処理の記録は無い | 概要 §操作が失敗したとき | 確定 |
+| ACD-X38 | 最終確認ダイアログで「OK」をタップし、Google の本人確認の応答を待っている | 「退会処理中です」とローディングのインジケーターが表示される。関数を呼ぶ回数は0回 | 概要 §退会の流れ 4, 原則-5 | 確定 |
+| ACD-X39 | 本人確認の応答待ち（ACD-X38 の状態）に戻る操作をした | 「退会処理中です」とインジケーターが表示されたまま。設定画面から移動しない | 概要 §退会の流れ 4 | 確定 |
+| ACD-X40 | 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にある「退会」の位置をタップした | 確認ダイアログは表示されない。本人確認を呼ぶ回数は1回のまま。関数を呼ぶ回数は0回 | 概要 §退会の流れ 4, 原則-4 | 確定 |
+| ACD-X41 | 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にあるボトムナビ「ホーム」の位置をタップした | 「退会処理中です」が表示されたまま。表示中の画面のパスは設定画面のまま | 概要 §退会の流れ 4 | 確定 |
+| ACD-X42 | 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にある「ログアウト」の位置をタップした | ログアウトの確認ダイアログは表示されない。`AuthRepository.signOut` は0回のまま | 概要 §退会の流れ 4 | 確定 |
+| ACD-X43 | メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認が `NetworkFailure` で失敗した | 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-X44 | 本人確認ダイアログ（ACD-X24 の状態）でパスワード欄に「 」（半角スペース1文字）を入力した | 「OK」ボタンが有効になる | ACD-N01 | 確定 |
+| ACD-X45 | メール登録のユーザーで、本人確認ダイアログに「 pass 」（前後に半角スペース）を入力して「OK」をタップした | `reauthenticateWithPassword` が「 pass 」（前後の空白を含んだまま）で1回呼ばれる | ACD-N01 | 確定 |
+| ACD-X46 | 最終確認ダイアログで「OK」をタップし、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗し、記録の削除（`clearRequest`）が `UnknownFailure` で失敗した | 「退会処理が完了していません」ダイアログと「再試行」ボタンが表示される | ユーザー決定 2026-10-03（ACD-Q05）, ACD-X22 | 確定 |
+| ACD-X47 | 本人確認ダイアログでパスワード欄に「p」を入力したあと、その1文字を消した | 「OK」ボタンが無効になる | ACD-N01, 原則-8 | 確定 |
+| ACD-X48 | 本人確認ダイアログで「pass1234」を入力して「キャンセル」をタップしたあと、もう一度「退会」から最終確認ダイアログの「OK」まで進んだ | 本人確認ダイアログのパスワード欄は空で、「OK」ボタンは無効 | 概要 §本人確認ダイアログ, ACD-Q13 | 確定 |
+| ACD-X49 | ACD-X30 の状態で、もう一度「OK」をタップし、本人確認がまた `AuthFailure` で失敗した | 本人確認ダイアログがもう一度表示され、パスワード欄には「pass1234」が入ったまま、「パスワードが正しくありません。もう一度入力してください。」が表示される。`reauthenticateWithPassword` は「pass1234」で合計2回呼ばれる | ユーザー決定 2026-10-31（ACD-Q13） | 確定 |
+| ACD-X50 | ACD-X30 の状態で「キャンセル」をタップした | ダイアログが閉じ、設定画面が表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま | 概要 §本人確認ダイアログ, ユーザー決定 2026-10-31（ACD-Q13） | 確定 |
+| ACD-X51 | ACD-X30 の状態で、パスワードを「pass5678」に直して「OK」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した | ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。最後の `reauthenticateWithPassword` は「pass5678」で呼ばれる | ユーザー決定 2026-10-31（ACD-Q13） | 確定 |
+| ACD-X52 | メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認が `TooManyRequestsFailure` で失敗した | 「退会処理中です」が消え、タイトル「本人確認できませんでした」、本文「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」、「OK」ボタンのダイアログが表示される。本人確認ダイアログは表示されない。関数を呼ぶ回数は0回 | 概要 §本人確認ダイアログ（試行回数の上限）, ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
+| ACD-X53 | 最終確認ダイアログで「OK」をタップし、Google の本人確認が `TooManyRequestsFailure` で失敗した | 「退会処理中です」が消え、タイトル「本人確認できませんでした」、本文「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」のダイアログが表示される。関数を呼ぶ回数は0回 | 概要 §本人確認ダイアログ（試行回数の上限）, ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
 
 ### 3.3 退会処理の再試行
 
@@ -135,6 +176,32 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | ACD-T13 | ログインしていない状態で記録が `requested` のまま「再試行」をタップし、端末内の削除が `UnknownFailure` で失敗した | 再開ダイアログが表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る | 概要 §退会処理の再開ダイアログ | 確定 |
 | ACD-T14 | ログイン中で記録が `requested` の状態で「再試行」をタップし、関数の呼び出しが `AuthFailure` で失敗し、端末内の削除が `UnknownFailure` で失敗した | 再開ダイアログが表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る | 概要 §退会処理の再開ダイアログ | 確定 |
 | ACD-T15 | 起動時の記録の読み取りが失敗して再開ダイアログが表示されている状態で「再試行」をタップし、記録の読み直しで記録が無かった | 再開ダイアログが閉じる。関数を呼ぶ回数は0回 | ユーザー決定 2026-10-03（ACD-Q02） | 確定 |
+| ACD-T16 | ログイン中（Google のユーザー）で記録が `requested` の状態で「再試行」をタップし、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した | 再開ダイアログが表示されたまま、「続けるには本人確認が必要です。「再試行」を押して、Google で本人確認してください。」が表示され、「再試行」ボタンが有効に戻る。パスワードの入力欄は表示されない。「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」は表示されない。端末内の削除は0回 | 概要 §途中で止まった場合, 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T17 | ログイン中（メール登録のユーザー）で記録が `requested` の状態で「再試行」をタップし、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した | 再開ダイアログが表示されたまま、「続けるには本人確認が必要です。パスワードを入力してください。」とラベル「パスワード」の空の入力欄が表示され、「再試行」ボタンは無効 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T18 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「p」を入力した | 「再試行」ボタンが有効になる。入力欄の文字は伏せ字で表示される | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T19 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した | 再開ダイアログが閉じ、ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithPassword` が「pass1234」で1回呼ばれる | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T20 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、Google の本人確認・関数の呼び出し・端末内の削除がすべて成功した | 再開ダイアログが閉じ、ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithGoogle` が1回呼ばれる | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T21 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認の応答を待っている | 再開ダイアログの中で「再試行」ボタンが無効になり、「退会処理中です」とローディングのインジケーターが表示される | 概要 §退会処理の再開ダイアログ, 原則-4, 原則-5 | 確定 |
+| ACD-T22 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、Google の本人確認がキャンセルされた（`Right(false)`） | 再開ダイアログに本人確認の案内が表示されたまま、「再試行」ボタンが有効に戻る。「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」と「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」はどちらも表示されない。関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T23 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `AuthFailure` で失敗した | 再開ダイアログに本人確認の案内が表示されたまま、「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。パスワード欄には入力した文字（8文字）が残る。関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ, 原則-3 | 確定 |
+| ACD-T24 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `NetworkFailure` で失敗した | 再開ダイアログに本人確認の案内が表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。パスワード欄には入力した文字（8文字）が残る。関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ, 原則-3 | 確定 |
+| ACD-T25 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `UnknownFailure` で失敗した | 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される | 概要 §退会処理の再開ダイアログ（本人確認ができたあとの結果は通常の再試行と同じ） | 確定 |
+| ACD-T26 | 本人確認の案内（ACD-T16 の状態）で戻る操作をした | 再開ダイアログと本人確認の案内が表示されたまま | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T27 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `NetworkFailure` で失敗した | 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される | 概要 §退会処理の再開ダイアログ（本人確認ができたあとの結果は通常の再試行と同じ）, ACD-T06 | 確定 |
+| ACD-T28 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `AuthFailure` で失敗し、端末内の削除が成功した | 再開ダイアログが閉じ、ログイン画面（`/login`）に「退会が完了しました」ダイアログが表示される | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-T04 | 確定 |
+| ACD-T29 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しは成功し、端末内の削除が `UnknownFailure` で失敗した | 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-T12 | 確定 |
+| ACD-T30 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認は成功し、関数の呼び出しがまた `RecentLoginRequiredFailure` で失敗した | 再開ダイアログに本人確認の案内が表示されたまま。「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」と「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」はどちらも表示されない。パスワード欄には入力した文字（8文字）が残り、「再試行」ボタンは有効 | 概要 §途中で止まった場合, 原則-3 | 確定 |
+| ACD-T31 | 本人確認の案内（ACD-T16 の状態）でダイアログの外側をタップした | 再開ダイアログと本人確認の案内が表示されたまま | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T32 | 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときに戻る操作をした | 再開ダイアログと「退会処理中です」が表示されたまま。表示中の画面のパスは変わらない | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T33 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認の応答を待っている | 「再試行」ボタンが無効になり、「退会処理中です」とローディングのインジケーターが表示される。パスワード欄には入力した文字（8文字）が残る | 概要 §退会処理の再開ダイアログ, 原則-4, 原則-5 | 確定 |
+| ACD-T34 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `AuthFailure` で失敗したあと、もう一度「再試行」をタップした | 「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が消える。`reauthenticateWithPassword` が「pass1234」で合計2回呼ばれる | 概要 §退会処理の再開ダイアログ, 原則-3 | 確定 |
+| ACD-T35 | 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときにダイアログの外側をタップした | 再開ダイアログと「退会処理中です」が表示されたまま。本人確認・関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ（処理中の表示は通常の再試行と同じ）, ACD-D11 | 確定 |
+| ACD-T36 | 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときに、ダイアログの下にあるボトムナビ「ホーム」の位置をタップした | 再開ダイアログと「退会処理中です」が表示されたまま。表示中の画面のパスは変わらない | 概要 §退会処理の再開ダイアログ（処理中の表示は通常の再試行と同じ）, ACD-D13 | 確定 |
+| ACD-T37 | 本人確認の案内（ACD-T16 の状態）を表示している間に、ダイアログの下にあるボトムナビ「ホーム」の位置をタップした | 再開ダイアログと本人確認の案内が表示されたまま。表示中の画面のパスは変わらない | 概要 §途中で止まった場合（他の機能は使えない）, ACD-D09 | 確定 |
+| ACD-T38 | 本人確認の案内（ACD-T16 の状態。Google のユーザー）で「再試行」をタップし、Google の本人確認が `AuthFailure` で失敗した（ログイン中と別のアカウントを選んだ） | 再開ダイアログに本人確認の案内が表示されたまま、「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-T39 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「　」（全角スペース1文字）を入力した | 「再試行」ボタンが有効になる | ACD-N02 | 確定 |
+| ACD-T40 | 本人確認の案内（ACD-T17 の状態）でパスワード欄に「 pass 」（前後に半角スペース）を入力して「再試行」をタップした | `reauthenticateWithPassword` が「 pass 」（前後の空白を含んだまま）で1回呼ばれる | ACD-N02 | 確定 |
+| ACD-T41 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認が `TooManyRequestsFailure` で失敗した | 再開ダイアログに本人確認の案内が表示されたまま、「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」は表示されない。関数を呼ぶ回数は増えない | 概要 §退会処理の再開ダイアログ, ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
 
 ### 3.4 エラー種別ごとの扱い
 
@@ -144,10 +211,12 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 |----|------|----------------|------|--------|
 | ACD-E01 | 最終確認ダイアログで「OK」をタップし、関数の呼び出しが `AuthFailure` で失敗した | 「退会処理中です」が消え、タイトル「退会できませんでした」、本文「通信環境を確認して、もう一度お試しください。」、「OK」ボタンのダイアログが表示される。設定画面から移動しない。通信エラーダイアログは表示されない | ユーザー決定 2026-10-03（ACD-Q01） | 確定 |
 | ACD-E02 | （廃止）最終確認ダイアログで「OK」をタップし、端末内の削除が `NetworkFailure` で失敗した | 端末内の削除は通信を使わず `NetworkFailure` は発生しないため廃止（7章） | — | 廃止 |
+| ACD-E03 | 最終確認ダイアログで「OK」をタップし、本人確認が `UnknownFailure` で失敗した | 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回 | 概要 §本人確認ダイアログ（その他のエラー） | 確定 |
+| ACD-E04 | 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認が `UnknownFailure` で失敗した | 再開ダイアログに本人確認の案内が表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される | 概要 §退会処理の再開ダイアログ（その他のエラー） | 確定 |
 
 ### 3.5 状態遷移
 
-状態は 4章の `phase` で書く。
+状態は 4章の `phase` で書く。`withdraw` の行（ACD-V04 など）は、特に書かない限り本人確認が成功したあとの遷移を書く（本人確認中の遷移は表の後半の行）。
 
 | 現在の状態 | 操作・イベント | 次の状態 | ID |
 |-----------|---------------|---------|----|
@@ -172,6 +241,24 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | 記録 `serverDone`・`processing`（再試行） | 削除成功 | 記録なし・`completed` | ACD-V13 |
 | `processing`（再試行） | 再試行が失敗 | `pendingRetry`（`retryFailed` true） | ACD-V16, ACD-V17, ACD-V18, ACD-V29, ACD-V30, ACD-V31 |
 | 記録 `requested`・`pendingRetry`（ログイン中の uid が記録と違う） | 再試行（削除成功） | 記録なし・`completed` | ACD-V26 |
+| `idle` | 最終確認で OK（本人確認の応答待ち） | 記録なし・`processing` | ACD-V114 |
+| 記録なし・`processing`（本人確認中） | Google の本人確認がキャンセル | 記録なし・`idle` | ACD-V115 |
+| 記録なし・`processing`（本人確認中） | 本人確認 `AuthFailure` | 記録なし・`reauthRejected` | ACD-V116 |
+| 記録なし・`processing`（本人確認中） | 本人確認 `NetworkFailure` / `UnknownFailure` | 記録なし・`notSent` | ACD-V117, ACD-V118 |
+| 記録 `requested`・`processing` | 関数 `RecentLoginRequiredFailure` | 記録なし・`notSent` | ACD-V119 |
+| `reauthRejected` | 「本人確認できませんでした」で OK | `idle` | ACD-V120 |
+| 記録 `requested`・`processing`（再試行） | 関数 `RecentLoginRequiredFailure` | 記録 `requested`・`reauthRequired` | ACD-V121 |
+| 記録 `requested`・`reauthRequired` | 再試行（本人確認の応答待ち） | 記録 `requested`・`processing` | ACD-V124 |
+| 記録 `requested`・`processing`（本人確認中） | Google の本人確認がキャンセル | 記録 `requested`・`reauthRequired` | ACD-V125 |
+| 記録 `requested`・`processing`（本人確認中） | 本人確認 `AuthFailure` | 記録 `requested`・`reauthRequired`（`reauthRejected` true） | ACD-V126 |
+| 記録 `requested`・`processing`（本人確認中） | 本人確認 `NetworkFailure` / `UnknownFailure` | 記録 `requested`・`reauthRequired`（`retryFailed` true） | ACD-V127, ACD-V128 |
+| 記録 `requested`・`processing`（本人確認後） | 関数成功・削除成功 | 記録なし・`completed` | ACD-V122, ACD-V123 |
+| 記録 `requested`・`processing`（本人確認後） | 関数 `UnknownFailure` / `NetworkFailure` | 記録 `requested`・`pendingRetry`（`retryFailed` true） | ACD-V129, ACD-V134 |
+| 記録 `requested`・`processing`（本人確認後） | 関数 `AuthFailure`・削除成功 | 記録なし・`completed` | ACD-V135 |
+| 記録 `requested`・`processing`（本人確認後） | 関数成功・削除 `UnknownFailure` | 記録 `serverDone`・`pendingRetry`（`retryFailed` true） | ACD-V136 |
+| 記録 `requested`・`processing`（本人確認後） | 関数 `AuthFailure`・削除 `UnknownFailure` | 記録 `requested`・`pendingRetry`（`retryFailed` true） | ACD-V137 |
+| 記録 `requested`・`processing`（本人確認後） | 関数 `RecentLoginRequiredFailure` | 記録 `requested`・`reauthRequired` | ACD-V130 |
+| `reauthRequired`（`reauthRejected` / `retryFailed` true） | 再試行（本人確認の応答待ち） | `processing`（両方 false） | ACD-V139 |
 | `completed` | 完了ダイアログを表示した | `idle` | ACD-V21 |
 
 ### 3.6 他の端末での退会
@@ -241,6 +328,8 @@ Firestore と Firebase Authentication の削除は Cloud Functions の関数 `de
 | ACD-W51 | ログイン中の uid が `A`、端末内に uid `A` と uid `C` のデータがあり、両方に退会済みの記録があり、uid `C` の端末内の削除が `UnknownFailure` で失敗する状態でアプリを起動した | ホーム画面（`/home`）の上にお知らせダイアログが表示される。失敗を知らせる表示は無い | 概要 §退会済みが見つかったとき（ログイン中）1, 概要 §退会済みが見つかったとき（ログアウト済み）2 | 確定 |
 | ACD-W52 | ログイン中の uid が `B`、端末内に uid `A` と uid `B` のデータがあり、uid `A` にだけ退会済みの記録があり、端末内の削除が `UnknownFailure` で失敗する状態でアプリを起動した | ホーム画面（`/home`）が表示される。ダイアログは表示されない | 概要 §退会済みが見つかったとき（ログアウト済み）1・2（操作を妨げない・失敗しても表示しない） | 確定 |
 | ACD-W53 | ログインしていない状態で、端末内に uid `A` のデータがあり、uid `A` に退会済みの記録があり、1回目の端末内の削除が `UnknownFailure`、2回目が成功する状態でアプリを起動し、その後アプリがフォアグラウンドに戻った | ログイン画面（`/login`）が表示されたまま、ダイアログは表示されない。`deleteLocalDataOfUsers([A])` が合計2回呼ばれる | 概要 §退会済みが見つかったとき（ログアウト済み）2（次のきっかけで削除をやり直す） | 確定 |
+| ACD-W54 | ログイン中の uid が `A`、設定画面で「本人確認できませんでした」ダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 「本人確認できませんでした」ダイアログが閉じ、お知らせダイアログが表示される。`AccountDeletionViewModel` の `phase` は `idle` になる | 概要 §退会済みが見つかったとき（ログイン中）1, ACD-W32 | 確定 |
+| ACD-W55 | ログイン中の uid が `A`、メール登録のユーザーで設定画面の本人確認ダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った | 本人確認ダイアログが閉じ、お知らせダイアログが表示される。本人確認・関数を呼ぶ回数は0回 | 概要 §退会済みが見つかったとき（ログイン中）1, ユーザー決定 2026-10-31（ACD-Q14） | 確定 |
 
 ### 3.7 状態遷移（他の端末での退会）
 
@@ -278,6 +367,12 @@ State の項目:
 
 - `phase`: `checking`（起動時の記録の確認が終わっていない）／ `idle`（待機）／ `processing`（退会処理中）／ `completed`（完了。完了ダイアログをまだ表示していない）／ `notSent`（関数に届かず、何も削除していない）／ `pendingRetry`（再開待ち）
 - `retryFailed`: 再開待ちで、直前の再試行が失敗したか（bool）
+- `phase` には上記に加えて `reauthRequired`（再開待ちで、続きを行うには本人確認のし直しが必要）／ `reauthRejected`（退会の前の本人確認で、パスワードが違う・別のアカウントを選んだ。何も削除していない）がある
+- `reauthRejected`（State の項目。`phase` の値 `reauthRejected` とは別）: 本人確認のし直しを待っていて、直前の本人確認が `AuthFailure` で失敗したか（bool）
+- `tooManyAttempts`: 直前の本人確認が、試行回数の上限を超えて失敗したか（bool）
+- `isRetry`: 再開ダイアログからの処理か（bool。処理中の表示を再開ダイアログの中に出すか、設定画面の上に出すかを分ける）
+
+`withdraw` は、特に書かない限り引数なし（Google で本人確認する）で呼び、本人確認は成功するものとする。
 
 ログイン中のユーザーは、特に書かない限り uid `A` とする。
 
@@ -321,6 +416,42 @@ State の項目:
 | ACD-V36 | 記録が無い状態で `withdraw` を呼び、関数の呼び出しが `NetworkFailure` で失敗し、`clearRequest` が `UnknownFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は false | ACD-X22 | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
 | ACD-V37 | 記録が無い状態で `withdraw` を呼び、関数の呼び出しは成功し、`markServerDone` が `UnknownFailure` で失敗し、端末内の削除は成功した | `phase` は `completed`。`deleteLocalData(A)` は1回 | ACD-X23 | ユーザー決定 2026-10-03（ACD-Q05） | 確定 |
 | ACD-V38 | ViewModel を作成した直後（`checkPending` の完了前） | `phase` は `checking` | ACD-D16 | ユーザー決定 2026-10-03（ACD-Q06） | 確定 |
+| ACD-V112 | 記録が無い状態で `withdraw(password: 'pass1234')` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | `phase` は `completed`。`reauthenticateWithPassword('pass1234')` が1回呼ばれ、その後に `markRequested(A)` が呼ばれる。`reauthenticateWithGoogle` は0回 | ACD-X28 | 概要 §退会の流れ 3・4 | 確定 |
+| ACD-V113 | 記録が無い状態で `withdraw()` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | `phase` は `completed`。`reauthenticateWithGoogle` が1回呼ばれ、その後に `markRequested(A)` が呼ばれる。`reauthenticateWithPassword` は0回 | ACD-X33 | 概要 §退会の流れ 3・4 | 確定 |
+| ACD-V114 | 記録が無い状態で `withdraw` を呼び、本人確認の応答を待っている | `phase` は `processing`。`markRequested`・`requestServerDeletion` は0回 | ACD-X29 | 概要 §退会の流れ 4, 原則-5 | 確定 |
+| ACD-V115 | 記録が無い状態で `withdraw()` を呼び、Google の本人確認がキャンセルされた（`Right(false)`） | `phase` は `idle`。`markRequested`・`requestServerDeletion` は0回 | ACD-X34 | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-V116 | 記録が無い状態で `withdraw` を呼び、本人確認が `AuthFailure` で失敗した | `phase` は `reauthRejected`。`markRequested`・`requestServerDeletion` は0回 | ACD-X30, ACD-X35 | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-V117 | 記録が無い状態で `withdraw` を呼び、本人確認が `NetworkFailure` で失敗した | `phase` は `notSent`。`markRequested`・`requestServerDeletion` は0回 | ACD-X36 | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-V118 | 記録が無い状態で `withdraw` を呼び、本人確認が `UnknownFailure` で失敗した | `phase` は `notSent`。`markRequested`・`requestServerDeletion` は0回 | ACD-E03 | 概要 §本人確認ダイアログ（本人確認の結果） | 確定 |
+| ACD-V119 | 記録が無い状態で `withdraw` を呼び、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した | `phase` は `notSent`。`clearRequest(A)` が1回呼ばれ、uid `A` の記録は無い。`deleteLocalData`・`signOut` は0回 | ACD-X37 | 概要 §操作が失敗したとき | 確定 |
+| ACD-V120 | `phase` が `reauthRejected` の状態で `acknowledgeReauthRejected` を呼んだ | `phase` は `idle` | ACD-X31 | 概要 §本人確認できなかったときのダイアログ | 確定 |
+| ACD-V121 | ログイン中で uid `A` の記録が `requested` の状態で `retry` を呼び、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した | `phase` は `reauthRequired`、`retryFailed` は false、`reauthRejected` は false。uid `A` の記録は `requested` のまま。`deleteLocalData`・`signOut` は0回 | ACD-T16, ACD-T17 | 概要 §途中で止まった場合 | 確定 |
+| ACD-V122 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth(password: 'pass1234')` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | `phase` は `completed`。`reauthenticateWithPassword('pass1234')` が1回呼ばれ、その後に `requestServerDeletion` が1回呼ばれる | ACD-T19 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V123 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth()` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | `phase` は `completed`。`reauthenticateWithGoogle` が1回呼ばれ、その後に `requestServerDeletion` が1回呼ばれる | ACD-T20 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V124 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、本人確認の応答を待っている | `phase` は `processing`、`isRetry` は true。`requestServerDeletion` は呼ばれていない | ACD-T21 | 原則-5 | 確定 |
+| ACD-V125 | `phase` が `reauthRequired` の状態で `retryWithReauth()` を呼び、Google の本人確認がキャンセルされた（`Right(false)`） | `phase` は `reauthRequired`、`retryFailed` は false、`reauthRejected` は false。`requestServerDeletion` は呼ばれない | ACD-T22 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V126 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、本人確認が `AuthFailure` で失敗した | `phase` は `reauthRequired`、`reauthRejected` は true、`retryFailed` は false。`requestServerDeletion` は呼ばれない | ACD-T23 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V127 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、本人確認が `NetworkFailure` で失敗した | `phase` は `reauthRequired`、`retryFailed` は true、`reauthRejected` は false。`requestServerDeletion` は呼ばれない | ACD-T24 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V128 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、本人確認が `UnknownFailure` で失敗した | `phase` は `reauthRequired`、`retryFailed` は true、`reauthRejected` は false。`requestServerDeletion` は呼ばれない | ACD-E04 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V129 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しが `UnknownFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は true。uid `A` の記録は `requested` のまま | ACD-T25 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V130 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しがまた `RecentLoginRequiredFailure` で失敗した | `phase` は `reauthRequired`。uid `A` の記録は `requested` のまま | ACD-T16 | 概要 §途中で止まった場合 | 確定 |
+| ACD-V131 | `phase` が `pendingRetry` の状態で `retryWithReauth` を呼んだ | `phase` は `pendingRetry` のまま。本人確認・`requestServerDeletion` は0回 | —（画面からは呼ばれない。誤った呼び出しを無視する） | 原則-4 | 確定 |
+| ACD-V132 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、その処理中にもう一度 `retryWithReauth` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | 本人確認は合計1回、`requestServerDeletion` は合計1回呼ばれる | ACD-T21 | 原則-4 | 確定 |
+| ACD-V133 | 記録が無い状態で `withdraw` を呼び、本人確認の処理中にもう一度 `withdraw` を呼び、本人確認・関数の呼び出し・端末内の削除がすべて成功した | 本人確認は合計1回、`requestServerDeletion` は合計1回呼ばれる | ACD-X40 | 原則-4 | 確定 |
+| ACD-V134 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しが `NetworkFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は true。uid `A` の記録は `requested` のまま | ACD-T27 | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-V16 | 確定 |
+| ACD-V135 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しが `AuthFailure` で失敗し、端末内の削除が成功した | `phase` は `completed`。`deleteLocalData(A)` は1回、`signOut` は1回 | ACD-T28 | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-V15 | 確定 |
+| ACD-V136 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しは成功し、端末内の削除が `UnknownFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は true。uid `A` の記録は `serverDone`。`signOut` は0回 | ACD-T29 | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-V29 | 確定 |
+| ACD-V137 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認は成功し、関数の呼び出しが `AuthFailure` で失敗し、端末内の削除が `UnknownFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は true。uid `A` の記録は `requested` のまま。`signOut` は0回 | —（画面は ACD-T29 と同じ表示） | 概要 §退会処理の再開ダイアログ（通常の再試行と同じ）, ACD-V31 | 確定 |
+| ACD-V138 | `phase` が `reauthRequired`、uid `A` の記録が `requested` の状態で `retryWithReauth` を呼び、本人確認・関数の呼び出し・端末内の削除が成功し、`signOut` が `UnknownFailure` で失敗した | `phase` は `completed` | —（画面は ACD-T28 と同じ表示） | 概要 §退会の流れ 5（ログアウトに失敗しても成功扱い）, ACD-V27 | 確定 |
+| ACD-V139 | `phase` が `reauthRequired`、`reauthRejected` が true の状態で `retryWithReauth` を呼び、本人確認の応答を待っている | `phase` は `processing`、`reauthRejected` は false、`retryFailed` は false | ACD-T34 | 概要 §退会処理の再開ダイアログ | 確定 |
+| ACD-V140 | `phase` が `reauthRequired` の状態で `retry` を呼んだ | `phase` は `reauthRequired` のまま。本人確認・`requestServerDeletion` は0回 | —（画面からは呼ばれない。誤った呼び出しを無視する） | 原則-4 | 確定 |
+| ACD-V141 | `phase` が `reauthRejected` の状態で `withdraw` を呼んだ | `phase` は `reauthRejected` のまま。本人確認・`markRequested` は0回 | —（画面からは呼ばれない。誤った呼び出しを無視する） | 原則-4 | 確定 |
+| ACD-V142 | 記録が無い状態で `withdraw` を呼び、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗し、`clearRequest` が `UnknownFailure` で失敗した | `phase` は `pendingRetry`、`retryFailed` は false。uid `A` の記録は `requested` のまま | ACD-X46 | ユーザー決定 2026-10-03（ACD-Q05）, ACD-V36 | 確定 |
+| ACD-V143 | 記録が無い状態で `withdraw` を呼び、本人確認が `TooManyRequestsFailure` で失敗した | `phase` は `reauthRejected`、`tooManyAttempts` は true。`markRequested`・`requestServerDeletion` は0回 | ACD-X52, ACD-X53 | ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
+| ACD-V144 | `phase` が `reauthRequired` の状態で `retryWithReauth` を呼び、本人確認が `TooManyRequestsFailure` で失敗した | `phase` は `reauthRequired`、`tooManyAttempts` は true、`retryFailed` は false、`reauthRejected` は false。`requestServerDeletion` は呼ばれない | ACD-T41 | ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
+| ACD-V145 | 記録が無い状態で `withdraw` を呼び、本人確認の応答を待っている間に `WithdrawnElsewhereViewModel` の `phase` が `notifying` になり、その後に本人確認が成功した | `phase` は `idle`。`markRequested`・`requestServerDeletion` は0回 | ACD-W55 | ユーザー決定 2026-10-31（ACD-Q14） | 確定 |
+| ACD-V146 | 記録が無い状態で `withdraw` を呼び、本人確認の応答を待っている間にログアウトしてログイン中のユーザーがいなくなり、その後に本人確認が成功した | `phase` は `idle`。`markRequested`・`requestServerDeletion` は0回 | ACD-W55 | ユーザー決定 2026-10-31（ACD-Q14） | 確定 |
+| ACD-V147 | 記録が無い状態で `withdraw` を呼び、本人確認の応答を待っている間に `WithdrawnElsewhereViewModel` の `phase` が `notifying` になり、その後に本人確認が `AuthFailure` で失敗した | `phase` は `idle`（`reauthRejected` にならない） | ACD-W55 | ユーザー決定 2026-10-31（ACD-Q14） | 確定 |
 
 ### 4.2 WithdrawnElsewhereViewModel（他の端末での退会）
 
@@ -437,6 +568,7 @@ State の項目:
 | ACD-R26 | clearRequest | 記録が無い状態で `clearRequest(A)` を呼んだ | `Right(unit)`。その後の `findPending` は `Right(None)` | 概要 §操作が失敗したとき | 確定 |
 | ACD-R27 | requestServerDeletion | オンラインで、関数の呼び出しが `FirebaseFunctionsException` 以外の例外で失敗した | `Left(UnknownFailure)` | 概要 §操作が失敗したとき（その他のエラー）, 原則-10 | 確定 |
 | ACD-R29 | requestServerDeletion | オンラインで `requestServerDeletion` を呼んだ | 関数 `deleteAccount` の呼び出しに、応答の待ち時間の上限として60秒が指定される | ユーザー決定 2026-10-03（ACD-Q07） | 確定 |
+| ACD-R51 | requestServerDeletion | オンラインで、関数の呼び出しがエラーコード `failed-precondition` で失敗した（最後の本人確認から5分を超えていて、関数は何も削除していない） | `Left(RecentLoginRequiredFailure)` | 概要 §削除の方式 | 確定 |
 
 ### 5.2 SyncRepository（退会処理中の同期の停止）
 
@@ -481,15 +613,59 @@ State の項目:
 | ACD-R46 | watchWithdrawn | オンラインで、退会済みの記録の監視が例外を通知する状態で `watchWithdrawn(A)` の購読を始めた | ストリームが `Left(UnknownFailure)` を通知する | 概要 §確認のタイミング（監視できない間は起動時・resumed の確認で補う）, 原則-10 | 確定 |
 | ACD-R48 | watchWithdrawn | オンラインで、uid `A` に退会済みの記録がある状態で `watchWithdrawn(A)` の購読を始めた | ストリームの最初の通知が `Right(true)` | 概要 §確認のタイミング（リアルタイムで監視する） | 確定 |
 
+### 5.4 ReauthenticationRepository（退会の前の本人確認）
+
+| ID | メソッド | 条件 | 期待される結果 | 根拠 | 確定度 |
+|----|----------|------|----------------|------|--------|
+| ACD-R52 | reauthenticateWithPassword | Firebase Authentication の本人確認が成功した | `Right(unit)`。本人確認に渡したパスワードは引数と同じ | 概要 §本人確認ダイアログ | 確定 |
+| ACD-R53 | reauthenticateWithPassword | 本人確認がエラーコード `wrong-password` で失敗した | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（パスワードが違う） | 確定 |
+| ACD-R54 | reauthenticateWithPassword | 本人確認がエラーコード `invalid-credential` で失敗した | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（パスワードが違う） | 確定 |
+| ACD-R55 | reauthenticateWithPassword | 本人確認がエラーコード `network-request-failed` で失敗した | `Left(NetworkFailure)` | 概要 §本人確認ダイアログ（通信エラー） | 確定 |
+| ACD-R56 | reauthenticateWithPassword | 本人確認がエラーコード `too-many-requests` で失敗した | `Left(TooManyRequestsFailure)` | 概要 §本人確認ダイアログ（試行回数の上限）, ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
+| ACD-R57 | reauthenticateWithPassword | 本人確認が `FirebaseAuthException` 以外の例外で失敗した | `Left(UnknownFailure)` | 概要 §本人確認ダイアログ（その他のエラー）, 原則-10 | 確定 |
+| ACD-R58 | reauthenticateWithGoogle | Google の本人確認が成功した | `Right(true)` | 概要 §本人確認ダイアログ | 確定 |
+| ACD-R59 | reauthenticateWithGoogle | Google のアカウント選択がキャンセルされた | `Right(false)` | 概要 §本人確認ダイアログ（キャンセル） | 確定 |
+| ACD-R60 | reauthenticateWithGoogle | 本人確認がエラーコード `user-mismatch` で失敗した（ログイン中と別のアカウントを選んだ） | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（別のアカウント） | 確定 |
+| ACD-R61 | reauthenticateWithGoogle | 本人確認がエラーコード `network-request-failed` で失敗した | `Left(NetworkFailure)` | 概要 §本人確認ダイアログ（通信エラー） | 確定 |
+| ACD-R62 | reauthenticateWithGoogle | 本人確認が `FirebaseAuthException` 以外の例外で失敗した | `Left(UnknownFailure)` | 概要 §本人確認ダイアログ（その他のエラー）, 原則-10 | 確定 |
+| ACD-R65 | reauthenticateWithPassword | 本人確認がエラーコード `user-mismatch` で失敗した | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（別のアカウント） | 確定 |
+| ACD-R66 | reauthenticateWithPassword | 本人確認がエラーコード `user-not-found` で失敗した | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（パスワードが違う）, 7章 | 確定 |
+| ACD-R67 | reauthenticateWithPassword | ログインしていない（現在のユーザーが無い）状態で呼んだ | `Left(UnknownFailure)`。本人確認は0回 | 原則-10 | 確定 |
+| ACD-R68 | reauthenticateWithPassword | メールアドレス「a@example.com」のユーザーでログイン中に「pass1234」で呼んだ | 本人確認に、メールアドレス「a@example.com」とパスワード「pass1234」が渡される | 概要 §本人確認ダイアログ | 確定 |
+| ACD-R69 | reauthenticateWithGoogle | 本人確認がエラーコード `invalid-credential` で失敗した | `Left(AuthFailure)` | 概要 §本人確認ダイアログ（本人確認できない） | 確定 |
+| ACD-R70 | reauthenticateWithGoogle | ログインしていない（現在のユーザーが無い）状態で呼んだ | `Left(UnknownFailure)`。Google のアカウント選択は表示されない | 原則-10 | 確定 |
+| ACD-R73 | reauthenticateWithGoogle | 本人確認がエラーコード `user-not-found` で失敗した | `Left(AuthFailure)` | 7章（ユーザーが消えているときは `AuthFailure`） | 確定 |
+| ACD-R74 | reauthenticateWithGoogle | 本人確認がエラーコード `too-many-requests` で失敗した | `Left(TooManyRequestsFailure)` | 概要 §本人確認ダイアログ（試行回数の上限）, ユーザー決定 2026-10-31（ACD-Q15） | 確定 |
+| ACD-R75 | reauthenticateWithPassword | 本人確認がエラーコード `user-disabled` で失敗した | `Left(UnknownFailure)` | 概要 §本人確認ダイアログ（その他のエラー） | 確定 |
+
+### 5.5 AuthRepository（本人確認の方法の判定）
+
+| ID | メソッド | 条件 | 期待される結果 | 根拠 | 確定度 |
+|----|----------|------|----------------|------|--------|
+| ACD-R63 | authStateChanges | ログイン方法に `password` を含むユーザーが流れた | 流れる `AppUser` の `hasPassword` は true | 概要 §削除の方式（メール登録のユーザーはパスワード） | 確定 |
+| ACD-R64 | authStateChanges | ログイン方法が `google.com` だけのユーザーが流れた | 流れる `AppUser` の `hasPassword` は false | 概要 §削除の方式（Google のユーザーは Google） | 確定 |
+| ACD-R71 | authStateChanges | ログイン方法に `password` と `google.com` の両方を持つユーザーが流れた | 流れる `AppUser` の `hasPassword` は true | 概要 §削除の方式 | 確定 |
+| ACD-R72 | authStateChanges | ログイン方法が1つも無いユーザーが流れた | 流れる `AppUser` の `hasPassword` は false | 概要 §削除の方式 | 確定 |
+
 ## 6. ユースケース
 
 DeleteAccountUseCase は、手順の順序と分岐（記録の状態・Failure の種類による分岐）を持つ。これらは4章で ViewModel を通して検証する（ViewModel は UseCase を呼ぶだけで、独自の分岐を持たない）。UseCase 単体の仕様項目は作らない。
+
+ReauthenticateUseCase（退会の前の本人確認）は、本人確認の方法の選び方（パスワードの有無）と結果の分け方（成功・キャンセル・`AuthFailure`・それ以外）を持つ。これらは 4章の ACD-V112〜V118・ACD-V122〜V128 で ViewModel を通して検証する。UseCase 単体の仕様項目は作らない。
 
 WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の対象の選び方・ログアウト・削除の順序を 4.2 で ViewModel を通して検証する。UseCase 単体の仕様項目は作らない。
 
 ---
 
 ## 7. 対象外
+
+- **関数 `deleteAccount` の本人確認の確認**（ID トークンの `auth_time` が5分以内か。5分ちょうどは通し、5分1秒は「本人確認が必要」を返して何も削除しない）: Cloud Functions 側（`functions/test/delete_account.test.ts`）で検証する
+- **本人確認の `NotFoundFailure`**: 本人確認は対象のデータを探さないため、発生しない（ユーザーが消えているときは `user-not-found` を `AuthFailure` として扱う）
+- **`RecentLoginRequiredFailure` の、退会の関数以外での発生**: 関数 `deleteAccount` だけが返すため、ほかの操作では発生しない
+- **本人確認ダイアログの入力の上限**: パスワードは Firebase Authentication に渡すだけで、アプリでは長さを判定しない（空かどうかだけ ACD-X24・ACD-X25 で判定する）
+- **本人確認の `NetworkFailure` / `UnknownFailure` をメール登録のユーザーと Google のユーザーで書き分けること**: 本人確認の方法で動作を変えないため、3章はメール登録の `NetworkFailure`（ACD-X43）と Google の `NetworkFailure`（ACD-X36）・`UnknownFailure`（ACD-E03）で代表し、方法ごとの Failure の分類は 5章（ACD-R55〜R57・ACD-R61・ACD-R62）で検証する
+- **パスワードでの本人確認の応答待ちの間の他の操作（戻る操作・背後の「退会」「ホーム」「ログアウト」）**: 応答待ちの画面の状態は本人確認の方法で変わらない（どちらも `processing` で、同じ「退会処理中です」の表示）ため、Google の応答待ち（ACD-X39〜X42）で代表する
+- **本人確認ダイアログ・「本人確認できませんでした」ダイアログでの二重操作**: ボタンをタップするとダイアログが閉じるため、同じボタンを2回押せない
 
 - **関数 `deleteAccount` の中の動作**（Firestore の `users/{uid}` 配下と `accounts/{uid}` の削除、Authentication のユーザーの削除、何度呼んでも成功すること、すでにユーザーがいないときに成功すること）: Cloud Functions 側（`functions/`）のテストで、Firebase Emulator を使って検証する。Flutter のテストの対象外
 - **`requestServerDeletion` / `deleteLocalData` の `NotFoundFailure`**: 関数は対象が無くても成功を返し、端末内の削除は対象の行が無くても成功する（ACD-R24）ため、発生しない
@@ -500,8 +676,8 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 - **自動同期の契機ごとの停止**（接続復帰・ログイン済み・登録や編集の直後）: どの契機も `syncAll` / `pushPending` / `syncOnResumed` を呼ぶため、ACD-R13・R14・R21・R22・R23・R28 で網羅している
 - **`waitUntilIdle` の待ち時間の上限**: 同期のリモート通信には1回ごとに時間の上限があり（online_offline §オンライン・オフラインの判定）、待ちは必ず終わる
 - **設定画面のダークモード・カラーテーマ・ログアウト**: この仕様書の範囲外（退会だけを扱う）。ただし、ログアウトのダイアログが他の端末での退会で閉じること（ACD-W36）は扱う
-- **共通原則-11（`NetworkFailure` / `AuthFailure` → 通信エラーダイアログ → ログアウト）**: 退会処理の失敗には適用しない（概要 §操作が失敗したとき）。初回の `AuthFailure` も「退会できませんでした」とする（ACD-E01）
-- **原則-10（画面が崩れない）**: 表示する文言はすべて固定で、長い文字列や多数のデータを表示しないため、個別の仕様項目を作らない
+- **共通原則-11（`NetworkFailure` / `AuthFailure` → 通信エラーダイアログ → ログアウト）**: 退会処理の失敗には適用しない（概要 §操作が失敗したとき）。初回の `AuthFailure` も「退会できませんでした」とする（ACD-E01）。本人確認の失敗にも適用しない（概要 §本人確認ダイアログ・§退会処理の再開ダイアログの本人確認の結果。ACD-X30・ACD-X36・ACD-T23・ACD-T24）
+- **原則-10（画面が崩れない）**: 表示する文言はすべて固定で、多数のデータを表示しないため、個別の仕様項目を作らない。本人確認のパスワード欄は1行の伏せ字の入力欄で、長い文字列を貼り付けても入力欄の中で横に送られるだけのため、個別の仕様項目を作らない（ACD-N01・ACD-N02 は空かどうかだけを判定する）
 - **退会済みの記録（`deleted_accounts/{uid}`）を関数が書き込むこと**（最初に作る・退会後も残す・何度呼んでも1つ）: 関数の中の動作のため、Cloud Functions 側（`functions/test/delete_account.test.ts`）で Firebase Emulator を使って検証する
 - **Firestore のルール**（退会済みの記録がある uid の `users/{uid}` 配下への書き込みの拒否、ログインしていなくても退会済みの記録を1件ずつ読めること、一覧は読めないこと）: Flutter のテストの対象外。`functions/` 側で `@firebase/rules-unit-testing` と Firebase Emulator を使って自動テストする（ユーザー決定 2026-10-12）
 - **退会済みの記録をキャッシュではなくサーバーから読むこと**: Firestore SDK の呼び出し方そのもので、リモートのデータソースは単体テストの対象外（ACD-R33〜R36 は Repository の契約として検証する）
@@ -545,6 +721,9 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 | ACD-Q10 | （論点・案は決定前のもの。決定は右欄） 退会済みの uid が複数あり、OK で一部の uid の削除だけが失敗した場合に、もう一度 OK を押したときの削除の対象（ACD-V57） | A: 失敗した uid だけを削除し直す（`userIds` は `[C]`） ／ B: すべての uid を削除し直す（`userIds` は `[A, C]` のまま。削除済みの uid をもう一度削除しても成功する: ACD-R24） | B（削除は何度行っても同じ結果になるので、状態の持ち方が単純になる。ユーザーから見た違いは無い） | 決定: 対象の uid をまとめて1つのトランザクションで削除し、失敗したら失敗ダイアログを表示する。一部だけ失敗する状態は無くなる（2026-10-12） |
 | ACD-Q11 | （論点・案は決定前のもの。決定は右欄） 起動時に、他の端末での退会の確認（通信あり）が終わるまで、スプラッシュ画面に留めるか（ACD-W25） | A: 確認の応答を待たずに通常どおり起動する（退会済みと分かった時点でログイン画面に移動する） ／ B: 確認が終わるまでスプラッシュ画面に留める（ACD-D16 と同じ） | A（通信が遅いと起動が遅れる。退会済みのアカウントのデータが一瞬ホームに見えるが、見えるのは本人のデータで、Firestore への書き込みはルールで拒否される） | 決定: 案A（2026-10-12） |
 | ACD-Q12 | 退会処理の記録がある間は確認全体を止める（ACD-V49）場合に、別の uid の退会済みをいつ確認し直すか | A: 次のきっかけ（起動時・復帰時）まで待つ ／ B: 退会処理（再試行）が完了した直後に確認し直す | A（退会処理が完了するとログイン画面に移り、通常はその後すぐに次のきっかけがある。仕組みが単純になる） | 決定: 案A（2026-10-12） |
+| ACD-Q13 | 退会の前の本人確認でパスワードが違ったとき、本人確認ダイアログを閉じて「本人確認できませんでした」ダイアログを出すと、入力したパスワードが失われる（原則-3 と違う） | A: 概要どおりダイアログを閉じる（入力し直してもらう。パスワードは保持しないほうが安全） ／ B: 本人確認ダイアログを閉じず、ダイアログの中にエラーを出して入力を残す | A（パスワードは短く、入力し直しの負担が小さい。伏せ字の値を画面に残し続けない） || 決定: 案B（2026-10-31。Claude に一任。パスワード違いは本人確認ダイアログを開き直して入力を残す） |
+| ACD-Q14 | 本人確認の途中（本人確認ダイアログ・Google の画面・本人確認の応答待ち・「本人確認できませんでした」ダイアログの表示中。退会処理の記録はまだ無い）に、他の端末での退会が見つかった場合 | A: 他の端末での退会のお知らせを優先し、本人確認の結果が後から届いても退会処理（記録・関数の呼び出し）を行わない ／ B: 特別な扱いをしない（お知らせでログアウトされ、その後の関数の呼び出しは `AuthFailure` で「退会できませんでした」になる） | B（同じアカウントを2つの端末でほぼ同時に退会する、まれな場合で、どちらでもデータは残らない。A は状態の組み合わせが増える） || 決定: 案A（2026-10-31。ユーザーの指示「使いやすいように」） |
+| ACD-Q15 | 本人確認が `too-many-requests`（試行回数の超過）などで失敗したとき、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」（通信の問題のような文言）になる | A: そのままにする（その他のエラーとしてまとめる） ／ B: 試行回数の超過だけ「しばらく時間をおいて、もう一度お試しください。」を出す | A（まれで、時間をおけば通る。文言の種類を増やさない） || 決定: 案B（2026-10-31。ユーザーの指示「分かりやすいように」） |
 
 ---
 
@@ -562,15 +741,15 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 | §削除の方式：本人のデータだけ・Firestore → Authentication の順 | 7章（関数の中の動作）, ACD-T10, ACD-V26 |
 | §削除の方式：何度呼んでも同じ結果 | 7章（関数の中の動作）, ACD-R24, ACD-R25, ACD-R26 |
 | §削除の方式：関数の成功を受け取ってから端末内を削除 | ACD-V05, ACD-V06, ACD-V07 |
-| §削除の方式：パスワードの再入力は求めない | ACD-X07 |
+| （2026-10-31 に概要から削除）§削除の方式：パスワードの再入力は求めない | 本人確認を求めるに変更（下の §削除の方式 の行）。ACD-X07 は Google のユーザーの処理中の表示として残す |
 | §画面構成：「ログアウト」の下に「退会」 | ACD-D01 |
 | §画面構成：赤色・人の削除のアイコン | ACD-D01 |
 | §退会の流れ：1. 退会で確認ダイアログ | ACD-X01 |
 | §退会の流れ：2. OK で最終確認ダイアログ | ACD-X04 |
-| §退会の流れ：3. OK で処理開始・ローディング | ACD-X07 |
-| §退会の流れ：3. 他の操作（戻る操作を含む）をできない | ACD-X08, ACD-X09, ACD-X16, ACD-X18 |
-| §退会の流れ：4. 成功でログアウト・ログイン画面・完了ダイアログ | ACD-X10, ACD-V05, ACD-V12, ACD-V13 |
-| §退会の流れ：4. ログアウトに失敗しても成功扱い | ACD-X17, ACD-T11, ACD-V24, ACD-V27 |
+| §退会の流れ：4（旧 3）. 本人確認ができたら処理開始・ローディング | ACD-X07, ACD-X38 |
+| §退会の流れ：4（旧 3）. 本人確認の間と処理中は他の操作（戻る操作を含む）をできない | ACD-X08, ACD-X09, ACD-X16, ACD-X18, ACD-X39, ACD-X40, ACD-X41, ACD-X42 |
+| §退会の流れ：5（旧 4）. 成功でログアウト・ログイン画面・完了ダイアログ | ACD-X10, ACD-V05, ACD-V12, ACD-V13 |
+| §退会の流れ：5（旧 4）. ログアウトに失敗しても成功扱い | ACD-X17, ACD-T11, ACD-V24, ACD-V27, ACD-V138 |
 | §確認ダイアログ：構成（タイトル・本文・ボタン並び） | ACD-X01 |
 | §確認ダイアログ：キャンセル | ACD-X02 |
 | §確認ダイアログ：外側タップ | ACD-X03 |
@@ -666,6 +845,44 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 | §削除に失敗したときのダイアログ：外側タップ・戻る操作では閉じない | ACD-W34, ACD-W35 |
 | §画面遷移：お知らせダイアログで OK → ログイン画面・その上にデータの削除ダイアログ（ログアウトに失敗しても同じ） | ACD-W26, ACD-W27 |
 | §画面遷移：削除が成功 → 今の画面のまま | ACD-W07, ACD-W40 |
+| §本人確認ダイアログ：パスワード違いは開き直して入力を残す（Q13）・試行回数の上限は専用の本文（Q15） | ACD-X30, ACD-X49, ACD-X50, ACD-X51, ACD-X52, ACD-X53, ACD-T41, ACD-V143, ACD-V144, ACD-R56, ACD-R74 |
+| §退会済みが見つかったとき：本人確認の途中は結果を捨ててお知らせを優先（Q14） | ACD-W55, ACD-V145, ACD-V146, ACD-V147 |
+| §削除の方式：退会の前に本人確認を求める（確認ダイアログ2回のあと） | ACD-X24, ACD-X33, ACD-V112, ACD-V113 |
+| §削除の方式：メール登録はパスワード、Google は Google で本人確認する | ACD-X24, ACD-X28, ACD-X33, ACD-R63, ACD-R64 |
+| §削除の方式：関数は最後のログインから5分を超えていたら何も削除せず「本人確認が必要」を返す | ACD-R51, 7章（関数の中の判定は functions のテスト） |
+| §退会の流れ 3：最終確認で OK → 本人確認 | ACD-X24, ACD-X33 |
+| §退会の流れ 4：本人確認ができたら退会処理。本人確認の間もローディング | ACD-X28, ACD-X29, ACD-X38, ACD-V114 |
+| §本人確認ダイアログ：タイトル・本文・入力欄（伏せ字）・ボタンの並び | ACD-X24, ACD-X25 |
+| §本人確認ダイアログ：パスワードが空の間は OK を押せない | ACD-N01, ACD-X24, ACD-X25 |
+| §本人確認ダイアログ：キャンセル | ACD-X26 |
+| §本人確認ダイアログ：外側タップはキャンセルと同じ | ACD-X27 |
+| §本人確認ダイアログ：OK で入力したパスワードで本人確認 | ACD-X28, ACD-V112 |
+| §本人確認ダイアログ：本人確認ができた → 退会処理 | ACD-X28, ACD-V112, ACD-V113 |
+| §本人確認ダイアログ：Google でキャンセル → 設定画面、何も削除しない | ACD-X34, ACD-V115 |
+| §本人確認ダイアログ：パスワード違い・別の Google アカウント → 本人確認できなかったダイアログ | ACD-X30, ACD-X35, ACD-V116, ACD-R53, ACD-R54, ACD-R60 |
+| §本人確認ダイアログ：通信エラー・その他のエラー → 退会できませんでした | ACD-X36, ACD-X43, ACD-E03, ACD-V117, ACD-V118, ACD-R55, ACD-R56, ACD-R57, ACD-R61, ACD-R62 |
+| §本人確認できなかったときのダイアログ：タイトル・本文・OK | ACD-X30 |
+| §本人確認できなかったときのダイアログ：OK で設定画面に戻る | ACD-X31, ACD-V120 |
+| §退会処理の再開ダイアログ：再試行で「本人確認が必要」→ 本人確認の案内 | ACD-T16, ACD-T17, ACD-V121 |
+| §退会処理の再開ダイアログ：メール登録は案内文とパスワード欄。空の間は再試行を押せない | ACD-N02, ACD-T17, ACD-T18 |
+| §退会処理の再開ダイアログ：Google は案内文 | ACD-T16 |
+| §退会処理の再開ダイアログ：再試行で本人確認 → 続き。処理中の表示は通常と同じ | ACD-T19, ACD-T20, ACD-T21, ACD-V122, ACD-V123, ACD-V124 |
+| §退会処理の再開ダイアログ：Google でキャンセル → 案内のまま、メッセージなし | ACD-T22, ACD-V125 |
+| §退会処理の再開ダイアログ：パスワード違い・別アカウント → 本人確認できませんでした の表示 | ACD-T23, ACD-V126 |
+| §退会処理の再開ダイアログ：本人確認が通信エラー・その他 → 再試行に失敗しました の表示 | ACD-T24, ACD-E04, ACD-V127, ACD-V128 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（関数 Unknown） | ACD-T25, ACD-V129 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（関数 Network） | ACD-T27, ACD-V134 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（関数 Auth・削除成功） | ACD-T28, ACD-V135 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（関数成功・削除 Unknown） | ACD-T29, ACD-V136 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（関数 Auth・削除 Unknown） | ACD-V137 |
+| §退会処理の再開ダイアログ：本人確認後の結果は通常の再試行と同じ（ログアウト失敗でも完了） | ACD-V138 |
+| §退会処理の再開ダイアログ：本人確認後にまた「本人確認が必要」 | ACD-T30, ACD-V130 |
+| §退会処理の再開ダイアログ：本人確認の案内の表示中の外側タップ・戻る操作 | ACD-T26, ACD-T31, ACD-T32 |
+| §退会済みが見つかったとき：本人確認の途中に見つかった場合 | 8章（ACD-Q14）。「本人確認できませんでした」ダイアログの表示中は ACD-W54 |
+| §退会処理の再開ダイアログ：本人確認の応答待ちの外側タップ・背後のタップ、案内の表示中の背後のタップ | ACD-T35, ACD-T36, ACD-T37 |
+| §本人確認ダイアログ：空白だけ・前後の空白はそのまま渡す、入力を消すと OK を押せない、開き直すと空 | ACD-X44, ACD-X45, ACD-X47, ACD-X48, ACD-T39, ACD-T40 |
+| §途中で止まった場合：削除中で関数が「本人確認が必要」→ 記録を残し案内を表示 | ACD-T16, ACD-V121 |
+| §操作が失敗したとき：関数が「本人確認が必要」（同期待ちで5分超え）→ 記録を消し、退会できませんでした | ACD-X37, ACD-V119 |
 
 ### 9.2 操作 × 観点
 
@@ -673,6 +890,9 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 |-----|-----|---------|----------|---------|------|-----------|-----------|----------------|---------|-----------|--------|-----------|
 | 設定画面の表示 | ACD-D01 | — 設定の読み込みは範囲外（7章） | — 範囲外 | — 範囲外 | — 範囲外 | — 操作なし | — 操作なし | — 処理なし | — 操作なし | — 対象なし | — 値なし | — 入力なし |
 | 起動時の確認 | ACD-D02, ACD-D03, ACD-D04, ACD-D05, ACD-D08, ACD-V01〜V03 | ACD-D15, ACD-V33 | — 記録が無いのは ACD-D02 | — 端末内の読み取りのみで通信なし | — 認証を使わない | — 操作なし | — 操作なし | ACD-D16, ACD-V38 | — 起動時に1回だけ | ACD-D02（記録なし） | — 値なし | — 入力なし |
+| 本人確認（退会） | ACD-X28, ACD-X33, ACD-V112, ACD-V113 | ACD-E03, ACD-V118 | 7章（発生しない） | ACD-X36, ACD-V117 | ACD-X30, ACD-X35, ACD-V116 | ACD-X26, ACD-X34, ACD-V115 | ACD-X27 | ACD-X29, ACD-X38, ACD-X39, ACD-X40, ACD-X41, ACD-X42, ACD-V114 | ACD-V133, ACD-V141 | — 対象は自分 | — 値なし | ACD-N01, ACD-X24, ACD-X25, 7章（上限は判定しない） |
+| 本人確認できなかったダイアログの OK | ACD-X31, ACD-V120 | — 処理なし | — 処理なし | — 処理なし | — 処理なし | 7章（キャンセルボタンなし） | ACD-X32 | — 処理なし | 7章（ダイアログが閉じる） | — 対象なし | — 値なし | — 入力なし |
+| 本人確認の案内での再試行 | ACD-T19, ACD-T20, ACD-V122, ACD-V123 | ACD-E04, ACD-V128, ACD-T25, ACD-V129 | 7章（発生しない） | ACD-T24, ACD-V127 | ACD-T23, ACD-V126 | ACD-T22, ACD-V125 | ACD-T31（閉じられない）, ACD-T26, ACD-T32 | ACD-T21, ACD-T33, ACD-V124, ACD-V139 | ACD-V132 | ACD-V131, ACD-V140（再開待ちでないときは何もしない） | ACD-T34（同じパスワードで再操作） | ACD-N02, ACD-T17, ACD-T18 |
 | 「退会」タップ（確認ダイアログ） | ACD-X04 | — 通信なし | — 通信なし | — 通信なし | — 通信なし | ACD-X02 | ACD-X03 | — 処理なし | 7章（ダイアログが閉じる） | — 対象は自分 | — 値なし | — 入力なし |
 | 最終確認で OK（退会処理） | ACD-X10, ACD-V05, ACD-V24 | ACD-X14, ACD-V07, ACD-X15, ACD-V08 | 7章（発生しない） | ACD-X12, ACD-V06 | ACD-E01, ACD-V11 | ACD-X05 | ACD-X06 | ACD-X07, ACD-X08, ACD-X16, ACD-X18 | ACD-X09, ACD-V09 | — 対象は自分 | — 値なし | — 入力なし |
 | 完了ダイアログの OK | ACD-X11, ACD-V21 | — 通信なし | — 通信なし | — 通信なし | — 通信なし | — OK のみ | ACD-X19 | — 処理なし | 7章（ダイアログが閉じる） | — 対象なし | — 値なし | — 入力なし |
@@ -691,6 +911,8 @@ WithdrawnElsewhereUseCase（他の端末での退会）も同じく、確認の�
 |-----|-------|-------|-------|-------|-------|-------|-------|-------|-------|--------|--------|
 | 「退会」タップ | — 失敗しない | — 失敗しない | — 入力なし | — 処理なし | — 処理なし | ACD-X01, ACD-X04（確認2回） | ACD-X02, ACD-X03, ACD-X05, ACD-X06 | — 入力なし | — 自分の操作のみ | 7章（固定文言のみ） | — 通信なし |
 | 最終確認で OK | ACD-X12（設定画面に留まる）, ACD-V07（記録を残す）, ACD-R06（失敗時は端末内のデータが消えない） | ACD-X12, ACD-X14, ACD-X15 | — 入力なし | ACD-X09, ACD-X16, ACD-V09 | ACD-X07 | ACD-X04 | ACD-X05, ACD-X06 | — 入力なし | ACD-R05（他の uid は残す）, ACD-R15, ACD-T10 | 7章（固定文言のみ）, ACD-R27 | 7章（適用しない）, ACD-E01 |
+| 本人確認（退会） | ACD-X30, ACD-X36（設定画面に留まり、何も削除しない） | ACD-X30, ACD-X36, ACD-E03 | — パスワードは Firebase に渡すだけ（7章） | ACD-X29, ACD-V133 | ACD-X29 | ACD-X24（取り消せない操作の前に本人確認） | ACD-X26, ACD-X27, ACD-X34 | ACD-X30, ACD-X49（パスワード違いでは入力を残して開き直す） | — 自分のアカウントのみ（ACD-X35） | 7章（固定文言のみ）, ACD-R57, ACD-R62 | 7章（適用しない。通信エラーでも「退会できませんでした」） |
+| 本人確認の案内での再試行 | ACD-T23, ACD-T24（再開ダイアログを残す） | ACD-T23, ACD-T24, ACD-E04 | ACD-T23, ACD-T24, ACD-T30（入力を残す） | ACD-T21, ACD-V132 | ACD-T21 | — 退会を続けるだけ | ACD-T22, ACD-T26 | — 入力の保持なし | — 自分のアカウントのみ | 7章（固定文言のみ） | 7章（適用しない） |
 | 再試行 | ACD-T06, ACD-T07, ACD-T08（再開ダイアログを残す） | ACD-T06, ACD-T07, ACD-T08 | — 入力なし | ACD-T05, ACD-T09, ACD-V20 | ACD-T05, ACD-T09 | — すでに同意済み | ACD-D06, ACD-D07, ACD-D10, ACD-D11（閉じる操作をしても記録は変わらない） | — 入力なし | ACD-R05, ACD-T10 | 7章（固定文言のみ） | 7章（適用しない） |
 | 起動時の確認 | — 表示中のデータなし | ACD-D15 | — 入力なし | — 起動時に1回だけ | ACD-D16 | — 削除を始めない | — キャンセルなし | — 入力なし | — 自分の端末の記録のみ | 7章（固定文言のみ） | — 通信なし |
 | 他の端末での退会の確認 | ACD-W05, ACD-W06（失敗しても今の画面のまま）, ACD-V66, ACD-V67, ACD-V71（自分の退会中はお知らせを出さない）, ACD-R39（無言の削除が失敗しても何も消えない） | 7章（裏の確認のため表示しない）, 7章（無言の削除の失敗は表示しない）, ACD-W50 | — 入力なし | ACD-V60, ACD-V61, ACD-V70, ACD-V73, ACD-V75 | ACD-W25, ACD-W39（応答を待たずに起動） | ACD-V39（ログイン中のアカウントはお知らせの後にデータの削除ダイアログで確認する）, ACD-V40（ログアウト済みは退会時に本人が同意済みのため確認しない） | — キャンセルなし | — 入力なし | ACD-R31（端末内の uid ごとに判定）, ACD-V41（ログイン中の別のアカウントはログアウトしない）, ACD-V69 | 7章（固定文言のみ） | 7章（適用しない） |

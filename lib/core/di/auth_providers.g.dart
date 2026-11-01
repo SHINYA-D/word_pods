@@ -146,6 +146,24 @@ final deleteAccountUseCaseProvider = Provider<DeleteAccountUseCase>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DeleteAccountUseCaseRef = ProviderRef<DeleteAccountUseCase>;
+String _$reauthenticateUseCaseHash() =>
+    r'7d378db9fa14d3f1145b6939fe731a0e9f8d3a83';
+
+/// See also [reauthenticateUseCase].
+@ProviderFor(reauthenticateUseCase)
+final reauthenticateUseCaseProvider = Provider<ReauthenticateUseCase>.internal(
+  reauthenticateUseCase,
+  name: r'reauthenticateUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$reauthenticateUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ReauthenticateUseCaseRef = ProviderRef<ReauthenticateUseCase>;
 String _$withdrawnElsewhereUseCaseHash() =>
     r'f55d03f03a2dcfb3115b13bbd52f49d53db7619b';
 

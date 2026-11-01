@@ -9,6 +9,9 @@
 
 対象は SettingsPage の描画と退会の画面操作（Widget テスト）。退会は画面をまたぐため、本物のルーター（routerProvider）と
 AccountDeletionGate を `MaterialApp.router` に組み、手書き Fake（退会用リポジトリ・認証）と Mock Repository で検証する。
+退会の前の本人確認（仕様書 3.2 ACD-X24〜X53・3.3 ACD-T16〜T41・3.4 ACD-E03/E04・3.6 ACD-W54/W55・2.2 ACD-N01/N02）は、本人確認用の手書き Fake
+（`ReauthenticationRepository`。成功・キャンセル・各 Failure・応答待ち・呼び出し回数とパスワードの記録）を `reauthenticationRepositoryProvider` に差し込んで検証する。
+仕様書 3章冒頭の前提どおり、特に書かない限り Google のユーザー（hasPassword が false）で本人確認は成功する。メール登録のユーザーは hasPassword が true のユーザーを注入する。
 ViewModel（AccountDeletionViewModel）のロジック網羅は `test/presentation/settings/account_deletion_view_model_test.dart`
 （仕様書4章）が別に担当する（本項目書では扱わない）。1〜5 は仕様 ID の無い既存テスト。
 
@@ -132,6 +135,74 @@ ViewModel / UseCase の分岐網羅は `withdrawn_elsewhere_view_model_test.dart
 | 110 | ログイン中で設定画面を表示している状態でアプリをフォアグラウンドにしたまま A に退会済みの記録ができた場合、設定画面の上にお知らせダイアログが表示される [ACD-W45] | ACD-W45 #35e2bc | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 111 | 最終確認ダイアログの「OK」をタップして「退会処理中です」が表示されている状態で A に退会済みの記録ができた場合、お知らせダイアログは表示されず「退会処理中です」が表示されたままである [ACD-W46] | ACD-W46 #6aa639 | 境界値 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 | 112 | 最終確認ダイアログ（タイトル「最終確認」）を表示している状態でアプリをフォアグラウンドにしたまま A に退会済みの記録ができた場合、最終確認ダイアログが閉じてお知らせダイアログが表示される [ACD-W48] | ACD-W48 #27bf0f | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
+| 113 | メール登録のユーザーで最終確認ダイアログの「OK」をタップした場合、「本人確認」ダイアログに本文・パスワード欄・「キャンセル」「OK」が並び、欄は空で「OK」は無効、本人確認と関数は呼ばれない [ACD-X24] | ACD-X24 #0972a0 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 114 | 本人確認ダイアログでパスワード欄に「p」を入力した場合、「OK」が有効になり入力欄の文字は伏せ字で表示される [ACD-X25] | ACD-X25 #791972 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 115 | 本人確認ダイアログで「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X26] | ACD-X26 #4774f0 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 116 | 本人確認ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X27] | ACD-X27 #f4ea88 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 117 | メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、パスワードで1回・Google で0回本人確認される [ACD-X28] | ACD-X28 #6321f7 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 118 | メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認の応答を待っている場合、本人確認ダイアログが閉じて「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X29] | ACD-X29 #39c35f | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 119 | メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認が AuthFailure で失敗した場合、本人確認ダイアログが入力を残したまま誤りの文言付きで開き直され、関数は呼ばれず記録も無い [ACD-X30] | ACD-X30 #d08e8a | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 120 | 「本人確認できませんでした」ダイアログで「OK」をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X31] | ACD-X31 #3219e5 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 121 | 「本人確認できませんでした」ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X32] | ACD-X32 #f7682f | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 122 | Google のユーザーで最終確認ダイアログの「OK」をタップした場合、本人確認ダイアログは表示されず Google で1回・パスワードで0回本人確認される [ACD-X33] | ACD-X33 #dfac4e | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 123 | 最終確認ダイアログで「OK」をタップし Google の本人確認がキャンセルされた場合、「退会処理中です」が消えて設定画面が表示されダイアログは出ず、関数は呼ばれず記録も無い [ACD-X34] | ACD-X34 #a15afe | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 124 | 最終確認ダイアログで「OK」をタップし Google の本人確認が AuthFailure で失敗した場合、「退会処理中です」が消えて「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X35] | ACD-X35 #df8960 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 125 | 最終確認ダイアログで「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X36] | ACD-X36 #f8c722 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 126 | 最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、設定画面から移動せず記録も無い [ACD-X37] | ACD-X37 #a20b5b | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 127 | 最終確認ダイアログで「OK」をタップし Google の本人確認の応答を待っている場合、「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X38] | ACD-X38 #7e5bcf | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 128 | 本人確認の応答待ちに戻る操作をした場合、「退会処理中です」とインジケーターが表示されたままで設定画面から移動しない [ACD-X39] | ACD-X39 #99720c | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 129 | 本人確認の応答待ちにローディングの下にある「退会」の位置をタップした場合、確認ダイアログは表示されず本人確認は1回のままで関数は呼ばれない [ACD-X40] | ACD-X40 #90c047 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 130 | 本人確認の応答待ちにローディングの下にあるボトムナビ「ホーム」の位置をタップした場合、「退会処理中です」が表示されたままで画面のパスは設定画面のままである [ACD-X41] | ACD-X41 #f84c74 | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 131 | 本人確認の応答待ちにローディングの下にある「ログアウト」の位置をタップした場合、ログアウトの確認ダイアログは表示されず signOut は0回のままである [ACD-X42] | ACD-X42 #a1ae9e | 正常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 132 | メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X43] | ACD-X43 #7d31af | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 133 | 本人確認ダイアログでパスワード欄に「 」（半角スペース1文字）を入力した場合、「OK」が有効になる [ACD-X44] | ACD-X44 #3a568b | 境界値 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 134 | メール登録のユーザーで本人確認ダイアログに「 pass 」（前後に半角スペース）を入力して「OK」をタップした場合、空白を含んだまま1回本人確認される [ACD-X45] | ACD-X45 #f3b59a | 境界値 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 135 | 最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗し記録の削除（clearRequest）が UnknownFailure で失敗した場合、再開ダイアログと「再試行」が表示される [ACD-X46] | ACD-X46 #74733e | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 136 | 本人確認ダイアログでパスワード欄に「p」を入力したあとその1文字を消した場合、「OK」が無効になる [ACD-X47] | ACD-X47 #ecc53c | 境界値 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 137 | 本人確認ダイアログで「pass1234」を入力して「キャンセル」をタップしたあともう一度最終確認の「OK」まで進めた場合、パスワード欄は空で「OK」は無効である [ACD-X48] | ACD-X48 #30ec78 | 境界値 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 138 | パスワード違いで本人確認ダイアログが開き直された状態でもう一度「OK」をタップし本人確認がまた AuthFailure で失敗した場合、入力を残したまま誤りの文言付きで開き直され、本人確認は「pass1234」で合計2回呼ばれる [ACD-X49] | ACD-X49 #d3d500 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 139 | パスワード違いで本人確認ダイアログが開き直された状態で「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、関数は呼ばれず記録も無いままである [ACD-X50] | ACD-X50 #68b865 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 140 | パスワード違いで本人確認ダイアログが開き直された状態でパスワードを「pass5678」に直して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、最後の本人確認は「pass5678」で呼ばれる [ACD-X51] | ACD-X51 #ac0596 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 141 | メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、本人確認ダイアログは出ず関数は呼ばれない [ACD-X52] | ACD-X52 #1016bc | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 142 | 最終確認ダイアログで「OK」をタップし Google の本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X53] | ACD-X53 #b33953 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 143 | 最終確認ダイアログで「OK」をタップし本人確認が UnknownFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-E03] | ACD-E03 #e4dc94 | 異常系 | _withdraw() / askPasswordForAccountDeletion() | ✅ |
+| 144 | 本人確認ダイアログのパスワード欄に「p」を入力した場合、「OK」が有効になる [ACD-N01] | ACD-N01 #0f297c | 境界値 | askPasswordForAccountDeletion() | ✅ |
+| 145 | 本人確認ダイアログのパスワード欄に「 」（半角スペース1文字）を入力した場合、「OK」が有効になる [ACD-N01] | ACD-N01 #0f297c | 境界値 | askPasswordForAccountDeletion() | ✅ |
+| 146 | 本人確認ダイアログのパスワード欄に「　」（全角スペース1文字）を入力した場合、「OK」が有効になる [ACD-N01] | ACD-N01 #0f297c | 境界値 | askPasswordForAccountDeletion() | ✅ |
+| 147 | 本人確認ダイアログのパスワード欄が「」（空）の場合、「OK」が無効である [ACD-N01] | ACD-N01 #0f297c | 境界値 | askPasswordForAccountDeletion() | ✅ |
+| 148 | 再開ダイアログの本人確認の案内のパスワード欄に「p」を入力した場合、「再試行」が有効になる [ACD-N02] | ACD-N02 #aa8e79 | 境界値 | AccountDeletionRetryDialog | ✅ |
+| 149 | 再開ダイアログの本人確認の案内のパスワード欄に「 」（半角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-N02] | ACD-N02 #aa8e79 | 境界値 | AccountDeletionRetryDialog | ✅ |
+| 150 | 再開ダイアログの本人確認の案内のパスワード欄に「　」（全角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-N02] | ACD-N02 #aa8e79 | 境界値 | AccountDeletionRetryDialog | ✅ |
+| 151 | 再開ダイアログの本人確認の案内のパスワード欄が「」（空）の場合、「再試行」が無効である [ACD-N02] | ACD-N02 #aa8e79 | 境界値 | AccountDeletionRetryDialog | ✅ |
+| 152 | Google のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、Google 用の案内が表示され「再試行」が有効に戻り、パスワード欄・失敗文言は出ず端末内の削除は呼ばれない [ACD-T16] | ACD-T16 #72a4c1 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 153 | メール登録のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、パスワード用の案内と空のパスワード欄が表示され「再試行」は無効である [ACD-T17] | ACD-T17 #6331f4 | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 154 | 本人確認の案内のパスワード欄に「p」を入力した場合、「再試行」が有効になり入力欄の文字は伏せ字で表示される [ACD-T18] | ACD-T18 #1b2a3a | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 155 | 本人確認の案内のパスワード欄に「pass1234」を入力して「再試行」をタップし本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、パスワード「pass1234」で1回本人確認される [ACD-T19] | ACD-T19 #b0f49c | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 156 | Google の本人確認の案内で「再試行」をタップし Google の本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、Google で1回本人確認される [ACD-T20] | ACD-T20 #7373da | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 157 | Google の本人確認の案内で「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示される [ACD-T21] | ACD-T21 #ffdc0c | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 158 | Google の本人確認の案内で「再試行」をタップし Google の本人確認がキャンセルされた場合、案内が表示されたまま「再試行」が有効に戻り、2種類の失敗文言は出ず関数を呼ぶ回数は増えない [ACD-T22] | ACD-T22 #c7c683 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 159 | 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T23] | ACD-T23 #d12d39 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 160 | 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が NetworkFailure で失敗した場合、案内と「再試行に失敗しました。」が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T24] | ACD-T24 #e7e418 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 161 | 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T25] | ACD-T25 #27d498 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 162 | 本人確認の案内で戻る操作をした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T26] | ACD-T26 #7db56d | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 163 | 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが NetworkFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T27] | ACD-T27 #260cd7 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 164 | 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが AuthFailure で失敗し端末内の削除が成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示される [ACD-T28] | ACD-T28 #186e7c | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 165 | 本人確認の案内で「再試行」をタップし本人確認と関数の呼び出しは成功し端末内の削除が UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T29] | ACD-T29 #751bab | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 166 | 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認は成功し関数の呼び出しがまた RecentLoginRequiredFailure で失敗した場合、案内が表示されたまま2種類の失敗文言は出ず、入力（8文字）が残って「再試行」は有効である [ACD-T30] | ACD-T30 #183a94 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 167 | 本人確認の案内でダイアログの外側をタップした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T31] | ACD-T31 #dd9cb5 | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 168 | 本人確認の案内で「再試行」をタップし本人確認の応答を待っているときに戻る操作をした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T32] | ACD-T32 #afedbe | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 169 | 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示され、入力（8文字）が残る [ACD-T33] | ACD-T33 #beb28d | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 170 | 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗したあともう一度「再試行」をタップした場合、本人確認の失敗文言が消え、本人確認は「pass1234」で合計2回呼ばれる [ACD-T34] | ACD-T34 #b96e3a | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 171 | 本人確認の応答待ちでダイアログの外側をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで本人確認と関数を呼ぶ回数は増えない [ACD-T35] | ACD-T35 #146ff5 | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 172 | 本人確認の応答待ちでダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T36] | ACD-T36 #bb537a | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 173 | 本人確認の案内を表示している間にダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと本人確認の案内が表示されたままで画面のパスは変わらない [ACD-T37] | ACD-T37 #98a87e | 正常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 174 | Google の本人確認の案内で「再試行」をタップし Google の本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、関数を呼ぶ回数は増えない [ACD-T38] | ACD-T38 #2f606e | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 175 | 本人確認の案内のパスワード欄に「　」（全角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-T39] | ACD-T39 #c472be | 境界値 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 176 | 本人確認の案内のパスワード欄に「 pass 」（前後に半角スペース）を入力して「再試行」をタップした場合、空白を含んだまま1回本人確認される [ACD-T40] | ACD-T40 #0c87f4 | 境界値 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 177 | Google の本人確認の案内で「再試行」をタップし本人確認が TooManyRequestsFailure で失敗した場合、案内と試行回数の上限の文言が表示され「再試行」が有効に戻り、「再試行に失敗しました。」は出ず関数を呼ぶ回数は増えない [ACD-T41] | ACD-T41 #fb657f | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 178 | 本人確認の案内で「再試行」をタップし本人確認が UnknownFailure で失敗した場合、案内が表示されたまま「再試行に失敗しました。」が表示される [ACD-E04] | ACD-E04 #d9d636 | 異常系 | AccountDeletionRetryDialog / retryWithReauth() | ✅ |
+| 179 | 「本人確認できませんでした」ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、そのダイアログが閉じてお知らせダイアログが表示され、退会の状態は待機に戻る [ACD-W54] | ACD-W54 #2ccd98 | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
+| 180 | メール登録のユーザーで設定画面の本人確認ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、本人確認ダイアログが閉じてお知らせダイアログが表示され、本人確認と関数は呼ばれない [ACD-W55] | ACD-W55 #2df3cb | 正常系 | WithdrawnElsewhereGate / WithdrawnElsewhereViewModel | ✅ |
 
 ## テストケース詳細
 
@@ -1030,6 +1101,550 @@ ViewModel / UseCase の分岐網羅は `withdrawn_elsewhere_view_model_test.dart
 - **入力値・テスト条件**: ログイン中の uid が `A`、設定画面で最終確認ダイアログ（タイトル「最終確認」）を表示している状態で、アプリをフォアグラウンドにしたまま uid `A` に退会済みの記録ができた
 - **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・端末内の uid・退会済みの記録・強制ログアウトの記録・削除/ログアウトの結果・オフライン）で作り、タップ・戻る操作・アプリの復帰（resumed）・監視の通知を pump で進める
 - **期待結果**: 最終確認ダイアログが閉じ、お知らせダイアログが表示される
+
+### テストケース113: メール登録のユーザーで最終確認ダイアログの「OK」をタップした場合、「本人確認」ダイアログに本文・パスワード欄・「キャンセル」「OK」が並び、欄は空で「OK」は無効、本人確認と関数は呼ばれない [ACD-X24]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、最終確認ダイアログで「OK」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 最終確認ダイアログが閉じ、タイトル「本人確認」、本文「退会するには、パスワードを入力してください。」、ラベル「パスワード」の入力欄、「キャンセル」「OK」ボタンがこの順で横に並ぶダイアログが表示される。入力欄は空で、「OK」ボタンは無効。本人確認・関数を呼ぶ回数は0回
+
+### テストケース114: 本人確認ダイアログでパスワード欄に「p」を入力した場合、「OK」が有効になり入力欄の文字は伏せ字で表示される [ACD-X25]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログ（ACD-X24 の状態）でパスワード欄に「p」を入力した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「OK」ボタンが有効になる。入力欄の文字は伏せ字で表示される
+
+### テストケース115: 本人確認ダイアログで「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X26]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログで「キャンセル」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ダイアログが閉じ、設定画面が表示される。本人確認・関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース116: 本人確認ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示され、本人確認と関数は呼ばれず記録も無いままである [ACD-X27]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログの外側をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ダイアログが閉じ、設定画面が表示される。本人確認・関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース117: メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、パスワードで1回・Google で0回本人確認される [ACD-X28]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログに「pass1234」を入力して「OK」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithPassword` が「pass1234」で1回呼ばれる。`reauthenticateWithGoogle` は0回
+
+### テストケース118: メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認の応答を待っている場合、本人確認ダイアログが閉じて「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X29]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認の応答を待っている
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 本人確認ダイアログが閉じ、「退会処理中です」とローディングのインジケーターが表示される。関数を呼ぶ回数は0回
+
+### テストケース119: メール登録のユーザーで「pass1234」を入力して「OK」をタップし本人確認が AuthFailure で失敗した場合、本人確認ダイアログが入力を残したまま誤りの文言付きで開き直され、関数は呼ばれず記録も無い [ACD-X30]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログに「pass1234」を入力して「OK」をタップし、本人確認が `AuthFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、本人確認ダイアログがもう一度表示される。パスワード欄には「pass1234」（8文字）が入ったまま、「パスワードが正しくありません。もう一度入力してください。」が表示され、「OK」ボタンは有効。「本人確認できませんでした」ダイアログは表示されない。関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース120: 「本人確認できませんでした」ダイアログで「OK」をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X31]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 「本人確認できませんでした」ダイアログで「OK」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ダイアログが閉じ、設定画面が表示される
+
+### テストケース121: 「本人確認できませんでした」ダイアログの外側をタップした場合、ダイアログが閉じて設定画面が表示される [ACD-X32]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 「本人確認できませんでした」ダイアログの外側をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ダイアログが閉じ、設定画面が表示される
+
+### テストケース122: Google のユーザーで最終確認ダイアログの「OK」をタップした場合、本人確認ダイアログは表示されず Google で1回・パスワードで0回本人確認される [ACD-X33]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップした（Google のユーザー）
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 本人確認ダイアログは表示されない。`reauthenticateWithGoogle` が1回呼ばれる。`reauthenticateWithPassword` は0回
+
+### テストケース123: 最終確認ダイアログで「OK」をタップし Google の本人確認がキャンセルされた場合、「退会処理中です」が消えて設定画面が表示されダイアログは出ず、関数は呼ばれず記録も無い [ACD-X34]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、Google の本人確認がキャンセルされた（`Right(false)`）
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、設定画面が表示される。ダイアログは表示されない。関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース124: 最終確認ダイアログで「OK」をタップし Google の本人確認が AuthFailure で失敗した場合、「退会処理中です」が消えて「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X35]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、Google の本人確認が `AuthFailure` で失敗した（ログイン中と別のアカウントを選んだ）
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、「本人確認できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回
+
+### テストケース125: 最終確認ダイアログで「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X36]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、本人確認が `NetworkFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース126: 最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、設定画面から移動せず記録も無い [ACD-X37]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。設定画面から移動しない。退会処理の記録は無い
+
+### テストケース127: 最終確認ダイアログで「OK」をタップし Google の本人確認の応答を待っている場合、「退会処理中です」とインジケーターが表示され、関数は呼ばれない [ACD-X38]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、Google の本人確認の応答を待っている
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」とローディングのインジケーターが表示される。関数を呼ぶ回数は0回
+
+### テストケース128: 本人確認の応答待ちに戻る操作をした場合、「退会処理中です」とインジケーターが表示されたままで設定画面から移動しない [ACD-X39]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の応答待ち（ACD-X38 の状態）に戻る操作をした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」とインジケーターが表示されたまま。設定画面から移動しない
+
+### テストケース129: 本人確認の応答待ちにローディングの下にある「退会」の位置をタップした場合、確認ダイアログは表示されず本人確認は1回のままで関数は呼ばれない [ACD-X40]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にある「退会」の位置をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 確認ダイアログは表示されない。本人確認を呼ぶ回数は1回のまま。関数を呼ぶ回数は0回
+
+### テストケース130: 本人確認の応答待ちにローディングの下にあるボトムナビ「ホーム」の位置をタップした場合、「退会処理中です」が表示されたままで画面のパスは設定画面のままである [ACD-X41]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にあるボトムナビ「ホーム」の位置をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が表示されたまま。表示中の画面のパスは設定画面のまま
+
+### テストケース131: 本人確認の応答待ちにローディングの下にある「ログアウト」の位置をタップした場合、ログアウトの確認ダイアログは表示されず signOut は0回のままである [ACD-X42]
+- **カテゴリ**: 正常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の応答待ち（ACD-X38 の状態）に、ローディングの下にある「ログアウト」の位置をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ログアウトの確認ダイアログは表示されない。`AuthRepository.signOut` は0回のまま
+
+### テストケース132: メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が NetworkFailure で失敗した場合、「退会できませんでした」ダイアログが表示され、関数は呼ばれず記録も無い [ACD-X43]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認が `NetworkFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース133: 本人確認ダイアログでパスワード欄に「 」（半角スペース1文字）を入力した場合、「OK」が有効になる [ACD-X44]
+- **カテゴリ**: 境界値
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログ（ACD-X24 の状態）でパスワード欄に「 」（半角スペース1文字）を入力した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「OK」ボタンが有効になる
+
+### テストケース134: メール登録のユーザーで本人確認ダイアログに「 pass 」（前後に半角スペース）を入力して「OK」をタップした場合、空白を含んだまま1回本人確認される [ACD-X45]
+- **カテゴリ**: 境界値
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログに「 pass 」（前後に半角スペース）を入力して「OK」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: `reauthenticateWithPassword` が「 pass 」（前後の空白を含んだまま）で1回呼ばれる
+
+### テストケース135: 最終確認ダイアログで「OK」をタップし本人確認は成功し関数の呼び出しが RecentLoginRequiredFailure で失敗し記録の削除（clearRequest）が UnknownFailure で失敗した場合、再開ダイアログと「再試行」が表示される [ACD-X46]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、本人確認は成功し、関数の呼び出しが `RecentLoginRequiredFailure` で失敗し、記録の削除（`clearRequest`）が `UnknownFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理が完了していません」ダイアログと「再試行」ボタンが表示される
+
+### テストケース136: 本人確認ダイアログでパスワード欄に「p」を入力したあとその1文字を消した場合、「OK」が無効になる [ACD-X47]
+- **カテゴリ**: 境界値
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログでパスワード欄に「p」を入力したあと、その1文字を消した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「OK」ボタンが無効になる
+
+### テストケース137: 本人確認ダイアログで「pass1234」を入力して「キャンセル」をタップしたあともう一度最終確認の「OK」まで進めた場合、パスワード欄は空で「OK」は無効である [ACD-X48]
+- **カテゴリ**: 境界値
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認ダイアログで「pass1234」を入力して「キャンセル」をタップしたあと、もう一度「退会」から最終確認ダイアログの「OK」まで進んだ
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 本人確認ダイアログのパスワード欄は空で、「OK」ボタンは無効
+
+### テストケース138: パスワード違いで本人確認ダイアログが開き直された状態でもう一度「OK」をタップし本人確認がまた AuthFailure で失敗した場合、入力を残したまま誤りの文言付きで開き直され、本人確認は「pass1234」で合計2回呼ばれる [ACD-X49]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ACD-X30 の状態で、もう一度「OK」をタップし、本人確認がまた `AuthFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 本人確認ダイアログがもう一度表示され、パスワード欄には「pass1234」が入ったまま、「パスワードが正しくありません。もう一度入力してください。」が表示される。`reauthenticateWithPassword` は「pass1234」で合計2回呼ばれる
+
+### テストケース139: パスワード違いで本人確認ダイアログが開き直された状態で「キャンセル」をタップした場合、ダイアログが閉じて設定画面が表示され、関数は呼ばれず記録も無いままである [ACD-X50]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ACD-X30 の状態で「キャンセル」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ダイアログが閉じ、設定画面が表示される。関数を呼ぶ回数は0回。退会処理の記録は無いまま
+
+### テストケース140: パスワード違いで本人確認ダイアログが開き直された状態でパスワードを「pass5678」に直して「OK」をタップし本人確認・関数・端末内の削除がすべて成功した場合、ログイン画面に「退会が完了しました」が表示され、最後の本人確認は「pass5678」で呼ばれる [ACD-X51]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ACD-X30 の状態で、パスワードを「pass5678」に直して「OK」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。最後の `reauthenticateWithPassword` は「pass5678」で呼ばれる
+
+### テストケース141: メール登録のユーザーでパスワードを入力して「OK」をタップし本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、本人確認ダイアログは出ず関数は呼ばれない [ACD-X52]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: メール登録のユーザーで、本人確認ダイアログでパスワードを入力して「OK」をタップし、本人確認が `TooManyRequestsFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、タイトル「本人確認できませんでした」、本文「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」、「OK」ボタンのダイアログが表示される。本人確認ダイアログは表示されない。関数を呼ぶ回数は0回
+
+### テストケース142: 最終確認ダイアログで「OK」をタップし Google の本人確認が TooManyRequestsFailure で失敗した場合、試行回数の上限を知らせる「本人確認できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-X53]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、Google の本人確認が `TooManyRequestsFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、タイトル「本人確認できませんでした」、本文「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」のダイアログが表示される。関数を呼ぶ回数は0回
+
+### テストケース143: 最終確認ダイアログで「OK」をタップし本人確認が UnknownFailure で失敗した場合、「退会処理中です」が消えて「退会できませんでした」ダイアログが表示され、関数は呼ばれない [ACD-E03]
+- **カテゴリ**: 異常系
+- **対象メソッド**: _withdraw() / askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 最終確認ダイアログで「OK」をタップし、本人確認が `UnknownFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「退会処理中です」が消え、「退会できませんでした」ダイアログが表示される。関数を呼ぶ回数は0回
+
+### テストケース144: 本人確認ダイアログのパスワード欄に「p」を入力した場合、「OK」が有効になる [ACD-N01]
+- **カテゴリ**: 境界値
+- **対象メソッド**: askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。最終確認の「OK」まで進めて本人確認ダイアログを表示
+- **入力値・テスト条件**: パスワード欄に「p」を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「p」を入力する（enterText）
+- **期待結果**: 「OK」ボタンが有効になる
+
+### テストケース145: 本人確認ダイアログのパスワード欄に「 」（半角スペース1文字）を入力した場合、「OK」が有効になる [ACD-N01]
+- **カテゴリ**: 境界値
+- **対象メソッド**: askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。最終確認の「OK」まで進めて本人確認ダイアログを表示
+- **入力値・テスト条件**: パスワード欄に「 」（半角スペース1文字）を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「 」（半角スペース1文字）を入力する（enterText）
+- **期待結果**: 「OK」ボタンが有効になる
+
+### テストケース146: 本人確認ダイアログのパスワード欄に「　」（全角スペース1文字）を入力した場合、「OK」が有効になる [ACD-N01]
+- **カテゴリ**: 境界値
+- **対象メソッド**: askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。最終確認の「OK」まで進めて本人確認ダイアログを表示
+- **入力値・テスト条件**: パスワード欄に「　」（全角スペース1文字）を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「　」（全角スペース1文字）を入力する（enterText）
+- **期待結果**: 「OK」ボタンが有効になる
+
+### テストケース147: 本人確認ダイアログのパスワード欄が「」（空）の場合、「OK」が無効である [ACD-N01]
+- **カテゴリ**: 境界値
+- **対象メソッド**: askPasswordForAccountDeletion()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。最終確認の「OK」まで進めて本人確認ダイアログを表示
+- **入力値・テスト条件**: パスワード欄が「」（空）。有効な値と比べる無効の境界値
+- **操作手順**: パスワード欄に空文字を入力する（enterText）
+- **期待結果**: 「OK」ボタンが無効
+
+### テストケース148: 再開ダイアログの本人確認の案内のパスワード欄に「p」を入力した場合、「再試行」が有効になる [ACD-N02]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。記録が requested で「再試行」をタップし、関数が RecentLoginRequiredFailure で失敗して本人確認の案内を表示
+- **入力値・テスト条件**: パスワード欄に「p」を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「p」を入力する（enterText）
+- **期待結果**: 「再試行」ボタンが有効になる
+
+### テストケース149: 再開ダイアログの本人確認の案内のパスワード欄に「 」（半角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-N02]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。記録が requested で「再試行」をタップし、関数が RecentLoginRequiredFailure で失敗して本人確認の案内を表示
+- **入力値・テスト条件**: パスワード欄に「 」（半角スペース1文字）を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「 」（半角スペース1文字）を入力する（enterText）
+- **期待結果**: 「再試行」ボタンが有効になる
+
+### テストケース150: 再開ダイアログの本人確認の案内のパスワード欄に「　」（全角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-N02]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。記録が requested で「再試行」をタップし、関数が RecentLoginRequiredFailure で失敗して本人確認の案内を表示
+- **入力値・テスト条件**: パスワード欄に「　」（全角スペース1文字）を入力した。空白は除かず1文字以上が有効
+- **操作手順**: パスワード欄に「　」（全角スペース1文字）を入力する（enterText）
+- **期待結果**: 「再試行」ボタンが有効になる
+
+### テストケース151: 再開ダイアログの本人確認の案内のパスワード欄が「」（空）の場合、「再試行」が無効である [ACD-N02]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入。ログイン中のユーザーはメール登録（hasPassword が true）。記録が requested で「再試行」をタップし、関数が RecentLoginRequiredFailure で失敗して本人確認の案内を表示
+- **入力値・テスト条件**: パスワード欄が「」（空）。有効な値と比べる無効の境界値
+- **操作手順**: パスワード欄に空文字を入力する（enterText）
+- **期待結果**: 「再試行」ボタンが無効
+
+### テストケース152: Google のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、Google 用の案内が表示され「再試行」が有効に戻り、パスワード欄・失敗文言は出ず端末内の削除は呼ばれない [ACD-T16]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ログイン中（Google のユーザー）で記録が `requested` の状態で「再試行」をタップし、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが表示されたまま、「続けるには本人確認が必要です。「再試行」を押して、Google で本人確認してください。」が表示され、「再試行」ボタンが有効に戻る。パスワードの入力欄は表示されない。「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」は表示されない。端末内の削除は0回
+
+### テストケース153: メール登録のユーザーで記録が requested で「再試行」をタップし関数の呼び出しが RecentLoginRequiredFailure で失敗した場合、パスワード用の案内と空のパスワード欄が表示され「再試行」は無効である [ACD-T17]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ログイン中（メール登録のユーザー）で記録が `requested` の状態で「再試行」をタップし、関数の呼び出しが `RecentLoginRequiredFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが表示されたまま、「続けるには本人確認が必要です。パスワードを入力してください。」とラベル「パスワード」の空の入力欄が表示され、「再試行」ボタンは無効
+
+### テストケース154: 本人確認の案内のパスワード欄に「p」を入力した場合、「再試行」が有効になり入力欄の文字は伏せ字で表示される [ACD-T18]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「p」を入力した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「再試行」ボタンが有効になる。入力欄の文字は伏せ字で表示される
+
+### テストケース155: 本人確認の案内のパスワード欄に「pass1234」を入力して「再試行」をタップし本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、パスワード「pass1234」で1回本人確認される [ACD-T19]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認・関数の呼び出し・端末内の削除がすべて成功した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが閉じ、ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithPassword` が「pass1234」で1回呼ばれる
+
+### テストケース156: Google の本人確認の案内で「再試行」をタップし Google の本人確認・関数・端末内の削除がすべて成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示され、Google で1回本人確認される [ACD-T20]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、Google の本人確認・関数の呼び出し・端末内の削除がすべて成功した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが閉じ、ログイン画面（`/login`）に移動し、「退会が完了しました」ダイアログが表示される。`reauthenticateWithGoogle` が1回呼ばれる
+
+### テストケース157: Google の本人確認の案内で「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示される [ACD-T21]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認の応答を待っている
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログの中で「再試行」ボタンが無効になり、「退会処理中です」とローディングのインジケーターが表示される
+
+### テストケース158: Google の本人確認の案内で「再試行」をタップし Google の本人確認がキャンセルされた場合、案内が表示されたまま「再試行」が有効に戻り、2種類の失敗文言は出ず関数を呼ぶ回数は増えない [ACD-T22]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、Google の本人確認がキャンセルされた（`Right(false)`）
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「再試行」ボタンが有効に戻る。「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」と「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」はどちらも表示されない。関数を呼ぶ回数は増えない
+
+### テストケース159: 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T23]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `AuthFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。パスワード欄には入力した文字（8文字）が残る。関数を呼ぶ回数は増えない
+
+### テストケース160: 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が NetworkFailure で失敗した場合、案内と「再試行に失敗しました。」が表示され「再試行」が有効に戻り、入力（8文字）が残って関数を呼ぶ回数は増えない [ACD-T24]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `NetworkFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。パスワード欄には入力した文字（8文字）が残る。関数を呼ぶ回数は増えない
+
+### テストケース161: 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T25]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `UnknownFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される
+
+### テストケース162: 本人確認の案内で戻る操作をした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T26]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で戻る操作をした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと本人確認の案内が表示されたまま
+
+### テストケース163: 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが NetworkFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T27]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `NetworkFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される
+
+### テストケース164: 本人確認の案内で「再試行」をタップし本人確認は成功し関数の呼び出しが AuthFailure で失敗し端末内の削除が成功した場合、再開ダイアログが閉じログイン画面に「退会が完了しました」が表示される [ACD-T28]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しが `AuthFailure` で失敗し、端末内の削除が成功した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが閉じ、ログイン画面（`/login`）に「退会が完了しました」ダイアログが表示される
+
+### テストケース165: 本人確認の案内で「再試行」をタップし本人確認と関数の呼び出しは成功し端末内の削除が UnknownFailure で失敗した場合、再開ダイアログが表示されたまま案内は消え「再試行に失敗しました。」が表示される [ACD-T29]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認は成功し、関数の呼び出しは成功し、端末内の削除が `UnknownFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログが表示されたまま、本人確認の案内は消え、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される
+
+### テストケース166: 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認は成功し関数の呼び出しがまた RecentLoginRequiredFailure で失敗した場合、案内が表示されたまま2種類の失敗文言は出ず、入力（8文字）が残って「再試行」は有効である [ACD-T30]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認は成功し、関数の呼び出しがまた `RecentLoginRequiredFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま。「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」と「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」はどちらも表示されない。パスワード欄には入力した文字（8文字）が残り、「再試行」ボタンは有効
+
+### テストケース167: 本人確認の案内でダイアログの外側をタップした場合、再開ダイアログと本人確認の案内が表示されたままである [ACD-T31]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）でダイアログの外側をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと本人確認の案内が表示されたまま
+
+### テストケース168: 本人確認の案内で「再試行」をタップし本人確認の応答を待っているときに戻る操作をした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T32]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときに戻る操作をした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと「退会処理中です」が表示されたまま。表示中の画面のパスは変わらない
+
+### テストケース169: 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認の応答を待っている場合、「再試行」が無効になり「退会処理中です」とインジケーターが表示され、入力（8文字）が残る [ACD-T33]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認の応答を待っている
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「再試行」ボタンが無効になり、「退会処理中です」とローディングのインジケーターが表示される。パスワード欄には入力した文字（8文字）が残る
+
+### テストケース170: 本人確認の案内でパスワード「pass1234」を入力して「再試行」をタップし本人確認が AuthFailure で失敗したあともう一度「再試行」をタップした場合、本人確認の失敗文言が消え、本人確認は「pass1234」で合計2回呼ばれる [ACD-T34]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「pass1234」を入力して「再試行」をタップし、本人確認が `AuthFailure` で失敗したあと、もう一度「再試行」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が消える。`reauthenticateWithPassword` が「pass1234」で合計2回呼ばれる
+
+### テストケース171: 本人確認の応答待ちでダイアログの外側をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで本人確認と関数を呼ぶ回数は増えない [ACD-T35]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときにダイアログの外側をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと「退会処理中です」が表示されたまま。本人確認・関数を呼ぶ回数は増えない
+
+### テストケース172: 本人確認の応答待ちでダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと「退会処理中です」が表示されたままで画面のパスは変わらない [ACD-T36]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内で「再試行」をタップし、本人確認の応答を待っている（ACD-T21 の状態）ときに、ダイアログの下にあるボトムナビ「ホーム」の位置をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと「退会処理中です」が表示されたまま。表示中の画面のパスは変わらない
+
+### テストケース173: 本人確認の案内を表示している間にダイアログの下にあるボトムナビ「ホーム」の位置をタップした場合、再開ダイアログと本人確認の案内が表示されたままで画面のパスは変わらない [ACD-T37]
+- **カテゴリ**: 正常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）を表示している間に、ダイアログの下にあるボトムナビ「ホーム」の位置をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログと本人確認の案内が表示されたまま。表示中の画面のパスは変わらない
+
+### テストケース174: Google の本人確認の案内で「再試行」をタップし Google の本人確認が AuthFailure で失敗した場合、案内と本人確認の失敗文言が表示され「再試行」が有効に戻り、関数を呼ぶ回数は増えない [ACD-T38]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態。Google のユーザー）で「再試行」をタップし、Google の本人確認が `AuthFailure` で失敗した（ログイン中と別のアカウントを選んだ）
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「本人確認できませんでした。パスワード（Google アカウント）を確認して、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。関数を呼ぶ回数は増えない
+
+### テストケース175: 本人確認の案内のパスワード欄に「　」（全角スペース1文字）を入力した場合、「再試行」が有効になる [ACD-T39]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「　」（全角スペース1文字）を入力した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 「再試行」ボタンが有効になる
+
+### テストケース176: 本人確認の案内のパスワード欄に「 pass 」（前後に半角スペース）を入力して「再試行」をタップした場合、空白を含んだまま1回本人確認される [ACD-T40]
+- **カテゴリ**: 境界値
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T17 の状態）でパスワード欄に「 pass 」（前後に半角スペース）を入力して「再試行」をタップした
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: `reauthenticateWithPassword` が「 pass 」（前後の空白を含んだまま）で1回呼ばれる
+
+### テストケース177: Google の本人確認の案内で「再試行」をタップし本人確認が TooManyRequestsFailure で失敗した場合、案内と試行回数の上限の文言が表示され「再試行」が有効に戻り、「再試行に失敗しました。」は出ず関数を呼ぶ回数は増えない [ACD-T41]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認が `TooManyRequestsFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「本人確認の試行回数が上限を超えました。しばらく時間をおいて、もう一度お試しください。」が表示され、「再試行」ボタンが有効に戻る。「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」は表示されない。関数を呼ぶ回数は増えない
+
+### テストケース178: 本人確認の案内で「再試行」をタップし本人確認が UnknownFailure で失敗した場合、案内が表示されたまま「再試行に失敗しました。」が表示される [ACD-E04]
+- **カテゴリ**: 異常系
+- **対象メソッド**: AccountDeletionRetryDialog / retryWithReauth()
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: 本人確認の案内（ACD-T16 の状態）で「再試行」をタップし、本人確認が `UnknownFailure` で失敗した
+- **操作手順**: 上記の条件を Fake の状態（ログイン中のユーザーの hasPassword・本人確認の結果/応答待ち・関数と端末内の削除の結果）で作り、タップ・文字入力・戻る操作を pump で進める
+- **期待結果**: 再開ダイアログに本人確認の案内が表示されたまま、「再試行に失敗しました。通信環境を確認して、もう一度お試しください。」が表示される
+
+### テストケース179: 「本人確認できませんでした」ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、そのダイアログが閉じてお知らせダイアログが表示され、退会の状態は待機に戻る [ACD-W54]
+- **カテゴリ**: 正常系
+- **対象メソッド**: WithdrawnElsewhereGate / WithdrawnElsewhereViewModel
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate + WithdrawnElsewhereGate（app.dart と同じ配線。起動時の initialize()→check()、復帰時の check()）で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ログイン中の uid が `A`、設定画面で「本人確認できませんでした」ダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った
+- **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・端末内の uid・退会済みの記録・本人確認の結果）で作り、タップ・文字入力・アプリの復帰（resumed）を pump で進める
+- **期待結果**: 「本人確認できませんでした」ダイアログが閉じ、お知らせダイアログが表示される。`AccountDeletionViewModel` の `phase` は `idle` になる
+
+### テストケース180: メール登録のユーザーで設定画面の本人確認ダイアログを表示している状態で A に退会済みの記録ができアプリがフォアグラウンドに戻った場合、本人確認ダイアログが閉じてお知らせダイアログが表示され、本人確認と関数は呼ばれない [ACD-W55]
+- **カテゴリ**: 正常系
+- **対象メソッド**: WithdrawnElsewhereGate / WithdrawnElsewhereViewModel
+- **事前条件**: 本物のルーター（routerProvider）+ AccountDeletionGate + WithdrawnElsewhereGate（app.dart と同じ配線。起動時の initialize()→check()、復帰時の check()）で起動し、手書き Fake（退会用リポジトリ・認証・本人確認）と Mock Repository を注入
+- **入力値・テスト条件**: ログイン中の uid が `A`、メール登録のユーザーで設定画面の本人確認ダイアログを表示している状態で、uid `A` に退会済みの記録ができ、アプリがフォアグラウンドに戻った
+- **操作手順**: 上記の条件を Fake の状態（ログイン中の uid・端末内の uid・退会済みの記録・本人確認の結果）で作り、タップ・文字入力・アプリの復帰（resumed）を pump で進める
+- **期待結果**: 本人確認ダイアログが閉じ、お知らせダイアログが表示される。本人確認・関数を呼ぶ回数は0回
 
 ## 対象外
 

@@ -7,7 +7,7 @@ part of 'flashcard_mode_view_model.dart';
 // **************************************************************************
 
 String _$flashcardModeViewModelHash() =>
-    r'f97ae155002cf0f082da5caab167a4bb182c38ce';
+    r'38a120c50a7e2d06ac4588363345766f5c476255';
 
 /// See also [FlashcardModeViewModel].
 @ProviderFor(FlashcardModeViewModel)

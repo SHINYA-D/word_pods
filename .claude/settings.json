@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash",
+      "Bash(fvm flutter pub get)",
       "Glob",
       "Grep",
       "Read(//Users/a12345/StudioProjects/word_pods/**)",
@@ -19,13 +19,17 @@
       "Read(.env*)",
       "Read(**/.env*)",
       "Read(android/key.properties)",
-      "Read(android/app/src/*/google-services.json)",
-      "Read(ios/Runner/GoogleService-Info.plist)",
+      "Read(**/google-services.json)",
+      "Read(**/GoogleService-Info.plist)",
       "Read(**/*.keystore)",
       "Read(**/*.jks)",
       "Read(**/*.p12)",
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.config/configstore/**)",
+      "Read(~/.netrc)",
+      "Read(~/.git-credentials)",
       "Bash(sudo:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
@@ -52,6 +56,51 @@
       "Bash(ssh:*)",
       "Bash(scp:*)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": [
+      "git push *",
+      "git fetch *",
+      "git pull *",
+      "gh *",
+      "firebase *",
+      "flutterfire *",
+      "gcloud *",
+      "fvm flutter pub *",
+      "fvm dart pub *",
+      "bash scripts/test_harness.sh",
+      "bash scripts/test_harness.sh *",
+      "npm run test:emulator",
+      "npm --prefix functions run test:emulator"
+    ],
+    "filesystem": {
+      "allowWrite": [
+        "~/fvm",
+        "~/.pub-cache",
+        "~/.dart-tool",
+        "~/.dartServer",
+        "~/.flutter",
+        "~/.config/flutter",
+        "~/.gradle",
+        "~/.npm",
+        "~/.cache/firebase",
+        "~/Desktop"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "pub.dev",
+        "*.pub.dev",
+        "storage.googleapis.com",
+        "*.googleapis.com",
+        "registry.npmjs.org",
+        "github.com",
+        "*.githubusercontent.com"
+      ],
+      "allowLocalBinding": true
+    }
   },
   "hooks": {
     "PreToolUse": [

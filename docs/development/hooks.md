@@ -204,6 +204,20 @@ test-loop のセッション中で、`start-session --scope` で範囲が宣言�
 - `gen_test_excel.py` 実行前の venv チェックはフックでは行わない。`openpyxl` が無ければスクリプト自身が
   セットアップ手順を表示して終了する。
 
+## Bash のサンドボックス（参考）
+
+フックではないが、`.claude/settings.json` の `sandbox` で Bash を OS レベルのサンドボックス（macOS は Seatbelt）で動かしている。
+
+- `"Bash"` の全面許可はしていない。サンドボックスの中で動くコマンドだけを自動で許可する（`autoAllowBashIfSandboxed`）。
+  `permissions.deny` の `Read(...)` はサンドボックスの中の `cat` などにも効くため、秘密情報のファイルを Bash 経由でも読めない
+- 書き込めるのはプロジェクト・一時ディレクトリと、`sandbox.filesystem.allowWrite` に並べたキャッシュ（fvm・pub・Gradle・npm 等）と `~/Desktop`（Excel 項目書の出力先）
+- 通信は `sandbox.network.allowedDomains` のドメインだけ。Dart の通信はサンドボックスのプロキシを使わないため、
+  `fvm flutter pub` と `bash scripts/test_harness.sh`（初回に SQLite のライブラリを取得する）は `excludedCommands` でサンドボックスの外で動かす
+- SSH の `git push` / `fetch` / `pull`、`gh`、`firebase` もサンドボックスの外で動かす（`excludedCommands`。許可はその都度確認する）
+- サンドボックスの外で動くコマンドは自動では許可されない（`permissions.allow` に無ければ確認が出る）
+- `cd`・パイプ・リダイレクト・`$(...)` を含むコマンドは、`excludedCommands` に当てはまってもサンドボックスの中で動く。
+  除外したいコマンドは単独で実行する（例: `npm --prefix functions run test:emulator`）
+
 ## 関連ファイル
 
 | ファイル | 役割 |

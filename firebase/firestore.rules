@@ -1,18 +1,101 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function canWrite(userId) {
+      return isOwner(userId)
+          && !exists(/databases/$(database)/documents/deleted_accounts/$(userId));
+    }
+
+    function isId(id) {
+      return id.size() <= 100;
+    }
+
+    function isText(value, maxSize) {
+      return value is string && value.size() <= maxSize;
+    }
+
+    function isOptionalTimestamp(data, key) {
+      return !(key in data) || data[key] == null || data[key] is timestamp;
+    }
+
+    // 同期のメタ情報。serverUpdatedAt はサーバー時刻（差分取得の基準）なので、端末が任意の時刻を書けないようにする
+    function hasSyncMeta(data) {
+      return data.updatedAt is timestamp
+          && data.serverUpdatedAt == request.time;
+    }
+
+    function isFolder(data) {
+      return data.keys().hasOnly(['name', 'parentFolderId', 'createdAt', 'updatedAt', 'deletedAt', 'serverUpdatedAt'])
+          && hasSyncMeta(data)
+          && isText(data.get('name', ''), 100)
+          && (data.get('parentFolderId', null) == null || isText(data.parentFolderId, 100))
+          && isOptionalTimestamp(data, 'createdAt')
+          && isOptionalTimestamp(data, 'deletedAt');
+    }
+
+    function isWord(data) {
+      return data.keys().hasOnly(['front', 'back', 'createdAt', 'updatedAt', 'deletedAt', 'serverUpdatedAt'])
+          && hasSyncMeta(data)
+          && isText(data.get('front', ''), 1000)
+          && isText(data.get('back', ''), 1000)
+          && isOptionalTimestamp(data, 'createdAt')
+          && isOptionalTimestamp(data, 'deletedAt');
+    }
+
+    function isFlashcardResult(data) {
+      return data.keys().hasOnly(['folderId', 'totalCount', 'correctCount', 'date', 'updatedAt', 'deletedAt', 'serverUpdatedAt'])
+          && hasSyncMeta(data)
+          && isText(data.get('folderId', ''), 100)
+          && data.get('totalCount', 0) is int
+          && data.get('correctCount', 0) is int
+          && data.get('totalCount', 0) >= 0 && data.get('totalCount', 0) <= 100000
+          && data.get('correctCount', 0) >= 0 && data.get('correctCount', 0) <= 100000
+          && isOptionalTimestamp(data, 'date')
+          && isOptionalTimestamp(data, 'deletedAt');
+    }
+
+    function isSettings(data) {
+      return data.keys().hasOnly(['colorTheme', 'darkMode', 'updatedAt', 'serverUpdatedAt'])
+          && hasSyncMeta(data)
+          && isText(data.get('colorTheme', ''), 50)
+          && data.get('darkMode', false) is bool;
+    }
+
     // 自分の配下データのみ読み書き可。退会済み（deleted_accounts/{uid} がある）なら書き込めない。
     // 他の端末に残っているログイン情報（最大1時間有効）で、同期によって削除したデータが作り直されるのを防ぐため
     match /users/{userId}/{document=**} {
-      allow read: if request.auth != null
-                  && request.auth.uid == userId;
-      allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && !exists(/databases/$(database)/documents/deleted_accounts/$(userId));
+      allow read: if isOwner(userId);
+    }
+
+    // 書き込みはアプリの同期（FirestoreSyncRemoteDataSource）が書く形だけを許す。
+    // アプリを通さずに任意の項目・大きなデータを書き込まれ、料金がかさむのを防ぐため。
+    // 文字数の上限はアプリの入力制限（フォルダ名は半角20文字、単語は500文字）より余裕を持たせる
+    match /users/{userId}/folders/{folderId} {
+      allow write: if canWrite(userId) && isId(folderId)
+                   && (request.method == 'delete' || isFolder(request.resource.data));
+
+      match /words/{wordId} {
+        allow write: if canWrite(userId) && isId(wordId)
+                     && (request.method == 'delete' || isWord(request.resource.data));
+      }
+    }
+
+    match /users/{userId}/flashcard_results/{resultId} {
+      allow write: if canWrite(userId) && isId(resultId)
+                   && (request.method == 'delete' || isFlashcardResult(request.resource.data));
+    }
+
+    match /users/{userId}/settings/{docId} {
+      allow write: if canWrite(userId) && docId == 'config'
+                   && (request.method == 'delete' || isSettings(request.resource.data));
     }
 
     // 退会済みの記録。ログインしていない端末からも退会済みかを確認できるよう、1件ずつの読み取りだけ許す
-    // （退会日時とメールアドレスを持つ。uid を知っていればログインしていなくても読める点に注意）。
+    // （退会日時だけを持つ。uid を知っていればログインしていなくても読めるため、個人情報は置かない）。
     // 一覧の読み取りと書き込みはサーバーだけ
     match /deleted_accounts/{userId} {
       allow get: if true;
@@ -26,7 +109,8 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // 規約への同意の履歴。退会後も残す証跡。読み書きともサーバー（Admin SDK）だけ
+    // 規約への同意の履歴と、退会したユーザーのメールアドレス（consent_logs/{uid}.email）。退会後も残す証跡。
+    // 読み書きともサーバー（Admin SDK）だけ
     match /consent_logs/{userId}/{document=**} {
       allow read, write: if false;
     }

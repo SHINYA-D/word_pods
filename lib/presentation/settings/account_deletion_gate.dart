@@ -52,6 +52,7 @@ class _AccountDeletionGateState extends ConsumerState<AccountDeletionGate> {
     final location = widget.router.routerDelegate.currentConfiguration.uri.path;
     final show = location != const SplashRoute().location &&
         (state.phase == AccountDeletionPhase.pendingRetry ||
+            state.phase == AccountDeletionPhase.reauthRequired ||
             (state.phase == AccountDeletionPhase.processing && state.isRetry));
     final route = _retryRoute;
     final isShowing = route != null && route.isActive;

@@ -48,6 +48,7 @@
 | 35 | オンラインで A に退会済みの記録がある状態で A の購読を始めた場合、ストリームの最初の通知が Right(true) になる [ACD-R48] | ACD-R48 ##8e1ffe | 正常系 | watchWithdrawn() | ✅ |
 | 36 | ログイン中の uid A に強制ログアウトの記録があり未送信の変更が1件ある状態で pushPending を呼んだ場合、リモートへの送信は0回で未送信の変更は1件のままになる [ACD-R49] | ACD-R49 ##ffed08 | 正常系 | pushPending()（SyncService） | ✅ |
 | 37 | ログイン中の uid A に強制ログアウトの記録があり前回の取得から5分以上たった状態で syncOnResumed を呼んだ場合、リモートからの取得は0回になる [ACD-R50] | ACD-R50 ##ad9d2b | 正常系 | syncOnResumed()（SyncService） | ✅ |
+| 38 | オンラインで関数が failed-precondition で失敗した場合、Left(RecentLoginRequiredFailure) になる [ACD-R51] | ACD-R51 #11dead | 異常系 | requestServerDeletion() | ✅ |
 
 ## テストケース詳細
 
@@ -346,3 +347,11 @@
 - **入力値・テスト条件**: userId=A（ほか仕様書の条件のとおり）
 - **操作手順**: 上記のメソッドを呼ぶ
 - **期待結果**: テスト名のとおり（仕様書 5.3 の ACD-R50 の期待される結果）
+
+### テストケース38: オンラインで関数が failed-precondition で失敗した場合、Left(RecentLoginRequiredFailure) になる [ACD-R51]
+- **カテゴリ**: 異常系
+- **対象メソッド**: requestServerDeletion()
+- **事前条件**: 仕様書 5.1 の ACD-R51 の条件のとおり（実SQLite（sqflite_common_ffi）と手書きFakeのリモート・接続状態）
+- **入力値・テスト条件**: 関数がエラーコード failed-precondition で失敗する
+- **操作手順**: 上記のメソッドを呼ぶ
+- **期待結果**: テスト名のとおり（仕様書 5.1 の ACD-R51 の期待される結果）

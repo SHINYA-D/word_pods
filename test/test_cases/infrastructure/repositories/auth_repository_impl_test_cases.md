@@ -6,6 +6,7 @@
 |------|-----|
 | ファイルパス | lib/infrastructure/repositories/auth_repository_impl.dart |
 | クラス名 | AuthRepositoryImpl |
+| 仕様書 | docs/detailed_design/presentation/settings/settings_page.md |
 | テスト対象メソッド | signInWithEmail() / signUpWithEmail() / signInWithGoogle() / signOut() / sendPasswordResetEmail() / authStateChanges / _toAppUser()(private、各メソッド経由で間接的に検証) / _mapFirebaseAuthException()(private、各メソッド経由で間接的に検証) |
 
 ## 実行環境について
@@ -27,29 +28,33 @@
 
 ## テストケース一覧
 
-| # | テスト名 | カテゴリ | 対象メソッド | 状態 |
-|---|---------|---------|-----------|------|
-| 1 | メールとパスワードでのサインインに成功した場合、AppUserに変換されRightで返る | 正常系 | signInWithEmail() | ✅ |
-| 2 | サインインしたユーザーのemail/displayNameがnullの場合、emailは空文字に変換されdisplayNameはnullのまま返る | 境界値 | signInWithEmail() | ✅ |
-| 3 | FirebaseAuthExceptionのcodeがnetwork-request-failedの場合、Failure.networkが返る | 異常系 | signInWithEmail() | ✅ |
-| 4 | FirebaseAuthExceptionのcodeがuser-not-foundの場合、Failure.authが返る | 異常系 | signInWithEmail() | ✅ |
-| 5 | FirebaseAuthExceptionのcodeがwrong-passwordの場合、Failure.authが返る | 異常系 | signInWithEmail() | ✅ |
-| 6 | FirebaseAuthExceptionのcodeがinvalid-credentialの場合、Failure.authが返る | 異常系 | signInWithEmail() | ✅ |
-| 7 | FirebaseAuthExceptionのcodeがemail-already-in-useの場合、Failure.authが返る | 異常系 | signInWithEmail() | ✅ |
-| 8 | FirebaseAuthExceptionのcodeが未知でmessageがある場合、Failure.unknown(message)が返る | 異常系 | signInWithEmail() | ✅ |
-| 9 | FirebaseAuthExceptionのcodeが未知でmessageがnullの場合、Failure.unknown(code)が返る | 境界値 | signInWithEmail() | ✅ |
-| 10 | FirebaseAuthException以外の例外が発生した場合、Failure.unknown(例外文字列)が返る | 異常系 | signInWithEmail() | ✅ |
-| 11 | UserCredentialのuserがnullの場合、Failure.unknownが返る | 境界値 | signInWithEmail() | ✅ |
-| 12 | サインアップに成功した場合、AppUserに変換されRightで返る | 正常系 | signUpWithEmail() | ✅ |
-| 13 | FirebaseAuthExceptionのcodeがemail-already-in-useの場合、Failure.authが返る | 異常系 | signUpWithEmail() | ✅ |
-| 14 | Google認証に成功した場合、AppUserに変換されRightで返る | 正常系 | signInWithGoogle() | ✅ |
-| 15 | Google認証がキャンセルされた場合、未知のコードとしてFailure.unknownが返る | 異常系 | signInWithGoogle() | ✅ |
-| 16 | サインアウトに成功した場合、Right(unit)が返る | 正常系 | signOut() | ✅ |
-| 17 | サインアウト中にFirebaseAuthExceptionが発生した場合、対応するFailureが返る | 異常系 | signOut() | ✅ |
-| 18 | パスワードリセットメール送信に成功した場合、Right(unit)が返る | 正常系 | sendPasswordResetEmail() | ✅ |
-| 19 | FirebaseAuthExceptionのcodeがuser-not-foundの場合、Failure.authが返る | 異常系 | sendPasswordResetEmail() | ✅ |
-| 20 | 認証状態変化のストリームにユーザーが流れた場合、AppUserに変換されて流れる | 正常系 | authStateChanges | ✅ |
-| 21 | 認証状態変化のストリームにnullが流れた場合、nullがそのまま流れる | 境界値 | authStateChanges | ✅ |
+| # | テスト名 | 仕様ID | カテゴリ | 対象メソッド | 状態 |
+|---|---------|--------|---------|-----------|------|
+| 1 | メールとパスワードでのサインインに成功した場合、AppUserに変換されRightで返る | | 正常系 | signInWithEmail() | ✅ |
+| 2 | サインインしたユーザーのemail/displayNameがnullの場合、emailは空文字に変換されdisplayNameはnullのまま返る | | 境界値 | signInWithEmail() | ✅ |
+| 3 | FirebaseAuthExceptionのcodeがnetwork-request-failedの場合、Failure.networkが返る | | 異常系 | signInWithEmail() | ✅ |
+| 4 | FirebaseAuthExceptionのcodeがuser-not-foundの場合、Failure.authが返る | | 異常系 | signInWithEmail() | ✅ |
+| 5 | FirebaseAuthExceptionのcodeがwrong-passwordの場合、Failure.authが返る | | 異常系 | signInWithEmail() | ✅ |
+| 6 | FirebaseAuthExceptionのcodeがinvalid-credentialの場合、Failure.authが返る | | 異常系 | signInWithEmail() | ✅ |
+| 7 | FirebaseAuthExceptionのcodeがemail-already-in-useの場合、Failure.authが返る | | 異常系 | signInWithEmail() | ✅ |
+| 8 | FirebaseAuthExceptionのcodeが未知でmessageがある場合、Failure.unknown(message)が返る | | 異常系 | signInWithEmail() | ✅ |
+| 9 | FirebaseAuthExceptionのcodeが未知でmessageがnullの場合、Failure.unknown(code)が返る | | 境界値 | signInWithEmail() | ✅ |
+| 10 | FirebaseAuthException以外の例外が発生した場合、Failure.unknown(例外文字列)が返る | | 異常系 | signInWithEmail() | ✅ |
+| 11 | UserCredentialのuserがnullの場合、Failure.unknownが返る | | 境界値 | signInWithEmail() | ✅ |
+| 12 | サインアップに成功した場合、AppUserに変換されRightで返る | | 正常系 | signUpWithEmail() | ✅ |
+| 13 | FirebaseAuthExceptionのcodeがemail-already-in-useの場合、Failure.authが返る | | 異常系 | signUpWithEmail() | ✅ |
+| 14 | Google認証に成功した場合、AppUserに変換されRightで返る | | 正常系 | signInWithGoogle() | ✅ |
+| 15 | Google認証がキャンセルされた場合、未知のコードとしてFailure.unknownが返る | | 異常系 | signInWithGoogle() | ✅ |
+| 16 | サインアウトに成功した場合、Right(unit)が返る | | 正常系 | signOut() | ✅ |
+| 17 | サインアウト中にFirebaseAuthExceptionが発生した場合、対応するFailureが返る | | 異常系 | signOut() | ✅ |
+| 18 | パスワードリセットメール送信に成功した場合、Right(unit)が返る | | 正常系 | sendPasswordResetEmail() | ✅ |
+| 19 | FirebaseAuthExceptionのcodeがuser-not-foundの場合、Failure.authが返る | | 異常系 | sendPasswordResetEmail() | ✅ |
+| 20 | 認証状態変化のストリームにユーザーが流れた場合、AppUserに変換されて流れる | | 正常系 | authStateChanges | ✅ |
+| 21 | 認証状態変化のストリームにnullが流れた場合、nullがそのまま流れる | | 境界値 | authStateChanges | ✅ |
+| 22 | ログイン方法に password を含むユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R63] | ACD-R63 #26cf57 | 正常系 | authStateChanges | ✅ |
+| 23 | ログイン方法が google.com だけのユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R64] | ACD-R64 #a2fed6 | 正常系 | authStateChanges | ✅ |
+| 24 | ログイン方法に password と google.com の両方を持つユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R71] | ACD-R71 #21b78b | 境界値 | authStateChanges | ✅ |
+| 25 | ログイン方法が1つも無いユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R72] | ACD-R72 #f543ef | 境界値 | authStateChanges | ✅ |
 
 ## テストケース詳細
 
@@ -220,6 +225,38 @@
 - **入力値・テスト条件**: なし
 - **操作手順**: `repository.authStateChanges.first` を待つ
 - **期待結果**: `null`
+
+### テストケース22: ログイン方法に password を含むユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R63]
+- **カテゴリ**: 正常系
+- **対象メソッド**: authStateChanges
+- **事前条件**: `authStateChangesOverride` に、ログイン方法（providerData の providerId）が ['password'] のユーザーの単一値ストリームを設定
+- **入力値・テスト条件**: なし
+- **操作手順**: `repository.authStateChanges.first` を待つ
+- **期待結果**: 流れる `AppUser` の `hasPassword` が true（仕様書 5.5 の ACD-R63）
+
+### テストケース23: ログイン方法が google.com だけのユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R64]
+- **カテゴリ**: 正常系
+- **対象メソッド**: authStateChanges
+- **事前条件**: `authStateChangesOverride` に、ログイン方法（providerData の providerId）が ['google.com'] のユーザーの単一値ストリームを設定
+- **入力値・テスト条件**: なし
+- **操作手順**: `repository.authStateChanges.first` を待つ
+- **期待結果**: 流れる `AppUser` の `hasPassword` が false（仕様書 5.5 の ACD-R64）
+
+### テストケース24: ログイン方法に password と google.com の両方を持つユーザーが流れた場合、hasPassword が true の AppUser が流れる [ACD-R71]
+- **カテゴリ**: 境界値
+- **対象メソッド**: authStateChanges
+- **事前条件**: `authStateChangesOverride` に、ログイン方法（providerData の providerId）が ['google.com', 'password'] のユーザーの単一値ストリームを設定
+- **入力値・テスト条件**: なし
+- **操作手順**: `repository.authStateChanges.first` を待つ
+- **期待結果**: 流れる `AppUser` の `hasPassword` が true（仕様書 5.5 の ACD-R71）
+
+### テストケース25: ログイン方法が1つも無いユーザーが流れた場合、hasPassword が false の AppUser が流れる [ACD-R72]
+- **カテゴリ**: 境界値
+- **対象メソッド**: authStateChanges
+- **事前条件**: `authStateChangesOverride` に、ログイン方法（providerData の providerId）が [] のユーザーの単一値ストリームを設定
+- **入力値・テスト条件**: なし
+- **操作手順**: `repository.authStateChanges.first` を待つ
+- **期待結果**: 流れる `AppUser` の `hasPassword` が false（仕様書 5.5 の ACD-R72）
 
 ## 対象外
 

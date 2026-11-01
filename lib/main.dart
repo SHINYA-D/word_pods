@@ -1,4 +1,6 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -15,6 +17,16 @@ Future<void> main() async {
 
   await Firebase.initializeApp(
     options: _firebaseOptions(),
+  );
+
+  // Firebase へのアクセスに「本物のアプリから来た」証明を付ける（App Check）。
+  // デバッグビルドは端末の証明を取れないため、Firebase コンソールに登録したデバッグ用トークンを使う。
+  await FirebaseAppCheck.instance.activate(
+    androidProvider:
+        kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode
+        ? AppleProvider.debug
+        : AppleProvider.appAttestWithDeviceCheckFallback,
   );
 
   FlutterNativeSplash.remove();

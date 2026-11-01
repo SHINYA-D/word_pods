@@ -64,7 +64,9 @@ SQLite（sqflite）をローカルキャッシュとして導入し、UI層は�
 
 ### CI/CD 設計
 - GitHub Secrets に Firebase キーを設定し、本番同等の環境で CI テストを実行
-- CI 通過後、CD で Firebase Security Rules を自動デプロイ
+- CI では Flutter のテストに加え、Cloud Functions のテストと Firestore Security Rules のテストを Firebase Emulator で実行
+- すべてのテストを通ったコミットだけを、main への push で dev → prod の順に自動デプロイ（`.github/workflows/ci.yml`）
+- 依存パッケージの脆弱性（OSV-Scanner）・ワークフローの穴（zizmor）・鍵の誤コミット（Gitleaks）を別のワークフローで検査し（`.github/workflows/security.yml`）、依存パッケージの更新は Dependabot が届ける
 - 個人開発においてもチーム開発を想定したインフラ構成を採用
 
 ## 技術スタック
@@ -291,6 +293,28 @@ fvm flutter run --flavor dev
 
 # 本番（word-pods-prod に接続）
 fvm flutter run --flavor prod
+```
+
+⑭ リリースビルド（Android）は本番用の鍵で署名する。`android/key.properties` が無いとリリース版のビルド（`--release`）は止まる
+
+```
+# 鍵を作る（一度だけ。鍵とパスワードは無くさないよう安全な場所に保管する）
+keytool -genkey -v -keystore ~/word-pods-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+`android/key.properties`（git 管理外）に次の4行を書く
+
+```
+storePassword=<鍵ストアのパスワード>
+keyPassword=<鍵のパスワード>
+keyAlias=upload
+storeFile=/Users/<ユーザー名>/word-pods-upload.jks
+```
+
+> Google ログインを使うため、この鍵の SHA-1（`keytool -list -v -keystore ~/word-pods-upload.jks -alias upload`）と、Play App Signing を使う場合は Play Console に表示されるアプリ署名鍵の SHA-1 を、Firebase コンソールの Android アプリに登録する。
+
+```
+fvm flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/symbols
 ```
 
 </details>

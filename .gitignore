@@ -56,6 +56,8 @@ android/local.properties
 .env.*
 !.env.example
 dart_define_dev.env
+# Claude Code の個人ごとの権限設定（各自の許可を共有しない。チーム共通の設定は .claude/settings.json）
+.claude/settings.local.json
 
 # Firebase
 lib/core/firebase/options/firebase_options_*.dart

@@ -2,7 +2,7 @@
 import { deleteApp, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { deleteUserAccount } from "../src/delete_account";
+import { deleteUserAccount, isRecentLogin } from "../src/delete_account";
 
 const app = initializeApp({ projectId: "demo-word-pods" }, "test");
 const db = getFirestore(app);
@@ -92,7 +92,7 @@ describe("deleteUserAccount", () => {
     await expect(auth.getUser("A")).rejects.toMatchObject({ code: "auth/user-not-found" });
   });
 
-  test("メールアドレスのあるユーザーが退会した場合、deleted_accounts/{uid} が退会日時とメールアドレスを持って残る", async () => {
+  test("メールアドレスのあるユーザーが退会した場合、deleted_accounts/{uid} は退会日時だけを持ち、メールアドレスは consent_logs/{uid} に残る", async () => {
     await auth.createUser({ uid: "A", email: "a@example.com" });
     await seed("A");
 
@@ -100,11 +100,11 @@ describe("deleteUserAccount", () => {
 
     const record = await db.doc("deleted_accounts/A").get();
     expect(record.exists).toBe(true);
-    expect(Object.keys(record.data() ?? {}).sort()).toEqual(["deletedAt", "email"]);
-    expect(record.get("email")).toBe("a@example.com");
+    expect(Object.keys(record.data() ?? {})).toEqual(["deletedAt"]);
+    expect((await db.doc("consent_logs/A").get()).get("email")).toBe("a@example.com");
   });
 
-  test("メールアドレスの無いユーザーが退会した場合、deleted_accounts/{uid} が退会日時だけを持って残る", async () => {
+  test("メールアドレスの無いユーザーが退会した場合、deleted_accounts/{uid} が退会日時だけを持って残り、consent_logs/{uid} は作られない", async () => {
     await auth.createUser({ uid: "A" });
 
     await deleteUserAccount("A", db, auth);
@@ -112,15 +112,26 @@ describe("deleteUserAccount", () => {
     const record = await db.doc("deleted_accounts/A").get();
     expect(record.exists).toBe(true);
     expect(Object.keys(record.data() ?? {})).toEqual(["deletedAt"]);
+    expect((await db.doc("consent_logs/A").get()).exists).toBe(false);
   });
 
-  test("ユーザーの削除後に再試行した場合、前回書いたメールアドレスが残る", async () => {
+  test("ユーザーの削除後に再試行した場合、前回書いたメールアドレスが consent_logs/{uid} に残る", async () => {
     await auth.createUser({ uid: "A", email: "a@example.com" });
 
     await deleteUserAccount("A", db, auth);
     await deleteUserAccount("A", db, auth);
 
-    expect((await db.doc("deleted_accounts/A").get()).get("email")).toBe("a@example.com");
+    expect((await db.doc("consent_logs/A").get()).get("email")).toBe("a@example.com");
+  });
+
+  test("同意の履歴がある場合、メールアドレスを書いても consent_logs/{uid}/logs の履歴は残る", async () => {
+    await auth.createUser({ uid: "A", email: "a@example.com" });
+    await db.doc("consent_logs/A/logs/l1").set({ document: "terms", version: "2026-01-01" });
+
+    await deleteUserAccount("A", db, auth);
+
+    const logs = await db.collection("consent_logs/A/logs").get();
+    expect(logs.size).toBe(1);
   });
 
   test("他のユーザーが退会した場合、deleted_accounts に自分の記録は作られない", async () => {
@@ -151,5 +162,26 @@ describe("deleteUserAccount", () => {
 
     const logs = await db.collection("consent_logs/A/logs").get();
     expect(logs.docs.map((d) => d.data().version)).toEqual(["2026-01-01"]);
+  });
+});
+
+describe("isRecentLogin", () => {
+  const now = 1_700_000_000_000;
+  const nowSeconds = now / 1000;
+
+  test("最後のログインがちょうど5分前の場合、true になる", () => {
+    expect(isRecentLogin(nowSeconds - 300, now)).toBe(true);
+  });
+
+  test("最後のログインが5分1秒前の場合、false になる", () => {
+    expect(isRecentLogin(nowSeconds - 301, now)).toBe(false);
+  });
+
+  test("最後のログインが今の場合、true になる", () => {
+    expect(isRecentLogin(nowSeconds, now)).toBe(true);
+  });
+
+  test("auth_time が無い場合、false になる", () => {
+    expect(isRecentLogin(undefined, now)).toBe(false);
   });
 });

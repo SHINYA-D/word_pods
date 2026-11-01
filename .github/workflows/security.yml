@@ -1,0 +1,78 @@
+name: Security
+
+# 依存パッケージの既知の脆弱性・ワークフローの書き方の穴・鍵の誤コミットを検査する。
+# CI（デプロイ）とは別のワークフローにして、検査で見つかってもデプロイは止めない（結果は Actions の画面で確認する）。
+# 新しい脆弱性はコミットが無くても公開されるため、週に1回も実行する
+on:
+  push:
+    branches:
+      - '**'
+  schedule:
+    - cron: '0 0 * * 1' # 毎週月曜 9:00（日本時間）
+  workflow_dispatch:
+
+# 外部のアクションはタグではなくコミット SHA で固定する
+permissions:
+  contents: read
+
+jobs:
+  # pubspec.lock（アプリ）と functions/package-lock.json（Cloud Functions）を OSV のデータベースと照合する。
+  # 無視する脆弱性と理由は functions/osv-scanner.toml に書く
+  osv-scanner:
+    name: 依存パッケージの脆弱性（OSV-Scanner）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+        with:
+          scan-args: |-
+            --lockfile=pubspec.lock
+            --lockfile=functions/package-lock.json
+
+  # GitHub Actions のワークフローの穴（権限の付けすぎ・認証情報の残存・テンプレートインジェクション等）
+  zizmor:
+    name: ワークフローの静的解析（zizmor）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          version: 1.31.1
+          # 結果は Security タブへアップロードせず、ログに出して失敗させる（アップロードには追加の権限が要るため）
+          advanced-security: false
+
+  # 鍵・パスワードの誤コミット。誤検知の除外は .gitleaks.toml に書く
+  gitleaks:
+    name: 鍵の誤コミット（Gitleaks）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # push に含まれるすべてのコミットを検査するため、履歴ごと取得する
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.30.1
+          # 見つかった鍵を含む結果ファイルを、成果物として残さない
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false

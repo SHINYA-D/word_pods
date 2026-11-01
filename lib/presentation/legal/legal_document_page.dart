@@ -130,6 +130,10 @@ class _LegalWebViewState extends State<_LegalWebView> {
   late final WebViewController _controller = WebViewController()
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setNavigationDelegate(NavigationDelegate(
+      // 文書と別のサイトへは移動しない（アプリの中の WebView で外部のサイトを開かせないため）
+      onNavigationRequest: (request) => _isSameSite(request.url)
+          ? NavigationDecision.navigate
+          : NavigationDecision.prevent,
       onPageFinished: (_) => widget.callbacks.onFinished(),
       onWebResourceError: (error) {
         if (error.isForMainFrame ?? true) widget.callbacks.onError();
@@ -139,6 +143,14 @@ class _LegalWebViewState extends State<_LegalWebView> {
         if (status >= 400) widget.callbacks.onError();
       },
     ));
+
+  bool _isSameSite(String url) {
+    final document = Uri.parse(widget.url);
+    final target = Uri.tryParse(url);
+    return target != null &&
+        target.scheme == document.scheme &&
+        target.host == document.host;
+  }
 
   @override
   void initState() {

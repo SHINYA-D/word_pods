@@ -17,6 +17,9 @@ enum AccountDeletionOutcome {
 
   /// 途中で止まっている（再試行で続きを行う）
   pending,
+
+  /// 途中で止まっていて、続きを行うには本人確認のし直しが必要（記録は残っている）
+  reauthRequired,
 }
 
 /// 退会する。
@@ -57,8 +60,11 @@ class DeleteAccountUseCase {
     final failure =
         (await _repository.requestServerDeletion()).getLeft().toNullable();
     if (failure == null) return _finishLocal(userId, serverConfirmed: true);
-    // 届いたか分からなければ、記録を残して再試行で続きを行う
-    if (failure is! NetworkFailure && failure is! AuthFailure) {
+    // 届いたか分からなければ、記録を残して再試行で続きを行う。
+    // 本人確認の期限切れは、関数が何も削除せずに返すので、届かなかったときと同じに扱う
+    if (failure is! NetworkFailure &&
+        failure is! AuthFailure &&
+        failure is! RecentLoginRequiredFailure) {
       return AccountDeletionOutcome.pending;
     }
     // 何も削除していないので記録を消す。消せなければ記録が残るので再試行で退会を進める
@@ -96,6 +102,10 @@ class DeleteAccountUseCase {
     if (failure == null) return _finishLocal(userId, serverConfirmed: true);
     // ログイン情報が無効＝サーバー側でユーザーまで削除が終わっている
     if (failure is AuthFailure) return _finishLocal(userId);
+    // 本人確認の期限切れ＝関数は何も削除していない。本人確認をし直してから呼び直す
+    if (failure is RecentLoginRequiredFailure) {
+      return AccountDeletionOutcome.reauthRequired;
+    }
     return AccountDeletionOutcome.pending;
   }
 

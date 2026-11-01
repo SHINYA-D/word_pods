@@ -29,6 +29,8 @@ else
   echo "▶ fvm flutter test --coverage ${PATHS[*]}"
 fi
 
+# 前回の lcov.info が残っていると、テストが起動できなかったときに古いカバレッジで判定してしまうため消す
+rm -f coverage/lcov.info
 fvm flutter test --coverage --machine ${PATHS[@]+"${PATHS[@]}"} > "$MACHINE_LOG"
 # flutter test の終了コードは無視し、判定は harness_report.py に委ねる
 # （--machine の JSON からより詳細な失敗内訳を出すため）

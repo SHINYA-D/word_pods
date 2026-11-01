@@ -19,6 +19,7 @@ abstract class AccountDeletionRepository {
   /// Firestore と Authentication の削除をサーバーに依頼する。
   ///
   /// 届かなかったことが確かなら `NetworkFailure`、ログイン情報が無効なら `AuthFailure`、
+  /// 最後の本人確認から時間が経っていて何も削除しなかったら `RecentLoginRequiredFailure`、
   /// 届いたか分からなければ `UnknownFailure` を返す。
   Future<Either<Failure, Unit>> requestServerDeletion();
 
