@@ -115,19 +115,30 @@ jobs:
       group: deploy-dev
       cancel-in-progress: false
 
+    # npm のパッケージはインストール時にスクリプトを実行できるため、インストールをすべて済ませてから認証する
+    # （依存パッケージが乗っ取られていても、デプロイ用の鍵を読まれないようにするため）
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # functions/package.json の engines.node と揃える
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Setup Firebase CLI
+        run: npm install -g firebase-tools@15.34.2 # zizmor: ignore[adhoc-packages] バージョンを固定している
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - name: Setup Firebase CLI
-        run: npm install -g firebase-tools@15.34.2 # zizmor: ignore[adhoc-packages] バージョンを固定している
 
       - name: Deploy Firestore Security Rules
         env:
@@ -135,15 +146,6 @@ jobs:
         run: firebase deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID"
 
       # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
-      # functions/package.json の engines.node と揃える
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-
-      - name: Install Cloud Functions dependencies
-        run: npm ci --prefix functions
-
       - name: Deploy Cloud Functions
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -161,19 +163,29 @@ jobs:
       group: deploy-prod
       cancel-in-progress: false
 
+    # インストールをすべて済ませてから認証する（deploy-dev と同じ理由）
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # functions/package.json の engines.node と揃える
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Setup Firebase CLI
+        run: npm install -g firebase-tools@15.34.2 # zizmor: ignore[adhoc-packages] バージョンを固定している
+
+      - name: Install Cloud Functions dependencies
+        run: npm ci --prefix functions
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - name: Setup Firebase CLI
-        run: npm install -g firebase-tools@15.34.2 # zizmor: ignore[adhoc-packages] バージョンを固定している
 
       - name: Deploy Firestore Security Rules
         env:
@@ -181,15 +193,6 @@ jobs:
         run: firebase deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID"
 
       # Cloud Functions は Blaze プランが必要（dev・prod とも Blaze）
-      # functions/package.json の engines.node と揃える
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-
-      - name: Install Cloud Functions dependencies
-        run: npm ci --prefix functions
-
       - name: Deploy Cloud Functions
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
