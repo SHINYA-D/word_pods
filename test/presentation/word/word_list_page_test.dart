@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:word_pods/domain/entities/word.dart';
 import 'package:word_pods/presentation/word/word_list_page.dart';
 import 'package:word_pods/presentation/word/word_list_view_model.dart';
@@ -105,11 +106,69 @@ void main() {
 
       // FAB タップ時は WordCreateRoute へ画面遷移する（ダイアログ表示は廃止）。
       // ルーター依存のため遷移自体はここでは検証せず、FAB の存在のみ確認する。
-      expect(find.byType(FloatingActionButton), findsOneWidget);
       expect(find.descendant(
         of: find.byType(FloatingActionButton),
         matching: find.byIcon(Icons.add),
       ), findsOneWidget);
+    });
+
+    testWidgets('画面を開いた場合、テスト開始の FAB が単語追加の FAB の上に表示され、AppBar には表示されない', (tester) async {
+      await tester.pumpWidget(
+        buildWordListPage(extra: [
+          wordListViewModelProvider(_folderId)
+              .overrideWith(DataWordListViewModel.new),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      final startFab = find.ancestor(
+        of: find.byIcon(Icons.play_arrow),
+        matching: find.byType(FloatingActionButton),
+      );
+      final addFab = find.ancestor(
+        of: find.byIcon(Icons.add),
+        matching: find.byType(FloatingActionButton),
+      );
+      expect(startFab, findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: find.byIcon(Icons.play_arrow)),
+        findsNothing,
+      );
+      expect(tester.getCenter(startFab).dy, lessThan(tester.getCenter(addFab).dy));
+    });
+
+    testWidgets('テスト開始の FAB をタップした場合、そのフォルダのテスト設定画面に遷移する', (tester) async {
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (c, s) =>
+                const WordListPage(folderId: _folderId, folderName: _folderName),
+          ),
+          GoRoute(
+            path: '/test-settings/:folderId',
+            builder: (c, s) =>
+                Text('test-settings:${s.pathParameters['folderId']}:${s.extra}'),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        buildWithMockRepositories(
+          child: Router.withConfig(config: router),
+          extra: [
+            wordListViewModelProvider(_folderId)
+                .overrideWith(DataWordListViewModel.new),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pumpAndSettle();
+
+      expect(find.text('test-settings:$_folderId:$_folderName'), findsOneWidget);
     });
   });
 }
