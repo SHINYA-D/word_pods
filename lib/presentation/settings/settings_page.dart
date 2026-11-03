@@ -83,6 +83,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             ListTile(
+              title: const Text('アカウント情報'),
+              leading: const Icon(Icons.person_outline),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => const AccountRoute().push<void>(context),
+            ),
+            ListTile(
               title: const Text('ログアウト'),
               leading: const Icon(Icons.logout),
               onTap: () => _showSignOutDialog(context, ref),

@@ -15,6 +15,15 @@ Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  // スマートフォンは縦向きだけ（横向きのレイアウトを用意していないため）。iPad は横向きも許可する
+  // （Info.plist で iPhone は縦向きだけ・iPad は全方向、AndroidManifest.xml で縦向きに固定している）。
+  // 画面の短い辺が 600 未満をスマートフォンとみなす（Material Design のタブレットの目安）
+  final view = widgetsBinding.platformDispatcher.views.first;
+  final shortestSide = view.physicalSize.shortestSide / view.devicePixelRatio;
+  if (shortestSide < 600) {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
+
   await Firebase.initializeApp(
     options: _firebaseOptions(),
   );

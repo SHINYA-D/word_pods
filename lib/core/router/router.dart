@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/sync_status_providers.dart';
 import 'package:word_pods/domain/entities/word.dart';
+import 'package:word_pods/presentation/account/account_page.dart';
 import 'package:word_pods/presentation/auth/login/login_page.dart';
 import 'package:word_pods/presentation/auth/password_reset/password_reset_page.dart';
 import 'package:word_pods/presentation/auth/sign_up/sign_up_page.dart';
@@ -121,6 +122,17 @@ class PasswordResetRoute extends GoRouteData {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const PasswordResetPage();
+}
+
+// ─── 設定から開く画面（BottomNav なし）─────────────────────────────
+
+@immutable
+@TypedGoRoute<AccountRoute>(path: '/account')
+class AccountRoute extends GoRouteData {
+  const AccountRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const AccountPage();
 }
 
 // ─── テスト関連（BottomNav なし）───────────────────────────────────

@@ -69,12 +69,13 @@
 	<string>Main</string>
 	<key>UIStatusBarHidden</key>
 	<false/>
+	<!-- iPhone は縦向きだけ（横向きのレイアウトを用意していないため） -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- iPad は全方向（画面分割（Split View・Slide Over）に対応するアプリは、全方向に対応していないと
+	     App Store へのアップロードで弾かれるため。ユーザー決定 2026-11-03） -->
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
