@@ -11,6 +11,7 @@ List<RouteBase> get $appRoutes => [
       $loginRoute,
       $signUpRoute,
       $passwordResetRoute,
+      $accountRoute,
       $flashcardModeSettingsRoute,
       $flashcardModeRoute,
       $wordEditRoute,
@@ -96,6 +97,28 @@ extension $PasswordResetRouteExtension on PasswordResetRoute {
 
   String get location => GoRouteData.$location(
         '/password-reset',
+      );
+
+  void go(BuildContext context) => context.go(location);
+
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $accountRoute => GoRouteData.$route(
+      path: '/account',
+      factory: $AccountRouteExtension._fromState,
+    );
+
+extension $AccountRouteExtension on AccountRoute {
+  static AccountRoute _fromState(GoRouterState state) => const AccountRoute();
+
+  String get location => GoRouteData.$location(
+        '/account',
       );
 
   void go(BuildContext context) => context.go(location);
