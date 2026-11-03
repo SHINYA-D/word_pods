@@ -201,4 +201,5 @@ sealed class Failure with _$Failure {
 | `docs/development/common_principles.md` | 全画面共通の振る舞い原則。各仕様書から `原則-<番号>` で引用される |
 | `docs/development/test_loop_pipeline.md` | テスト自動生成パイプライン（test-loop）の解説。定義の正は `.claude/skills/test-loop/SKILL.md` |
 | `docs/development/hooks.md` | `.claude/settings.json` に登録したフックの解説 |
+| `docs/TODO.md` | 後で対応する作業のチケット一覧（完了したら行ごと削除） |
 | `docs/images/test_pipeline_overview.svg` | テスト自動生成の全体図。`python3 scripts/gen_pipeline_svg.py` で生成する（SVG を直接編集しない。手順やフックを変えたらスクリプトを直して再生成） |
