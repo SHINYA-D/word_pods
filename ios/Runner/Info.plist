@@ -35,6 +35,9 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- 暗号化は HTTPS 通信と認証のみ（免除対象）。App Store Connect の輸出コンプライアンスの質問をビルドごとに出さないため -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

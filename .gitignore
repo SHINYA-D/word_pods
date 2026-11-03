@@ -73,3 +73,11 @@ coverage/
 .fvm/
 # Python venv for test tooling scripts
 scripts/.venv/
+
+# fastlane（実行のたびに作られるファイル）
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/
+**/fastlane/test_output/
+# App Store Connect API キー等（リポジトリには置かないが、誤って置いたときの保険）
+*.p8

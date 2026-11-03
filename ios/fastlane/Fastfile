@@ -1,23 +1,40 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
+# 使い方: cd ios && bundle exec fastlane beta
 #
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
+# App Store Connect API キーは環境変数で渡す（キーの中身をリポジトリに置かないため）
+#   ASC_KEY_ID      … キー ID
+#   ASC_ISSUER_ID   … Issuer ID
+#   ASC_KEY_PATH    … .p8 ファイルの絶対パス（リポジトリの外に置く）
 
 default_platform(:ios)
 
+# リポジトリのルート（この Fastfile は ios/fastlane/ にある）
+ROOT_DIR = File.expand_path("../..", __dir__)
+
 platform :ios do
-  desc "Description of what the lane does"
-  lane :custom_lane do
-    # add actions here: https://docs.fastlane.tools/actions
+  desc "prod をビルドして TestFlight にアップロードする"
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH")
+    )
+
+    # 同じビルド番号は二度アップロードできないため、TestFlight の最新の番号 + 1 にする
+    # （バージョン名 1.0.0 は pubspec.yaml の version をそのまま使う）
+    build_number = latest_testflight_build_number(api_key: api_key, initial_build_number: 0) + 1
+
+    Dir.chdir(ROOT_DIR) do
+      sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
+    end
+
+    ipa_path = Dir.glob(File.join(ROOT_DIR, "build/ios/ipa/*.ipa")).first
+    UI.user_error!("ipa が見つかりません（build/ios/ipa/）") if ipa_path.nil?
+
+    # Apple 側の処理（10〜30分ほど）の完了は待たない。終わるとメールが届く
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: true
+    )
   end
 end
