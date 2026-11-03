@@ -75,7 +75,7 @@ flutter:
   default-flavor: dev
   uses-material-design: true
   assets:
-    # アプリ内で表示する画像はスプラッシュのロゴだけ（他はアイコン生成の元画像なので同梱しない）
+    # アプリ内で表示する画像はスプラッシュ・ログイン画面のロゴだけ（他はアイコン生成の元画像なので同梱しない）
     - assets/images/android/android_icon_foreground_1024.png
 
 flutter_native_splash:
