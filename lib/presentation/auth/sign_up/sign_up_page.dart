@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:word_pods/core/di/legal_providers.dart';
 import 'package:word_pods/domain/entities/legal_consent.dart';
 import 'package:word_pods/presentation/auth/auth_state.dart';
@@ -35,6 +34,38 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     _documentOpen = false;
   }
 
+  /// 確認メールの送信完了ダイアログ。「閉じる」でだけ閉じる（外側の押下・戻る操作では閉じない）。
+  /// 閉じたら確認状態を取り直し、画面の移動の停止を解く。
+  /// 仕様: docs/detailed_design/email_verification/email_verification.md 3.1
+  Future<void> _showVerificationDialog({
+    required String email,
+    required bool sent,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(sent ? '確認メールを送信しました' : 'アカウントを作成しました'),
+          content: Text(
+            sent
+                ? '$email に本人確認用のメールを送信しました。メール内のリンクを押して、登録を完了してください。'
+                : '確認メールを送信できませんでした。次の画面の「確認メールを再送」から、もう一度送信してください。',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('閉じる'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    await ref.read(signUpViewModelProvider.notifier).closeVerificationDialog();
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -48,9 +79,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     final state = ref.watch(signUpViewModelProvider);
     final vm = ref.read(signUpViewModelProvider.notifier);
 
-    ref.listen<AuthState>(signUpViewModelProvider, (_, next) {
-      if (next.isSuccess) {
-        context.go('/home');
+    ref.listen<AuthState>(signUpViewModelProvider, (previous, next) {
+      if (next.isSuccess && previous?.isSuccess != true) {
+        // 移動先（確認済みならホーム画面、未確認なら確認待ち画面）はルーターが決める
+        _showVerificationDialog(
+          email: _emailController.text.trim(),
+          sent: next.verificationEmailSent,
+        );
         return;
       }
       if (next.errorMessage != null) {

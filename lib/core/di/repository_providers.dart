@@ -5,6 +5,7 @@ import 'package:word_pods/core/di/sync_providers.dart';
 import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
 import 'package:word_pods/domain/repositories/account_repository.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/email_verification_repository.dart';
 import 'package:word_pods/domain/repositories/folder_repository.dart';
 import 'package:word_pods/domain/repositories/legal_repository.dart';
 import 'package:word_pods/domain/repositories/reauthentication_repository.dart';
@@ -15,7 +16,9 @@ import 'package:word_pods/domain/repositories/word_repository.dart';
 import 'package:word_pods/infrastructure/repositories/account_deletion_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/account_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/email_verification_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/folder_repository_impl.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_email_verification_repository.dart';
 import 'package:word_pods/infrastructure/repositories/legal_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/reauthentication_repository_impl.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_account_deletion_repository.dart';
@@ -47,6 +50,15 @@ void Function() _onLocalChanged(Ref ref) =>
 AuthRepository authRepository(Ref ref) {
   if (kUseMocks) return MockAuthRepository();
   return AuthRepositoryImpl(ref.watch(firebaseAuthDataSourceProvider));
+}
+
+@Riverpod(keepAlive: true)
+EmailVerificationRepository emailVerificationRepository(Ref ref) {
+  if (kUseMocks) {
+    return MockEmailVerificationRepository(ref.watch(authRepositoryProvider));
+  }
+  return EmailVerificationRepositoryImpl(
+      ref.watch(firebaseAuthDataSourceProvider));
 }
 
 @Riverpod(keepAlive: true)

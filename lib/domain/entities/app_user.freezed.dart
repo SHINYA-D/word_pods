@@ -17,7 +17,10 @@ mixin _$AppUser {
 
  String get id; String get email; String? get displayName;/// メールアドレスとパスワードでログインできるか（本人確認でパスワードを求めるか）。
 /// false なら Google で本人確認する
- bool get hasPassword;
+ bool get hasPassword;/// メールアドレスが確認済みか（確認メールのリンクを押したか）。未確認の間は確認待ち画面から先に進めず、同期もしない。
+/// Google でログインしたユーザーは最初から true。Firebase のユーザーから作るときは必ず値を写す
+/// （既定値の true は、テストや Mock で確認済みのユーザーを簡単に作るため）
+ bool get emailVerified;
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +32,20 @@ $AppUserCopyWith<AppUser> get copyWith => _$AppUserCopyWithImpl<AppUser>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as AppUser;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppUser&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.hasPassword, _this.hasPassword) || other.hasPassword == _this.hasPassword));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppUser&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.hasPassword, _this.hasPassword) || other.hasPassword == _this.hasPassword)&&(identical(other.emailVerified, _this.emailVerified) || other.emailVerified == _this.emailVerified));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppUser;
-  return Object.hash(runtimeType,_this.id,_this.email,_this.displayName,_this.hasPassword);
+  return Object.hash(runtimeType,_this.id,_this.email,_this.displayName,_this.hasPassword,_this.emailVerified);
 }
 
 @override
 String toString() {
   final _this = this as AppUser;
-  return 'AppUser(id: ${_this.id}, email: ${_this.email}, displayName: ${_this.displayName}, hasPassword: ${_this.hasPassword})';
+  return 'AppUser(id: ${_this.id}, email: ${_this.email}, displayName: ${_this.displayName}, hasPassword: ${_this.hasPassword}, emailVerified: ${_this.emailVerified})';
 }
 
 
@@ -53,7 +56,7 @@ abstract mixin class $AppUserCopyWith<$Res>  {
   factory $AppUserCopyWith(AppUser value, $Res Function(AppUser) _then) = _$AppUserCopyWithImpl;
 @useResult
 $Res call({
- String id, String email, String? displayName, bool hasPassword
+ String id, String email, String? displayName, bool hasPassword, bool emailVerified
 });
 
 
@@ -70,12 +73,13 @@ class _$AppUserCopyWithImpl<$Res>
 
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? displayName = freezed,Object? hasPassword = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? displayName = freezed,Object? hasPassword = null,Object? emailVerified = null,}) {
   return _then(AppUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,hasPassword: null == hasPassword ? _self.hasPassword : hasPassword // ignore: cast_nullable_to_non_nullable
+as bool,emailVerified: null == emailVerified ? _self.emailVerified : emailVerified // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -161,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email,  String? displayName,  bool hasPassword)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email,  String? displayName,  bool hasPassword,  bool emailVerified)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppUser() when $default != null:
-return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _:
+return $default(_that.id,_that.email,_that.displayName,_that.hasPassword,_that.emailVerified);case _:
   return orElse();
 
 }
@@ -182,10 +186,10 @@ return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email,  String? displayName,  bool hasPassword)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email,  String? displayName,  bool hasPassword,  bool emailVerified)  $default,) {final _that = this;
 switch (_that) {
 case _AppUser():
-return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _:
+return $default(_that.id,_that.email,_that.displayName,_that.hasPassword,_that.emailVerified);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +206,10 @@ return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email,  String? displayName,  bool hasPassword)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email,  String? displayName,  bool hasPassword,  bool emailVerified)?  $default,) {final _that = this;
 switch (_that) {
 case _AppUser() when $default != null:
-return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _:
+return $default(_that.id,_that.email,_that.displayName,_that.hasPassword,_that.emailVerified);case _:
   return null;
 
 }
@@ -217,7 +221,7 @@ return $default(_that.id,_that.email,_that.displayName,_that.hasPassword);case _
 
 
 class _AppUser implements AppUser {
-  const _AppUser({required this.id, required this.email, this.displayName, this.hasPassword = false});
+  const _AppUser({required this.id, required this.email, this.displayName, this.hasPassword = false, this.emailVerified = true});
   
 
 @override final  String id;
@@ -226,6 +230,10 @@ class _AppUser implements AppUser {
 /// メールアドレスとパスワードでログインできるか（本人確認でパスワードを求めるか）。
 /// false なら Google で本人確認する
 @override@JsonKey() final  bool hasPassword;
+/// メールアドレスが確認済みか（確認メールのリンクを押したか）。未確認の間は確認待ち画面から先に進めず、同期もしない。
+/// Google でログインしたユーザーは最初から true。Firebase のユーザーから作るときは必ず値を写す
+/// （既定値の true は、テストや Mock で確認済みのユーザーを簡単に作るため）
+@override@JsonKey() final  bool emailVerified;
 
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +245,18 @@ _$AppUserCopyWith<_AppUser> get copyWith => __$AppUserCopyWithImpl<_AppUser>(thi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppUser&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword)&&(identical(other.emailVerified, emailVerified) || other.emailVerified == emailVerified));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,email,displayName,hasPassword);
+    return Object.hash(runtimeType,id,email,displayName,hasPassword,emailVerified);
 }
 
 @override
 String toString() {
-    return 'AppUser(id: $id, email: $email, displayName: $displayName, hasPassword: $hasPassword)';
+    return 'AppUser(id: $id, email: $email, displayName: $displayName, hasPassword: $hasPassword, emailVerified: $emailVerified)';
 }
 
 
@@ -259,7 +267,7 @@ abstract mixin class _$AppUserCopyWith<$Res> implements $AppUserCopyWith<$Res> {
   factory _$AppUserCopyWith(_AppUser value, $Res Function(_AppUser) _then) = __$AppUserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String email, String? displayName, bool hasPassword
+ String id, String email, String? displayName, bool hasPassword, bool emailVerified
 });
 
 
@@ -276,12 +284,13 @@ class __$AppUserCopyWithImpl<$Res>
 
 /// Create a copy of AppUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? displayName = freezed,Object? hasPassword = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? displayName = freezed,Object? hasPassword = null,Object? emailVerified = null,}) {
   return _then(_AppUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,hasPassword: null == hasPassword ? _self.hasPassword : hasPassword // ignore: cast_nullable_to_non_nullable
+as bool,emailVerified: null == emailVerified ? _self.emailVerified : emailVerified // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

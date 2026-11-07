@@ -92,4 +92,4 @@ final class IsDeveloperProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$isDeveloperHash() => r'99f0539ceb5d54aaa8bd7e8aa27d31a81d7c296d';
+String _$isDeveloperHash() => r'e3b9443c819bd558d1bf0b2f5ccdd6e565e96645';

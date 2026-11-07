@@ -1,8 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 本人で、メールアドレスが確認済み（確認メールのリンクを押した）。Google でログインしたユーザーは最初から確認済み。
+    // アプリの画面の振り分けを通らずに、未確認のアカウントでデータを読み書きされないようにする
+    // （docs/high_level_design/email_verification.md §Firestore のルール）
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId
+          && request.auth.token.email_verified == true;
     }
 
     function canWrite(userId) {

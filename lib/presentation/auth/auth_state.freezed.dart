@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthState {
 
- bool get isLoading; bool get isSuccess; String? get errorMessage;
+ bool get isLoading; bool get isSuccess; String? get errorMessage;/// 新規登録で、確認メールの送信に成功したか（送信完了ダイアログの文言を切り替える）
+ bool get verificationEmailSent;
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +28,20 @@ $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>
 @override
 bool operator ==(Object other) {
   final _this = this as AuthState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.isSuccess, _this.isSuccess) || other.isSuccess == _this.isSuccess)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.isSuccess, _this.isSuccess) || other.isSuccess == _this.isSuccess)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.verificationEmailSent, _this.verificationEmailSent) || other.verificationEmailSent == _this.verificationEmailSent));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthState;
-  return Object.hash(runtimeType,_this.isLoading,_this.isSuccess,_this.errorMessage);
+  return Object.hash(runtimeType,_this.isLoading,_this.isSuccess,_this.errorMessage,_this.verificationEmailSent);
 }
 
 @override
 String toString() {
   final _this = this as AuthState;
-  return 'AuthState(isLoading: ${_this.isLoading}, isSuccess: ${_this.isSuccess}, errorMessage: ${_this.errorMessage})';
+  return 'AuthState(isLoading: ${_this.isLoading}, isSuccess: ${_this.isSuccess}, errorMessage: ${_this.errorMessage}, verificationEmailSent: ${_this.verificationEmailSent})';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $AuthStateCopyWith<$Res>  {
   factory $AuthStateCopyWith(AuthState value, $Res Function(AuthState) _then) = _$AuthStateCopyWithImpl;
 @useResult
 $Res call({
- bool isLoading, bool isSuccess, String? errorMessage
+ bool isLoading, bool isSuccess, String? errorMessage, bool verificationEmailSent
 });
 
 
@@ -68,12 +69,13 @@ class _$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? isSuccess = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? isSuccess = null,Object? errorMessage = freezed,Object? verificationEmailSent = null,}) {
   return _then(AuthState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,isSuccess: null == isSuccess ? _self.isSuccess : isSuccess // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,verificationEmailSent: null == verificationEmailSent ? _self.verificationEmailSent : verificationEmailSent // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -158,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  bool isSuccess,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  bool isSuccess,  String? errorMessage,  bool verificationEmailSent)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.isSuccess,_that.errorMessage,_that.verificationEmailSent);case _:
   return orElse();
 
 }
@@ -179,10 +181,10 @@ return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  bool isSuccess,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  bool isSuccess,  String? errorMessage,  bool verificationEmailSent)  $default,) {final _that = this;
 switch (_that) {
 case _AuthState():
-return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.isSuccess,_that.errorMessage,_that.verificationEmailSent);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +201,10 @@ return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  bool isSuccess,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  bool isSuccess,  String? errorMessage,  bool verificationEmailSent)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.isSuccess,_that.errorMessage,_that.verificationEmailSent);case _:
   return null;
 
 }
@@ -214,12 +216,14 @@ return $default(_that.isLoading,_that.isSuccess,_that.errorMessage);case _:
 
 
 class _AuthState implements AuthState {
-  const _AuthState({required this.isLoading, required this.isSuccess, this.errorMessage});
+  const _AuthState({required this.isLoading, required this.isSuccess, this.errorMessage, this.verificationEmailSent = false});
   
 
 @override final  bool isLoading;
 @override final  bool isSuccess;
 @override final  String? errorMessage;
+/// 新規登録で、確認メールの送信に成功したか（送信完了ダイアログの文言を切り替える）
+@override@JsonKey() final  bool verificationEmailSent;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,18 +235,18 @@ _$AuthStateCopyWith<_AuthState> get copyWith => __$AuthStateCopyWithImpl<_AuthSt
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isSuccess, isSuccess) || other.isSuccess == isSuccess)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isSuccess, isSuccess) || other.isSuccess == isSuccess)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.verificationEmailSent, verificationEmailSent) || other.verificationEmailSent == verificationEmailSent));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,isLoading,isSuccess,errorMessage);
+    return Object.hash(runtimeType,isLoading,isSuccess,errorMessage,verificationEmailSent);
 }
 
 @override
 String toString() {
-    return 'AuthState(isLoading: $isLoading, isSuccess: $isSuccess, errorMessage: $errorMessage)';
+    return 'AuthState(isLoading: $isLoading, isSuccess: $isSuccess, errorMessage: $errorMessage, verificationEmailSent: $verificationEmailSent)';
 }
 
 
@@ -253,7 +257,7 @@ abstract mixin class _$AuthStateCopyWith<$Res> implements $AuthStateCopyWith<$Re
   factory _$AuthStateCopyWith(_AuthState value, $Res Function(_AuthState) _then) = __$AuthStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isLoading, bool isSuccess, String? errorMessage
+ bool isLoading, bool isSuccess, String? errorMessage, bool verificationEmailSent
 });
 
 
@@ -270,12 +274,13 @@ class __$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? isSuccess = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? isSuccess = null,Object? errorMessage = freezed,Object? verificationEmailSent = null,}) {
   return _then(_AuthState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,isSuccess: null == isSuccess ? _self.isSuccess : isSuccess // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,verificationEmailSent: null == verificationEmailSent ? _self.verificationEmailSent : verificationEmailSent // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

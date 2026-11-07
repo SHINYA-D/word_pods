@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/sync_status_providers.dart';
+import 'package:word_pods/core/utils/auth_redirect.dart';
 import 'package:word_pods/domain/entities/word.dart';
 import 'package:word_pods/presentation/account/account_page.dart';
 import 'package:word_pods/presentation/auth/login/login_page.dart';
 import 'package:word_pods/presentation/auth/password_reset/password_reset_page.dart';
 import 'package:word_pods/presentation/auth/sign_up/sign_up_page.dart';
 import 'package:word_pods/presentation/auth/splash/splash_page.dart';
+import 'package:word_pods/presentation/auth/verify_email/verify_email_page.dart';
 import 'package:word_pods/presentation/home/home_page.dart';
 import 'package:word_pods/presentation/result/result_page.dart';
 import 'package:word_pods/presentation/sample/sample_page.dart';
@@ -42,17 +44,17 @@ GoRouter router(Ref ref) {
       // 強制ログアウトした uid は、Firebase 上でログイン中でもログインしていないものとして扱う
       final user = authState.value;
       final forced = ref.read(withdrawnElsewhereViewModelProvider).forcedUserId;
-      final isLoggedIn = user != null && user.id != forced;
-      final isSyncing = ref.read(authSyncInProgressProvider);
       final loc = state.matchedLocation;
-      final isAuthRoute = loc == '/login' || loc == '/sign-up' || loc == '/password-reset';
-      // 退会が完了したら、ログアウトに失敗してログイン状態が残っていてもログイン画面に置く
-      final withdrawn = ref.read(accountDeletionViewModelProvider).phase ==
-          AccountDeletionPhase.completed;
-
-      if (!isLoggedIn && !isAuthRoute && loc != '/') return '/login';
-      // ログイン直後の初回同期が終わるまではホームに遷移させない
-      if (isLoggedIn && isAuthRoute && !isSyncing && !withdrawn) return '/home';
+      final target = authRedirect(
+        isLoggedIn: user != null && user.id != forced,
+        isEmailVerified: user?.emailVerified ?? false,
+        location: loc,
+        // ログイン直後の初回同期中・確認メールの送信完了ダイアログの表示中は、ログイン前の画面から移さない
+        isHolding: ref.read(authSyncInProgressProvider),
+        isWithdrawn: ref.read(accountDeletionViewModelProvider).phase ==
+            AccountDeletionPhase.completed,
+      );
+      if (target != null) return target;
       // サンプル画面は開発者だけ。判定の読み込み中・失敗時も開発者でないとして扱う
       if (loc == '/sample' && !ref.read(isDeveloperProvider)) return '/home';
       return null;
@@ -122,6 +124,15 @@ class PasswordResetRoute extends GoRouteData with $PasswordResetRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const PasswordResetPage();
+}
+
+@immutable
+@TypedGoRoute<VerifyEmailRoute>(path: '/verify-email')
+class VerifyEmailRoute extends GoRouteData with $VerifyEmailRoute {
+  const VerifyEmailRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const VerifyEmailPage();
 }
 
 // ─── 設定から開く画面（BottomNav なし）─────────────────────────────

@@ -32,6 +32,7 @@ import 'package:word_pods/presentation/settings/account_deletion_view_model.dart
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 import 'package:word_pods/core/di/provider_retry.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_email_verification_repository.dart';
 
 /// 仕様書（docs/detailed_design/legal_consent/legal_consent.md）3章の
 /// 同意ダイアログ・閲覧画面・設定画面の「このアプリについて」のテスト。期待値は仕様書から作っている。
@@ -505,6 +506,9 @@ Future<_Env> _launch(
     retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
+      // 新規登録の後の確認メールの送信・確認状態の問い合わせは成功する
+      emailVerificationRepositoryProvider
+          .overrideWithValue(MockEmailVerificationRepository(env.auth)),
       accountDeletionRepositoryProvider.overrideWithValue(env.deletion),
       // 退会の前の本人確認は成功するものとする（退会を始めるテストのため）
       reauthenticationRepositoryProvider

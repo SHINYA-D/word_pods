@@ -5,6 +5,17 @@ import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
 import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
 
+/// Firebase のユーザーを [AppUser] にする（[AuthRepositoryImpl] と `EmailVerificationRepositoryImpl` で共通）
+AppUser appUserFromFirebase(User user) {
+  return AppUser(
+    id: user.uid,
+    email: user.email ?? '',
+    displayName: user.displayName,
+    hasPassword: user.providerData.any((p) => p.providerId == 'password'),
+    emailVerified: user.emailVerified,
+  );
+}
+
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._dataSource);
 
@@ -91,14 +102,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  AppUser _toAppUser(User user) {
-    return AppUser(
-      id: user.uid,
-      email: user.email ?? '',
-      displayName: user.displayName,
-      hasPassword: user.providerData.any((p) => p.providerId == 'password'),
-    );
-  }
+  AppUser _toAppUser(User user) => appUserFromFirebase(user);
 
   Failure _mapFirebaseAuthException(FirebaseAuthException e) {
     switch (e.code) {

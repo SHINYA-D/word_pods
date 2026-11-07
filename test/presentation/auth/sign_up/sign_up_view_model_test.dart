@@ -8,7 +8,9 @@ import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/sync_status_providers.dart';
 import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_auth_repository.dart';
+import 'package:word_pods/infrastructure/repositories/mock/mock_email_verification_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_legal_repository.dart';
 import 'package:word_pods/presentation/auth/sign_up/sign_up_view_model.dart';
 
@@ -64,6 +66,9 @@ const _testUser = AppUser(id: 'user-1', email: 'new@example.com');
 ProviderContainer _makeContainer(SignUpUseCase signUpUseCase) {
   final container = ProviderContainer(retry: noRetry, overrides: [
     signUpUseCaseProvider.overrideWithValue(signUpUseCase),
+    // 確認メールの送信・確認状態の問い合わせは成功する
+    emailVerificationRepositoryProvider.overrideWithValue(
+        MockEmailVerificationRepository(MockAuthRepository())),
   ]);
   addTearDown(container.dispose);
   return container;
@@ -155,7 +160,7 @@ void main() {
       await future;
     });
 
-    test('呼び出し中は authSyncInProgressProvider が true になり、完了後に false へ戻る', () async {
+    test('呼び出し中は authSyncInProgressProvider が true になり、送信完了ダイアログを閉じた後に false へ戻る', () async {
       final completer = Completer<void>();
       final useCase = FakeSignUpUseCase(
         const Right(_testUser),
@@ -171,6 +176,13 @@ void main() {
 
       completer.complete();
       await future;
+
+      // 送信完了ダイアログを閉じるまでは画面を移さない（EMV-V01）
+      expect(container.read(authSyncInProgressProvider), isTrue);
+
+      await container
+          .read(signUpViewModelProvider.notifier)
+          .closeVerificationDialog();
 
       expect(container.read(authSyncInProgressProvider), isFalse);
     });
