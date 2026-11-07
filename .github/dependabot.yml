@@ -23,6 +23,22 @@ updates:
         update-types: [version-update:semver-minor]
       - dependency-name: intl
         update-types: [version-update:semver-minor]
+      # Firebase 5.x 系は、google_sign_in 7 と iOS の依存（gtm-session-fetcher）が衝突してビルドできないため止める。
+      # 上の semver-major の指定はグループの PR では効かず、#9・#44 で提案されたため、バージョン範囲で明示する。
+      # CI は iOS をビルドしないので、提案されると緑のまま通ってしまう。google_sign_in が対応したら外して手作業で上げる
+      - dependency-name: firebase_core
+        versions: ['>=5.0.0']
+      - dependency-name: firebase_auth
+        versions: ['>=7.0.0']
+      - dependency-name: cloud_firestore
+        versions: ['>=7.0.0']
+      - dependency-name: cloud_functions
+        versions: ['>=7.0.0']
+      - dependency-name: firebase_app_check
+        versions: ['>=0.5.0']
+      # 4.5.0 以降は cloud_firestore 7 を必要とする
+      - dependency-name: fake_cloud_firestore
+        versions: ['>=4.5.0']
     groups:
       pub-minor-and-patch:
         update-types: [minor, patch]
