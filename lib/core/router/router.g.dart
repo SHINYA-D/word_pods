@@ -11,6 +11,7 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $signUpRoute,
   $passwordResetRoute,
+  $verifyEmailRoute,
   $accountRoute,
   $flashcardModeSettingsRoute,
   $flashcardModeRoute,
@@ -110,6 +111,33 @@ mixin $PasswordResetRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/password-reset');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $verifyEmailRoute => GoRouteData.$route(
+  path: '/verify-email',
+  hasOverriddenOnExit: false,
+  factory: $VerifyEmailRoute._fromState,
+);
+
+mixin $VerifyEmailRoute on GoRouteData {
+  static VerifyEmailRoute _fromState(GoRouterState state) =>
+      const VerifyEmailRoute();
+
+  @override
+  String get location => GoRouteData.$location('/verify-email');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -516,4 +544,4 @@ final class RouterProvider
   }
 }
 
-String _$routerHash() => r'1edd9b334411027b9afe477ecada5231ea6c1514';
+String _$routerHash() => r'3af65cc128c89731fcf03bad9e811bdc735055a9';

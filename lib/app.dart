@@ -8,6 +8,7 @@ import 'package:word_pods/core/di/local_data_source_providers.dart';
 import 'package:word_pods/core/di/sync_providers.dart';
 import 'package:word_pods/core/router/router.dart';
 import 'package:word_pods/core/theme/app_theme.dart';
+import 'package:word_pods/core/utils/sync_trigger.dart';
 import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
 import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
 import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
@@ -39,9 +40,10 @@ class _AppState extends ConsumerState<App> {
     // オンライン復帰時に同期する
     autoSync.start();
 
-    // ログイン済みになったら同期する（起動時にログイン済みだった場合を含む）
+    // 確認済みのユーザーでログイン済みになったら同期する（起動時にログイン済みだった場合・
+    // メールアドレスが確認済みに変わった場合を含む）
     ref.listenManual(currentUserProvider, (previous, next) {
-      if (next != null && previous?.id != next.id) autoSync.onSignedIn();
+      if (shouldStartSync(previous, next)) autoSync.onSignedIn();
     }, fireImmediately: true);
 
     // resumed 時に同期する（前回の取得から5分以上たっていれば）

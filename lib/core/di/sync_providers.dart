@@ -3,6 +3,7 @@ import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/firebase_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';
 import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/utils/sync_trigger.dart';
 import 'package:word_pods/domain/repositories/sync_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_sync_repository.dart';
 import 'package:word_pods/infrastructure/sync/auto_sync_service.dart';
@@ -18,11 +19,18 @@ SyncService syncService(Ref ref) {
     remoteDataSource: ref.watch(syncRemoteDataSourceProvider),
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
     // モックモードでは Firestore と同期しない。
-    // ログイン直後は authStateChanges より先に FirebaseAuth.currentUser が確定するので、そちらを優先する
-    getCurrentUserId: () => kUseMocks
-        ? null
-        : ref.read(firebaseAuthProvider).currentUser?.uid ??
-            ref.read(currentUserProvider)?.id,
+    // ログイン直後は authStateChanges より先に FirebaseAuth.currentUser が確定するので、そちらを優先する。
+    // メールアドレスが未確認の間は、Firestore を読み書きできないため同期しない
+    getCurrentUserId: () {
+      if (kUseMocks) return null;
+      final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
+      if (firebaseUser != null) {
+        return syncUserId(
+            uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified);
+      }
+      final user = ref.read(currentUserProvider);
+      return syncUserId(uid: user?.id, emailVerified: user?.emailVerified ?? false);
+    },
     isAccountDeletionPending:
         ref.watch(accountDeletionLocalDataSourceProvider).shouldSkipSync,
   );

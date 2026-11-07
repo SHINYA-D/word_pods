@@ -47,6 +47,11 @@ async function markWithdrawn(uid: string): Promise<void> {
   });
 }
 
+/** メールアドレスが確認済みのユーザーとしてログインした Firestore。 */
+function verifiedUser(uid: string) {
+  return env.authenticatedContext(uid, { email_verified: true }).firestore();
+}
+
 /** アプリの同期（FirestoreSyncRemoteDataSource）が書くフォルダの形。 */
 function folder(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -62,25 +67,25 @@ function folder(overrides: Record<string, unknown> = {}): Record<string, unknown
 
 describe("users/{uid} への書き込み", () => {
   test("退会済みの記録が無い本人の場合、書き込める", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("退会済みの記録がある本人の場合、書き込めない", async () => {
     await markWithdrawn("A");
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("別のユーザーが退会済みの場合、自分の users/{uid} には書き込める", async () => {
     await markWithdrawn("B");
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
   });
 
   test("退会済みの記録がある本人の場合でも、読み取りはできる", async () => {
     await markWithdrawn("A");
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(getDoc(doc(db, "users/A/folders/f1")));
   });
 });
@@ -89,7 +94,7 @@ describe("users/{uid} 配下へ書き込めるデータの形", () => {
   const now = () => Timestamp.now();
 
   test("同期が書く形のフォルダ・単語・結果・設定の場合、書き込める", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder()));
     await assertSucceeds(
       setDoc(doc(db, "users/A/folders/f1/words/w1"), {
@@ -123,18 +128,18 @@ describe("users/{uid} 配下へ書き込めるデータの形", () => {
   });
 
   test("決められていない項目を含む場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder({ extra: "x" })));
   });
 
   test("フォルダ名が100文字の場合は書き込め、101文字の場合は書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(setDoc(doc(db, "users/A/folders/f1"), folder({ name: "a".repeat(100) })));
     await assertFails(setDoc(doc(db, "users/A/folders/f2"), folder({ name: "a".repeat(101) })));
   });
 
   test("単語の表面が1001文字の場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(
       setDoc(doc(db, "users/A/folders/f1/words/w1"), {
         front: "a".repeat(1001),
@@ -146,7 +151,7 @@ describe("users/{uid} 配下へ書き込めるデータの形", () => {
   });
 
   test("項目の型が違う場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(
       setDoc(doc(db, "users/A/settings/config"), {
         colorTheme: "indigo",
@@ -158,17 +163,17 @@ describe("users/{uid} 配下へ書き込めるデータの形", () => {
   });
 
   test("serverUpdatedAt に端末の時刻を書く場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder({ serverUpdatedAt: now() })));
   });
 
   test("決められていないコレクションの場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(setDoc(doc(db, "users/A/others/x"), { a: 1 }));
   });
 
   test("設定の config 以外のドキュメントの場合、書き込めない", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertFails(
       setDoc(doc(db, "users/A/settings/other"), {
         colorTheme: "indigo",
@@ -180,13 +185,35 @@ describe("users/{uid} 配下へ書き込めるデータの形", () => {
   });
 
   test("本人の場合、削除できる", async () => {
-    const db = env.authenticatedContext("A").firestore();
+    const db = verifiedUser("A");
     await assertSucceeds(deleteDoc(doc(db, "users/A/folders/f1")));
   });
 
   test("別のユーザーの場合、正しい形でも書き込めない", async () => {
-    const db = env.authenticatedContext("B").firestore();
+    const db = verifiedUser("B");
     await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder()));
+  });
+});
+
+describe("メールアドレスが未確認のユーザー（docs/high_level_design/email_verification.md）", () => {
+  test("未確認の本人の場合、users/{uid} 配下を読めない", async () => {
+    const db = env.authenticatedContext("A", { email_verified: false }).firestore();
+    await assertFails(getDoc(doc(db, "users/A/folders/f1")));
+  });
+
+  test("未確認の本人の場合、正しい形でも users/{uid} 配下に書き込めない", async () => {
+    const db = env.authenticatedContext("A", { email_verified: false }).firestore();
+    await assertFails(setDoc(doc(db, "users/A/folders/f1"), folder()));
+  });
+
+  test("確認済みかの情報が無い本人の場合、users/{uid} 配下を読めない", async () => {
+    const db = env.authenticatedContext("A").firestore();
+    await assertFails(getDoc(doc(db, "users/A/folders/f1")));
+  });
+
+  test("未確認の本人の場合でも、accounts/{uid} は読める（規約への同意の判定のため）", async () => {
+    const db = env.authenticatedContext("A", { email_verified: false }).firestore();
+    await assertSucceeds(getDoc(doc(db, "accounts/A")));
   });
 });
 

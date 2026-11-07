@@ -82,7 +82,7 @@ final class CurrentUserProvider
   }
 }
 
-String _$currentUserHash() => r'3db556da0b92c742a70203357263da3f45499b09';
+String _$currentUserHash() => r'e847c442bf06dd95e98daa78092b57243a8221cd';
 
 @ProviderFor(signInWithEmailUseCase)
 final signInWithEmailUseCaseProvider = SignInWithEmailUseCaseProvider._();
@@ -405,6 +405,236 @@ final class ReauthenticateUseCaseProvider
 
 String _$reauthenticateUseCaseHash() =>
     r'7d378db9fa14d3f1145b6939fe731a0e9f8d3a83';
+
+@ProviderFor(reloadUserUseCase)
+final reloadUserUseCaseProvider = ReloadUserUseCaseProvider._();
+
+final class ReloadUserUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ReloadUserUseCase,
+          ReloadUserUseCase,
+          ReloadUserUseCase
+        >
+    with $Provider<ReloadUserUseCase> {
+  ReloadUserUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'reloadUserUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$reloadUserUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ReloadUserUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ReloadUserUseCase create(Ref ref) {
+    return reloadUserUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ReloadUserUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ReloadUserUseCase>(value),
+    );
+  }
+}
+
+String _$reloadUserUseCaseHash() => r'97b2e638fac313baae5c3244b1819d22ccea25ac';
+
+@ProviderFor(sendEmailVerificationUseCase)
+final sendEmailVerificationUseCaseProvider =
+    SendEmailVerificationUseCaseProvider._();
+
+final class SendEmailVerificationUseCaseProvider
+    extends
+        $FunctionalProvider<
+          SendEmailVerificationUseCase,
+          SendEmailVerificationUseCase,
+          SendEmailVerificationUseCase
+        >
+    with $Provider<SendEmailVerificationUseCase> {
+  SendEmailVerificationUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sendEmailVerificationUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sendEmailVerificationUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SendEmailVerificationUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SendEmailVerificationUseCase create(Ref ref) {
+    return sendEmailVerificationUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SendEmailVerificationUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SendEmailVerificationUseCase>(value),
+    );
+  }
+}
+
+String _$sendEmailVerificationUseCaseHash() =>
+    r'46a757fb81ab6b1e46d4043e2d9836c8d3971a0c';
+
+/// 今の時刻。テストで時刻を固定できるよう Provider 経由で読む
+
+@ProviderFor(clock)
+final clockProvider = ClockProvider._();
+
+/// 今の時刻。テストで時刻を固定できるよう Provider 経由で読む
+
+final class ClockProvider
+    extends
+        $FunctionalProvider<
+          DateTime Function(),
+          DateTime Function(),
+          DateTime Function()
+        >
+    with $Provider<DateTime Function()> {
+  /// 今の時刻。テストで時刻を固定できるよう Provider 経由で読む
+  ClockProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'clockProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$clockHash();
+
+  @$internal
+  @override
+  $ProviderElement<DateTime Function()> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DateTime Function() create(Ref ref) {
+    return clock(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime Function() value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime Function()>(value),
+    );
+  }
+}
+
+String _$clockHash() => r'3f65ad34ac6fcd532de9004042bdf2ed2bd85b13';
+
+/// 最後に確認メールの送信に成功したユーザーと時刻（アプリの起動中だけ覚える）。
+/// 再送ボタンの60秒の待ち時間を、新規登録のときの送信からも数えるため、画面をまたいで持つ。
+/// 別のアカウントに切り替えたら、そのアカウントの待ち時間は無い（ユーザーごとに数える）
+
+@ProviderFor(VerificationEmailSentAt)
+final verificationEmailSentAtProvider = VerificationEmailSentAtProvider._();
+
+/// 最後に確認メールの送信に成功したユーザーと時刻（アプリの起動中だけ覚える）。
+/// 再送ボタンの60秒の待ち時間を、新規登録のときの送信からも数えるため、画面をまたいで持つ。
+/// 別のアカウントに切り替えたら、そのアカウントの待ち時間は無い（ユーザーごとに数える）
+final class VerificationEmailSentAtProvider
+    extends
+        $NotifierProvider<
+          VerificationEmailSentAt,
+          ({DateTime at, String userId})?
+        > {
+  /// 最後に確認メールの送信に成功したユーザーと時刻（アプリの起動中だけ覚える）。
+  /// 再送ボタンの60秒の待ち時間を、新規登録のときの送信からも数えるため、画面をまたいで持つ。
+  /// 別のアカウントに切り替えたら、そのアカウントの待ち時間は無い（ユーザーごとに数える）
+  VerificationEmailSentAtProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'verificationEmailSentAtProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$verificationEmailSentAtHash();
+
+  @$internal
+  @override
+  VerificationEmailSentAt create() => VerificationEmailSentAt();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(({DateTime at, String userId})? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<({DateTime at, String userId})?>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$verificationEmailSentAtHash() =>
+    r'c53b49b391eccea4cb2898f891bea76b15e8ee36';
+
+/// 最後に確認メールの送信に成功したユーザーと時刻（アプリの起動中だけ覚える）。
+/// 再送ボタンの60秒の待ち時間を、新規登録のときの送信からも数えるため、画面をまたいで持つ。
+/// 別のアカウントに切り替えたら、そのアカウントの待ち時間は無い（ユーザーごとに数える）
+
+abstract class _$VerificationEmailSentAt
+    extends $Notifier<({DateTime at, String userId})?> {
+  ({DateTime at, String userId})? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<
+              ({DateTime at, String userId})?,
+              ({DateTime at, String userId})?
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                ({DateTime at, String userId})?,
+                ({DateTime at, String userId})?
+              >,
+              ({DateTime at, String userId})?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
 
 @ProviderFor(withdrawnElsewhereUseCase)
 final withdrawnElsewhereUseCaseProvider = WithdrawnElsewhereUseCaseProvider._();

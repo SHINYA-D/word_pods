@@ -50,6 +50,55 @@ final class AuthRepositoryProvider
 
 String _$authRepositoryHash() => r'f89f6ed7ca2d0be302d1a07b308c1073ee0c3189';
 
+@ProviderFor(emailVerificationRepository)
+final emailVerificationRepositoryProvider =
+    EmailVerificationRepositoryProvider._();
+
+final class EmailVerificationRepositoryProvider
+    extends
+        $FunctionalProvider<
+          EmailVerificationRepository,
+          EmailVerificationRepository,
+          EmailVerificationRepository
+        >
+    with $Provider<EmailVerificationRepository> {
+  EmailVerificationRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'emailVerificationRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$emailVerificationRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<EmailVerificationRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  EmailVerificationRepository create(Ref ref) {
+    return emailVerificationRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EmailVerificationRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EmailVerificationRepository>(value),
+    );
+  }
+}
+
+String _$emailVerificationRepositoryHash() =>
+    r'96e4b002d1cf87154a9c5437e30b723ab3730ef4';
+
 @ProviderFor(folderRepository)
 final folderRepositoryProvider = FolderRepositoryProvider._();
 

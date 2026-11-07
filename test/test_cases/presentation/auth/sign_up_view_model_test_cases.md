@@ -34,7 +34,7 @@ DI し、Widget は一切 pump しない。
 | 3 | 成功した場合、SignUpUseCase に email と password がそのまま渡される | - | 正常系 | signUp() | ✅ |
 | 4 | email 'a@example.com'・password 'password1'・termsVersion '2026-01-01'・privacyVersion '2026-01-01' で signUp を呼んだ場合、SignUpUseCase が1回その引数で呼ばれる [LGL-V88] | LGL-V88 #278cc0 | 正常系 | signUp() | ✅ |
 | 5 | 呼び出し中は isLoading が true になり isSuccess/errorMessage はリセットされる | - | 境界値 | signUp() | ✅ |
-| 6 | 呼び出し中は authSyncInProgressProvider が true になり、完了後に false へ戻る | - | 正常系 | signUp() | ✅ |
+| 6 | 呼び出し中は authSyncInProgressProvider が true になり、送信完了ダイアログを閉じた後に false へ戻る | EMV-V01, EMV-V06 | 正常系 | signUp() / closeVerificationDialog() | ✅ |
 | 7 | NetworkFailure の場合、通信エラーメッセージが設定される | - | 異常系 | signUp() | ✅ |
 | 8 | AuthFailure の場合、メール重複エラーメッセージが設定される | - | 異常系 | signUp() | ✅ |
 | 9 | NotFoundFailure の場合、汎用エラーメッセージが設定される | - | 異常系 | signUp() | ✅ |
@@ -85,13 +85,13 @@ DI し、Widget は一切 pump しない。
 - **操作手順**: `signUp()` を呼び出しつつ即座に `container.read(signUpViewModelProvider)` を確認 → `Completer.complete()` → 後片付けの await
 - **期待結果**: `isLoading: true, isSuccess: false, errorMessage: null`
 
-### テストケース6: 呼び出し中は authSyncInProgressProvider が true になり、完了後に false へ戻る
+### テストケース6: 呼び出し中は authSyncInProgressProvider が true になり、送信完了ダイアログを閉じた後に false へ戻る
 - **カテゴリ**: 正常系
-- **対象メソッド**: signUp()
-- **事前条件**: `Completer` で `call()` を保留した状態
-- **入力値・テスト条件**: signUp() 呼び出し中／完了後
-- **操作手順**: 呼び出し直後に `authSyncInProgressProvider` を確認 → `Completer.complete()` → await 後に再確認
-- **期待結果**: 呼び出し中は `true`、完了後は `false`
+- **対象メソッド**: signUp() / closeVerificationDialog()
+- **事前条件**: `Completer` で `call()` を保留した状態。確認メールの送信・確認状態の問い合わせは Mock（成功）
+- **入力値・テスト条件**: signUp() 呼び出し中／完了後／closeVerificationDialog() の後
+- **操作手順**: 呼び出し直後に `authSyncInProgressProvider` を確認 → `Completer.complete()` → await 後に再確認 → `closeVerificationDialog()` → 再確認
+- **期待結果**: 呼び出し中は `true`、signUp の完了後も `true`（送信完了ダイアログの表示中は画面を移さない。EMV-V01）、closeVerificationDialog の後は `false`（EMV-V06）
 
 ### テストケース7: NetworkFailure の場合、通信エラーメッセージが設定される
 - **カテゴリ**: 異常系

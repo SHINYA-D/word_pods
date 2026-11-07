@@ -19,7 +19,12 @@ class FakeUser implements User {
     this.email,
     this.displayName,
     this.providerIds = const [],
+    this.emailVerified = true,
   });
+
+  /// メールアドレスが確認済みか（既定は確認済み）
+  @override
+  final bool emailVerified;
 
   @override
   final String uid;
@@ -119,5 +124,41 @@ class FakeFirebaseAuthDataSource implements FirebaseAuthDataSource {
       return Future.value();
     }
     return impl();
+  }
+
+  // ─── メールアドレスの確認（EmailVerificationRepositoryImpl 用）───
+
+  /// ログイン中か
+  bool signedIn = true;
+
+  /// [reloadCurrentUser] の動作。未設定なら null（ログインしていない）を返す
+  Future<User?> Function()? reloadCurrentUserImpl;
+
+  /// [sendEmailVerification] の動作。未設定なら成功する
+  Future<void> Function()? sendEmailVerificationImpl;
+
+  /// 呼ばれた順（`setLanguageCode:ja` / `sendEmailVerification`）
+  final calls = <String>[];
+
+  @override
+  bool get isSignedIn => signedIn;
+
+  @override
+  Future<User?> reloadCurrentUser() {
+    calls.add('reloadCurrentUser');
+    final impl = reloadCurrentUserImpl;
+    return impl == null ? Future.value() : impl();
+  }
+
+  @override
+  Future<void> setLanguageCode(String languageCode) async {
+    calls.add('setLanguageCode:$languageCode');
+  }
+
+  @override
+  Future<void> sendEmailVerification() {
+    calls.add('sendEmailVerification');
+    final impl = sendEmailVerificationImpl;
+    return impl == null ? Future.value() : impl();
   }
 }

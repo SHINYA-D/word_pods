@@ -50,7 +50,7 @@ final class WordListViewModelProvider
   }
 }
 
-String _$wordListViewModelHash() => r'd1518e65274186b547b6f6a0fe3bb7aaecae31c7';
+String _$wordListViewModelHash() => r'9c0a65cc18cbfa6c4b87018a2e09366b6c194dae';
 
 final class WordListViewModelFamily extends $Family
     with

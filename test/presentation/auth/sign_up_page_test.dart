@@ -15,6 +15,7 @@ import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/entities/legal_consent.dart';
 import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/repositories/email_verification_repository.dart';
 import 'package:word_pods/domain/repositories/legal_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repository.dart';
@@ -268,10 +269,32 @@ class _FakeWebView {
   int loadCount(String url) => loads.where((l) => l.url == url).length;
 }
 
+/// 確認メールの送信と確認状態の問い合わせの Fake。送信は成功し、問い合わせはログイン中のユーザー
+/// （[_userA] は確認済み）を返す。新規登録の後は送信完了ダイアログが出る
+/// （docs/detailed_design/email_verification/email_verification.md）。
+class _FakeEmailVerificationRepository implements EmailVerificationRepository {
+  _FakeEmailVerificationRepository(this._auth);
+
+  final _FakeAuthRepository _auth;
+
+  @override
+  Future<Either<Failure, AppUser>> reloadUser() async {
+    final user = _auth.user;
+    return user == null ? const Left(Failure.auth()) : Right(user);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> sendEmailVerification() async =>
+      const Right(unit);
+}
+
 class _Env {
-  _Env(AppUser? user) : auth = _FakeAuthRepository(user);
+  _Env(AppUser? user) : auth = _FakeAuthRepository(user) {
+    emailVerification = _FakeEmailVerificationRepository(auth);
+  }
 
   final _FakeAuthRepository auth;
+  late final _FakeEmailVerificationRepository emailVerification;
   final deletion = _FakeAccountDeletionRepository();
   final legal = _FakeLegalRepository();
   final web = _FakeWebView();
@@ -374,6 +397,8 @@ Future<_Env> _launch(
     retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
+      emailVerificationRepositoryProvider
+          .overrideWithValue(env.emailVerification),
       accountDeletionRepositoryProvider.overrideWithValue(env.deletion),
       legalRepositoryProvider.overrideWithValue(env.legal),
       legalWebViewBuilderProvider.overrideWithValue(env.web.build),
@@ -462,10 +487,14 @@ Future<void> _tapDocBack(WidgetTester t) => _tap(
     t, find.descendant(of: _document, matching: find.byType(BackButton)));
 
 /// 正しい入力と2つのチェックで「アカウント作成」をタップする。
+/// 作成に成功したら確認メールの送信完了ダイアログが出るので、「閉じる」で閉じる
+/// （確認済みのユーザーならホーム画面へ移る。docs/detailed_design/email_verification/email_verification.md EMV-A07）。
 Future<void> _signUpWithValid(WidgetTester t) async {
   await _fillValid(t);
   await _checkBoth(t);
   await _tapSubmit(t);
+  final close = find.widgetWithText(TextButton, '閉じる');
+  if (close.evaluate().isNotEmpty) await _tap(t, close);
 }
 
 void _expectDialogWithBothRows() {
