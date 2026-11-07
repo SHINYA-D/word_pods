@@ -14,12 +14,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
   SettingsRepositoryImpl({
     required SettingsLocalDataSource localDataSource,
     required SyncQueueDataSource syncQueueDataSource,
-    required DatabaseHelper dbHelper,
-    required void Function() onLocalChanged,
+    required this._dbHelper,
+    required this._onLocalChanged,
   })  : _local = localDataSource,
-        _syncQueue = syncQueueDataSource,
-        _dbHelper = dbHelper,
-        _onLocalChanged = onLocalChanged;
+        _syncQueue = syncQueueDataSource;
 
   final SettingsLocalDataSource _local;
   final SyncQueueDataSource _syncQueue;

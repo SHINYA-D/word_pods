@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/application/use_cases/auth/delete_account_use_case.dart';
 import 'package:word_pods/application/use_cases/auth/reauthenticate_use_case.dart';
@@ -19,7 +18,7 @@ Stream<AppUser?> authState(Ref ref) =>
     ref.watch(authRepositoryProvider).authStateChanges;
 
 @Riverpod(keepAlive: true)
-AppUser? currentUser(Ref ref) => ref.watch(authStateProvider).valueOrNull;
+AppUser? currentUser(Ref ref) => ref.watch(authStateProvider).value;
 
 @Riverpod(keepAlive: true)
 SignInWithEmailUseCase signInWithEmailUseCase(Ref ref) =>

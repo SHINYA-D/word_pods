@@ -1,8 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 class AppLifecycleObserver extends WidgetsBindingObserver {
-  AppLifecycleObserver({required void Function() onResumed})
-      : _onResumed = onResumed;
+  AppLifecycleObserver({required this._onResumed});
 
   final void Function() _onResumed;
 

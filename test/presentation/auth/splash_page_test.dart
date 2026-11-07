@@ -6,12 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/presentation/auth/splash/splash_page.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 void main() {
   group('SplashPage', () {
     // ナビゲーション（GoRouter 依存）を防ぐため authStateProvider をローディングのまま固定する
     ProviderScope buildSplash() {
       return ProviderScope(
+        retry: noRetry,
         overrides: [
           authStateProvider.overrideWith((ref) {
             final sc = StreamController<AppUser?>();

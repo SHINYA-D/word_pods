@@ -6,55 +6,129 @@ part of 'sync_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(syncService)
+final syncServiceProvider = SyncServiceProvider._();
+
+final class SyncServiceProvider
+    extends $FunctionalProvider<SyncService, SyncService, SyncService>
+    with $Provider<SyncService> {
+  SyncServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SyncService create(Ref ref) {
+    return syncService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncService>(value),
+    );
+  }
+}
+
 String _$syncServiceHash() => r'0c8fa6a3e7793d6f75ba0bed2b014279239b9987';
 
-/// See also [syncService].
-@ProviderFor(syncService)
-final syncServiceProvider = Provider<SyncService>.internal(
-  syncService,
-  name: r'syncServiceProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$syncServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(syncRepository)
+final syncRepositoryProvider = SyncRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SyncServiceRef = ProviderRef<SyncService>;
+final class SyncRepositoryProvider
+    extends $FunctionalProvider<SyncRepository, SyncRepository, SyncRepository>
+    with $Provider<SyncRepository> {
+  SyncRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SyncRepository create(Ref ref) {
+    return syncRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncRepository>(value),
+    );
+  }
+}
+
 String _$syncRepositoryHash() => r'21d1fb9e5177b8939e56e079e9f6aa6ac002572d';
 
-/// See also [syncRepository].
-@ProviderFor(syncRepository)
-final syncRepositoryProvider = Provider<SyncRepository>.internal(
-  syncRepository,
-  name: r'syncRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$syncRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SyncRepositoryRef = ProviderRef<SyncRepository>;
-String _$autoSyncServiceHash() => r'33ea95fd36e5920e55e4bf8b07758dc5f695272c';
-
-/// See also [autoSyncService].
 @ProviderFor(autoSyncService)
-final autoSyncServiceProvider = Provider<AutoSyncService>.internal(
-  autoSyncService,
-  name: r'autoSyncServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$autoSyncServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final autoSyncServiceProvider = AutoSyncServiceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AutoSyncServiceRef = ProviderRef<AutoSyncService>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class AutoSyncServiceProvider
+    extends
+        $FunctionalProvider<AutoSyncService, AutoSyncService, AutoSyncService>
+    with $Provider<AutoSyncService> {
+  AutoSyncServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'autoSyncServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$autoSyncServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<AutoSyncService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AutoSyncService create(Ref ref) {
+    return autoSyncService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AutoSyncService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AutoSyncService>(value),
+    );
+  }
+}
+
+String _$autoSyncServiceHash() => r'33ea95fd36e5920e55e4bf8b07758dc5f695272c';

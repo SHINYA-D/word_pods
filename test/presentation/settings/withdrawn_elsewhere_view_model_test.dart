@@ -16,6 +16,8 @@ import 'package:word_pods/presentation/settings/account_deletion_state.dart';
 import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// 仕様書（docs/detailed_design/presentation/settings/settings_page.md）4.2 の
 /// WithdrawnElsewhereViewModel のテスト。期待値は仕様書から作っている。
@@ -181,6 +183,7 @@ class _Env {
     auth = _FakeAuthRepository(log);
     sync = _FakeSyncRepository(log);
     container = ProviderContainer(
+      retry: noRetry,
       overrides: [
         accountDeletionRepositoryProvider.overrideWithValue(repo),
         authRepositoryProvider.overrideWithValue(auth),
@@ -193,6 +196,9 @@ class _Env {
       ],
     );
     addTearDown(container.dispose);
+    // アプリでは画面が listen している。Riverpod 3 は listen されていない Provider を一時停止し、
+    // その中の ref.listen（ログイン中の uid の変化など）が動かなくなるため、テストでも listen しておく
+    container.listen(withdrawnElsewhereViewModelProvider, (_, _) {});
     vm = container.read(withdrawnElsewhereViewModelProvider.notifier);
   }
 

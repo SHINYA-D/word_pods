@@ -4,10 +4,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 /// Firebase Authentication で、ログイン中のユーザーの本人確認をし直す。
 class ReauthenticationRemoteDataSource {
   ReauthenticationRemoteDataSource({
-    required FirebaseAuth firebaseAuth,
-    required GoogleSignIn googleSignIn,
-  })  : _firebaseAuth = firebaseAuth,
-        _googleSignIn = googleSignIn;
+    required this._firebaseAuth,
+    required this._googleSignIn,
+  });
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
@@ -22,12 +21,15 @@ class ReauthenticationRemoteDataSource {
   /// キャンセルされたら false。
   Future<bool> reauthenticateWithGoogle() async {
     final user = _currentUser();
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return false;
-    final googleAuth = await googleUser.authentication;
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      rethrow;
+    }
     await user.reauthenticateWithCredential(GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
+      idToken: googleUser.authentication.idToken,
     ));
     return true;
   }

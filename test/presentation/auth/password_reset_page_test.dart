@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_pods/presentation/auth/password_reset/password_reset_page.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 void main() {
   group('PasswordResetPage', () {
     testWidgets('初期表示: 説明文・メールフィールド・送信ボタンが揃っている', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: PasswordResetPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: PasswordResetPage())),
       );
 
       expect(find.text('パスワードリセット'), findsOneWidget);
@@ -21,7 +22,7 @@ void main() {
 
     testWidgets('メールアドレスが空のまま送信するとバリデーションエラーが出る', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: PasswordResetPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: PasswordResetPage())),
       );
 
       await tester.tap(find.text('送信する'));
@@ -32,7 +33,7 @@ void main() {
 
     testWidgets('メールアドレスを入力するとバリデーションエラーが出ない', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: PasswordResetPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: PasswordResetPage())),
       );
 
       await tester.enterText(find.byType(TextFormField), 'test@example.com');

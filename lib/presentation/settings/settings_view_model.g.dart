@@ -6,172 +6,94 @@ part of 'settings_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsViewModelHash() => r'a6bb8199e1769dd60f5ebe77bee7da539098f840';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$SettingsViewModel
-    extends BuildlessAutoDisposeAsyncNotifier<UserSettings> {
-  late final String userId;
-
-  FutureOr<UserSettings> build(
-    String userId,
-  );
-}
-
-/// See also [SettingsViewModel].
 @ProviderFor(SettingsViewModel)
-const settingsViewModelProvider = SettingsViewModelFamily();
+final settingsViewModelProvider = SettingsViewModelFamily._();
 
-/// See also [SettingsViewModel].
-class SettingsViewModelFamily extends Family<AsyncValue<UserSettings>> {
-  /// See also [SettingsViewModel].
-  const SettingsViewModelFamily();
+final class SettingsViewModelProvider
+    extends $AsyncNotifierProvider<SettingsViewModel, UserSettings> {
+  SettingsViewModelProvider._({
+    required SettingsViewModelFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'settingsViewModelProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
-  /// See also [SettingsViewModel].
-  SettingsViewModelProvider call(
-    String userId,
-  ) {
-    return SettingsViewModelProvider(
-      userId,
-    );
+  @override
+  String debugGetCreateSourceHash() => _$settingsViewModelHash();
+
+  @override
+  String toString() {
+    return r'settingsViewModelProvider'
+        ''
+        '($argument)';
   }
 
+  @$internal
   @override
-  SettingsViewModelProvider getProviderOverride(
-    covariant SettingsViewModelProvider provider,
-  ) {
-    return call(
-      provider.userId,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'settingsViewModelProvider';
-}
-
-/// See also [SettingsViewModel].
-class SettingsViewModelProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    SettingsViewModel, UserSettings> {
-  /// See also [SettingsViewModel].
-  SettingsViewModelProvider(
-    String userId,
-  ) : this._internal(
-          () => SettingsViewModel()..userId = userId,
-          from: settingsViewModelProvider,
-          name: r'settingsViewModelProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$settingsViewModelHash,
-          dependencies: SettingsViewModelFamily._dependencies,
-          allTransitiveDependencies:
-              SettingsViewModelFamily._allTransitiveDependencies,
-          userId: userId,
-        );
-
-  SettingsViewModelProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.userId,
-  }) : super.internal();
-
-  final String userId;
-
-  @override
-  FutureOr<UserSettings> runNotifierBuild(
-    covariant SettingsViewModel notifier,
-  ) {
-    return notifier.build(
-      userId,
-    );
-  }
-
-  @override
-  Override overrideWith(SettingsViewModel Function() create) {
-    return ProviderOverride(
-      origin: this,
-      override: SettingsViewModelProvider._internal(
-        () => create()..userId = userId,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        userId: userId,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeAsyncNotifierProviderElement<SettingsViewModel, UserSettings>
-      createElement() {
-    return _SettingsViewModelProviderElement(this);
-  }
+  SettingsViewModel create() => SettingsViewModel();
 
   @override
   bool operator ==(Object other) {
-    return other is SettingsViewModelProvider && other.userId == userId;
+    return other is SettingsViewModelProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, userId.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin SettingsViewModelRef
-    on AutoDisposeAsyncNotifierProviderRef<UserSettings> {
-  /// The parameter `userId` of this provider.
-  String get userId;
-}
+String _$settingsViewModelHash() => r'a6bb8199e1769dd60f5ebe77bee7da539098f840';
 
-class _SettingsViewModelProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<SettingsViewModel,
-        UserSettings> with SettingsViewModelRef {
-  _SettingsViewModelProviderElement(super.provider);
+final class SettingsViewModelFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          SettingsViewModel,
+          AsyncValue<UserSettings>,
+          UserSettings,
+          FutureOr<UserSettings>,
+          String
+        > {
+  SettingsViewModelFamily._()
+    : super(
+        retry: null,
+        name: r'settingsViewModelProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SettingsViewModelProvider call(String userId) =>
+      SettingsViewModelProvider._(argument: userId, from: this);
 
   @override
-  String get userId => (origin as SettingsViewModelProvider).userId;
+  String toString() => r'settingsViewModelProvider';
 }
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+
+abstract class _$SettingsViewModel extends $AsyncNotifier<UserSettings> {
+  late final _$args = ref.$arg as String;
+  String get userId => _$args;
+
+  FutureOr<UserSettings> build(String userId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<UserSettings>, UserSettings>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<UserSettings>, UserSettings>,
+              AsyncValue<UserSettings>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}

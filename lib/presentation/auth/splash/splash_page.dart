@@ -39,7 +39,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     // 強制ログアウトの記録を読み終えるまで移動しない（記録の uid はログイン画面から始めるため）
     final withdrawn = ref.read(withdrawnElsewhereViewModelProvider);
     if (!withdrawn.forcedLoaded) return;
-    final user = authState.valueOrNull;
+    final user = authState.value;
     if (authState.hasError || user == null || user.id == withdrawn.forcedUserId) {
       const LoginRoute().go(context);
     } else {
@@ -49,9 +49,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authStateProvider, (_, __) => _tryNavigate());
-    ref.listen(accountDeletionViewModelProvider, (_, __) => _tryNavigate());
-    ref.listen(withdrawnElsewhereViewModelProvider, (_, __) => _tryNavigate());
+    ref.listen(authStateProvider, (_, _) => _tryNavigate());
+    ref.listen(accountDeletionViewModelProvider, (_, _) => _tryNavigate());
+    ref.listen(withdrawnElsewhereViewModelProvider, (_, _) => _tryNavigate());
 
     return const Scaffold(
       backgroundColor: Color(0xFF15203B),

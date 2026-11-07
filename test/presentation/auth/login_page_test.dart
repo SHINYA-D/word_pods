@@ -4,12 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_pods/presentation/auth/auth_state.dart';
 import 'package:word_pods/presentation/auth/login/login_page.dart';
 import 'package:word_pods/presentation/auth/login/login_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 void main() {
   group('LoginPage', () {
     testWidgets('初期表示: フォーム・ボタン・リンクが揃っている', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: LoginPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: LoginPage())),
       );
 
       expect(find.text('WordPods'), findsOneWidget);
@@ -23,7 +24,7 @@ void main() {
 
     testWidgets('メール・パスワードが空のままログインするとバリデーションエラーが出る', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: LoginPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: LoginPage())),
       );
 
       await tester.tap(find.text('ログイン'));
@@ -35,7 +36,7 @@ void main() {
 
     testWidgets('パスワード表示切り替えアイコンをタップすると visibility アイコンが変わる', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: LoginPage())),
+        const ProviderScope(retry: noRetry, child: MaterialApp(home: LoginPage())),
       );
 
       // 初期状態は visibility_off
@@ -51,6 +52,7 @@ void main() {
     testWidgets('ローディング中はボタン内に CircularProgressIndicator が表示される', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          retry: noRetry,
           overrides: [
             loginViewModelProvider.overrideWith(LoadingLoginViewModel.new),
           ],

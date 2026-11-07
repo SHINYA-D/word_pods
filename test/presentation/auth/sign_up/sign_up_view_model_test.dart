@@ -13,6 +13,7 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_legal_repository
 import 'package:word_pods/presentation/auth/sign_up/sign_up_view_model.dart';
 
 import '../../../helpers/fake_auth_use_case_repositories.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// [SignUpUseCase] はインターフェースではなく具象クラスのため、テストでは
 /// 実 Firestore/SQLite 通信を避けつつコンストラクタの型要件を満たすために
@@ -61,7 +62,7 @@ class FakeSignUpUseCase extends SignUpUseCase {
 const _testUser = AppUser(id: 'user-1', email: 'new@example.com');
 
 ProviderContainer _makeContainer(SignUpUseCase signUpUseCase) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     signUpUseCaseProvider.overrideWithValue(signUpUseCase),
   ]);
   addTearDown(container.dispose);

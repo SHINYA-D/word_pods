@@ -5,6 +5,7 @@ import 'package:word_pods/application/use_cases/auth/reset_password_use_case.dar
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/presentation/auth/password_reset/password_reset_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// ResetPasswordUseCase の手書き Fake。
 /// `call()` が呼ばれるたびに引数を記録し、あらかじめ渡された結果を返す。
@@ -27,7 +28,7 @@ class FakeResetPasswordUseCase implements ResetPasswordUseCase {
 ProviderContainer _makeContainer({
   required Either<Failure, Unit> result,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     resetPasswordUseCaseProvider
         .overrideWithValue(FakeResetPasswordUseCase(result)),
   ]);
@@ -145,7 +146,7 @@ void main() {
 
     test('email 引数が UseCase にそのまま渡される', () async {
       final fakeUseCase = FakeResetPasswordUseCase(const Right(unit));
-      final container = ProviderContainer(overrides: [
+      final container = ProviderContainer(retry: noRetry, overrides: [
         resetPasswordUseCaseProvider.overrideWithValue(fakeUseCase),
       ]);
       addTearDown(container.dispose);

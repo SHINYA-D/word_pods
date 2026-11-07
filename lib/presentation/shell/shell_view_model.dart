@@ -20,5 +20,5 @@ Future<bool> developerStatus(Ref ref) async {
 @Riverpod(keepAlive: true)
 bool isDeveloper(Ref ref) {
   final status = ref.watch(developerStatusProvider);
-  return !status.isLoading && (status.valueOrNull ?? false);
+  return !status.isLoading && (status.value ?? false);
 }

@@ -6,171 +6,436 @@ part of 'local_data_source_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(databaseHelper)
+final databaseHelperProvider = DatabaseHelperProvider._();
+
+final class DatabaseHelperProvider
+    extends $FunctionalProvider<DatabaseHelper, DatabaseHelper, DatabaseHelper>
+    with $Provider<DatabaseHelper> {
+  DatabaseHelperProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'databaseHelperProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$databaseHelperHash();
+
+  @$internal
+  @override
+  $ProviderElement<DatabaseHelper> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DatabaseHelper create(Ref ref) {
+    return databaseHelper(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DatabaseHelper value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DatabaseHelper>(value),
+    );
+  }
+}
+
 String _$databaseHelperHash() => r'56231951807b413a0f538db07832460ed8f48d1d';
 
-/// See also [databaseHelper].
-@ProviderFor(databaseHelper)
-final databaseHelperProvider = Provider<DatabaseHelper>.internal(
-  databaseHelper,
-  name: r'databaseHelperProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$databaseHelperHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(connectivityMonitor)
+final connectivityMonitorProvider = ConnectivityMonitorProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DatabaseHelperRef = ProviderRef<DatabaseHelper>;
+final class ConnectivityMonitorProvider
+    extends
+        $FunctionalProvider<
+          ConnectivityMonitor,
+          ConnectivityMonitor,
+          ConnectivityMonitor
+        >
+    with $Provider<ConnectivityMonitor> {
+  ConnectivityMonitorProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'connectivityMonitorProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectivityMonitorHash();
+
+  @$internal
+  @override
+  $ProviderElement<ConnectivityMonitor> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ConnectivityMonitor create(Ref ref) {
+    return connectivityMonitor(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ConnectivityMonitor value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectivityMonitor>(value),
+    );
+  }
+}
+
 String _$connectivityMonitorHash() =>
     r'9ddfeb22b951e5557669cfe5bda111603fb70243';
 
-/// See also [connectivityMonitor].
-@ProviderFor(connectivityMonitor)
-final connectivityMonitorProvider = Provider<ConnectivityMonitor>.internal(
-  connectivityMonitor,
-  name: r'connectivityMonitorProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$connectivityMonitorHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(syncQueueDataSource)
+final syncQueueDataSourceProvider = SyncQueueDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ConnectivityMonitorRef = ProviderRef<ConnectivityMonitor>;
+final class SyncQueueDataSourceProvider
+    extends
+        $FunctionalProvider<
+          SyncQueueDataSource,
+          SyncQueueDataSource,
+          SyncQueueDataSource
+        >
+    with $Provider<SyncQueueDataSource> {
+  SyncQueueDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncQueueDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncQueueDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncQueueDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SyncQueueDataSource create(Ref ref) {
+    return syncQueueDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncQueueDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncQueueDataSource>(value),
+    );
+  }
+}
+
 String _$syncQueueDataSourceHash() =>
     r'4ea08607a67aa0755c6c0816abb1412efdfca58c';
 
-/// See also [syncQueueDataSource].
-@ProviderFor(syncQueueDataSource)
-final syncQueueDataSourceProvider = Provider<SyncQueueDataSource>.internal(
-  syncQueueDataSource,
-  name: r'syncQueueDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$syncQueueDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(folderLocalDataSource)
+final folderLocalDataSourceProvider = FolderLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SyncQueueDataSourceRef = ProviderRef<SyncQueueDataSource>;
+final class FolderLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          FolderLocalDataSource,
+          FolderLocalDataSource,
+          FolderLocalDataSource
+        >
+    with $Provider<FolderLocalDataSource> {
+  FolderLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'folderLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$folderLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<FolderLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  FolderLocalDataSource create(Ref ref) {
+    return folderLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FolderLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FolderLocalDataSource>(value),
+    );
+  }
+}
+
 String _$folderLocalDataSourceHash() =>
     r'0da2a26d9bbdcec2dc1b3ca8b2fcd98323b76fde';
 
-/// See also [folderLocalDataSource].
-@ProviderFor(folderLocalDataSource)
-final folderLocalDataSourceProvider = Provider<FolderLocalDataSource>.internal(
-  folderLocalDataSource,
-  name: r'folderLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$folderLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(wordLocalDataSource)
+final wordLocalDataSourceProvider = WordLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FolderLocalDataSourceRef = ProviderRef<FolderLocalDataSource>;
+final class WordLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          WordLocalDataSource,
+          WordLocalDataSource,
+          WordLocalDataSource
+        >
+    with $Provider<WordLocalDataSource> {
+  WordLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'wordLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$wordLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<WordLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  WordLocalDataSource create(Ref ref) {
+    return wordLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(WordLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<WordLocalDataSource>(value),
+    );
+  }
+}
+
 String _$wordLocalDataSourceHash() =>
     r'4a8911581545d0589ad7303aad433477825604b0';
 
-/// See also [wordLocalDataSource].
-@ProviderFor(wordLocalDataSource)
-final wordLocalDataSourceProvider = Provider<WordLocalDataSource>.internal(
-  wordLocalDataSource,
-  name: r'wordLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$wordLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(flashcardResultLocalDataSource)
+final flashcardResultLocalDataSourceProvider =
+    FlashcardResultLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef WordLocalDataSourceRef = ProviderRef<WordLocalDataSource>;
+final class FlashcardResultLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          FlashcardResultLocalDataSource,
+          FlashcardResultLocalDataSource,
+          FlashcardResultLocalDataSource
+        >
+    with $Provider<FlashcardResultLocalDataSource> {
+  FlashcardResultLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'flashcardResultLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$flashcardResultLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<FlashcardResultLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  FlashcardResultLocalDataSource create(Ref ref) {
+    return flashcardResultLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FlashcardResultLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FlashcardResultLocalDataSource>(
+        value,
+      ),
+    );
+  }
+}
+
 String _$flashcardResultLocalDataSourceHash() =>
     r'f2ed1741549f7b2e7e9cc38ff072ad76e327a2d7';
 
-/// See also [flashcardResultLocalDataSource].
-@ProviderFor(flashcardResultLocalDataSource)
-final flashcardResultLocalDataSourceProvider =
-    Provider<FlashcardResultLocalDataSource>.internal(
-  flashcardResultLocalDataSource,
-  name: r'flashcardResultLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$flashcardResultLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(settingsLocalDataSource)
+final settingsLocalDataSourceProvider = SettingsLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FlashcardResultLocalDataSourceRef
-    = ProviderRef<FlashcardResultLocalDataSource>;
+final class SettingsLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          SettingsLocalDataSource,
+          SettingsLocalDataSource,
+          SettingsLocalDataSource
+        >
+    with $Provider<SettingsLocalDataSource> {
+  SettingsLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'settingsLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$settingsLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SettingsLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SettingsLocalDataSource create(Ref ref) {
+    return settingsLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SettingsLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SettingsLocalDataSource>(value),
+    );
+  }
+}
+
 String _$settingsLocalDataSourceHash() =>
     r'995acde96095c83ea330a36423159e76d92d8020';
 
-/// See also [settingsLocalDataSource].
-@ProviderFor(settingsLocalDataSource)
-final settingsLocalDataSourceProvider =
-    Provider<SettingsLocalDataSource>.internal(
-  settingsLocalDataSource,
-  name: r'settingsLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$settingsLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(syncLocalDataSource)
+final syncLocalDataSourceProvider = SyncLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SettingsLocalDataSourceRef = ProviderRef<SettingsLocalDataSource>;
+final class SyncLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          SyncLocalDataSource,
+          SyncLocalDataSource,
+          SyncLocalDataSource
+        >
+    with $Provider<SyncLocalDataSource> {
+  SyncLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SyncLocalDataSource create(Ref ref) {
+    return syncLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncLocalDataSource>(value),
+    );
+  }
+}
+
 String _$syncLocalDataSourceHash() =>
     r'75673578fa781cf766cf70a95336ba3c049d720e';
 
-/// See also [syncLocalDataSource].
-@ProviderFor(syncLocalDataSource)
-final syncLocalDataSourceProvider = Provider<SyncLocalDataSource>.internal(
-  syncLocalDataSource,
-  name: r'syncLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$syncLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SyncLocalDataSourceRef = ProviderRef<SyncLocalDataSource>;
-String _$accountDeletionLocalDataSourceHash() =>
-    r'1ed13792c707fd8619884d463a819df799ecdd72';
-
-/// See also [accountDeletionLocalDataSource].
 @ProviderFor(accountDeletionLocalDataSource)
 final accountDeletionLocalDataSourceProvider =
-    Provider<AccountDeletionLocalDataSource>.internal(
-  accountDeletionLocalDataSource,
-  name: r'accountDeletionLocalDataSourceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$accountDeletionLocalDataSourceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    AccountDeletionLocalDataSourceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AccountDeletionLocalDataSourceRef
-    = ProviderRef<AccountDeletionLocalDataSource>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class AccountDeletionLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          AccountDeletionLocalDataSource,
+          AccountDeletionLocalDataSource,
+          AccountDeletionLocalDataSource
+        >
+    with $Provider<AccountDeletionLocalDataSource> {
+  AccountDeletionLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'accountDeletionLocalDataSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$accountDeletionLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<AccountDeletionLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AccountDeletionLocalDataSource create(Ref ref) {
+    return accountDeletionLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AccountDeletionLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AccountDeletionLocalDataSource>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$accountDeletionLocalDataSourceHash() =>
+    r'1ed13792c707fd8619884d463a819df799ecdd72';

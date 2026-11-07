@@ -57,8 +57,8 @@ class LegalRepositoryImpl implements LegalRepository {
   }) async {
     try {
       await _remote.accept({
-        if (termsVersion != null) 'terms': termsVersion,
-        if (privacyVersion != null) 'privacy': privacyVersion,
+        'terms': ?termsVersion,
+        'privacy': ?privacyVersion,
       });
       return const Right(LegalAcceptResult.accepted);
     } on FirebaseFunctionsException catch (e) {

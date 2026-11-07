@@ -6,171 +6,94 @@ part of 'word_list_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$wordListViewModelHash() => r'd1518e65274186b547b6f6a0fe3bb7aaecae31c7';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$WordListViewModel
-    extends BuildlessAutoDisposeAsyncNotifier<List<Word>> {
-  late final String folderId;
-
-  FutureOr<List<Word>> build(
-    String folderId,
-  );
-}
-
-/// See also [WordListViewModel].
 @ProviderFor(WordListViewModel)
-const wordListViewModelProvider = WordListViewModelFamily();
+final wordListViewModelProvider = WordListViewModelFamily._();
 
-/// See also [WordListViewModel].
-class WordListViewModelFamily extends Family<AsyncValue<List<Word>>> {
-  /// See also [WordListViewModel].
-  const WordListViewModelFamily();
+final class WordListViewModelProvider
+    extends $AsyncNotifierProvider<WordListViewModel, List<Word>> {
+  WordListViewModelProvider._({
+    required WordListViewModelFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'wordListViewModelProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
-  /// See also [WordListViewModel].
-  WordListViewModelProvider call(
-    String folderId,
-  ) {
-    return WordListViewModelProvider(
-      folderId,
-    );
+  @override
+  String debugGetCreateSourceHash() => _$wordListViewModelHash();
+
+  @override
+  String toString() {
+    return r'wordListViewModelProvider'
+        ''
+        '($argument)';
   }
 
+  @$internal
   @override
-  WordListViewModelProvider getProviderOverride(
-    covariant WordListViewModelProvider provider,
-  ) {
-    return call(
-      provider.folderId,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'wordListViewModelProvider';
-}
-
-/// See also [WordListViewModel].
-class WordListViewModelProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    WordListViewModel, List<Word>> {
-  /// See also [WordListViewModel].
-  WordListViewModelProvider(
-    String folderId,
-  ) : this._internal(
-          () => WordListViewModel()..folderId = folderId,
-          from: wordListViewModelProvider,
-          name: r'wordListViewModelProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$wordListViewModelHash,
-          dependencies: WordListViewModelFamily._dependencies,
-          allTransitiveDependencies:
-              WordListViewModelFamily._allTransitiveDependencies,
-          folderId: folderId,
-        );
-
-  WordListViewModelProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.folderId,
-  }) : super.internal();
-
-  final String folderId;
-
-  @override
-  FutureOr<List<Word>> runNotifierBuild(
-    covariant WordListViewModel notifier,
-  ) {
-    return notifier.build(
-      folderId,
-    );
-  }
-
-  @override
-  Override overrideWith(WordListViewModel Function() create) {
-    return ProviderOverride(
-      origin: this,
-      override: WordListViewModelProvider._internal(
-        () => create()..folderId = folderId,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        folderId: folderId,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeAsyncNotifierProviderElement<WordListViewModel, List<Word>>
-      createElement() {
-    return _WordListViewModelProviderElement(this);
-  }
+  WordListViewModel create() => WordListViewModel();
 
   @override
   bool operator ==(Object other) {
-    return other is WordListViewModelProvider && other.folderId == folderId;
+    return other is WordListViewModelProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, folderId.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin WordListViewModelRef on AutoDisposeAsyncNotifierProviderRef<List<Word>> {
-  /// The parameter `folderId` of this provider.
-  String get folderId;
-}
+String _$wordListViewModelHash() => r'd1518e65274186b547b6f6a0fe3bb7aaecae31c7';
 
-class _WordListViewModelProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<WordListViewModel,
-        List<Word>> with WordListViewModelRef {
-  _WordListViewModelProviderElement(super.provider);
+final class WordListViewModelFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          WordListViewModel,
+          AsyncValue<List<Word>>,
+          List<Word>,
+          FutureOr<List<Word>>,
+          String
+        > {
+  WordListViewModelFamily._()
+    : super(
+        retry: null,
+        name: r'wordListViewModelProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  WordListViewModelProvider call(String folderId) =>
+      WordListViewModelProvider._(argument: folderId, from: this);
 
   @override
-  String get folderId => (origin as WordListViewModelProvider).folderId;
+  String toString() => r'wordListViewModelProvider';
 }
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+
+abstract class _$WordListViewModel extends $AsyncNotifier<List<Word>> {
+  late final _$args = ref.$arg as String;
+  String get folderId => _$args;
+
+  FutureOr<List<Word>> build(String folderId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<Word>>, List<Word>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<Word>>, List<Word>>,
+              AsyncValue<List<Word>>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}

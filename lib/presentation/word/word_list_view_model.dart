@@ -45,7 +45,7 @@ class WordListViewModel extends _$WordListViewModel {
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (word) {
-        final current = state.valueOrNull ?? [];
+        final current = state.value ?? [];
         state = AsyncValue.data([...current, word]);
       },
     );
@@ -66,7 +66,7 @@ class WordListViewModel extends _$WordListViewModel {
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (updated) {
-        final current = state.valueOrNull ?? [];
+        final current = state.value ?? [];
         state = AsyncValue.data(
           current.map((w) => w.id == wordId ? updated : w).toList(),
         );
@@ -83,7 +83,7 @@ class WordListViewModel extends _$WordListViewModel {
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (_) {
-        final current = state.valueOrNull ?? [];
+        final current = state.value ?? [];
         state = AsyncValue.data(current.where((w) => w.id != wordId).toList());
       },
     );

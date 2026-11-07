@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';

@@ -42,7 +42,7 @@ class ResultPage extends ConsumerWidget {
               ),
             );
           }
-          final folderNames = ref.watch(folderNamesProvider).valueOrNull ?? {};
+          final folderNames = ref.watch(folderNamesProvider).value ?? {};
           return RefreshIndicator(
             onRefresh: controller.refresh,
             child: ListView.builder(

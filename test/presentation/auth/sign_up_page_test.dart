@@ -29,6 +29,7 @@ import 'package:word_pods/presentation/settings/account_deletion_gate.dart';
 import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// 仕様書（docs/detailed_design/legal_consent/legal_consent.md）3.6 節
 /// 「新規登録画面での同意（SignUpPage）」の Widget テスト。期待値は仕様書から作っている。
@@ -370,6 +371,7 @@ Future<_Env> _launch(
   final env = _Env(user);
   configure?.call(env);
   await tester.pumpWidget(ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.deletion),

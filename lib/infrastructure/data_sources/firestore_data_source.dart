@@ -6,8 +6,7 @@ import 'package:word_pods/domain/entities/user_settings.dart';
 import 'package:word_pods/domain/entities/word.dart';
 
 class FirestoreDataSource {
-  FirestoreDataSource({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+  FirestoreDataSource({required this._firestore});
 
   final FirebaseFirestore _firestore;
 

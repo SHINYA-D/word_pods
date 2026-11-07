@@ -12,6 +12,8 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_settings_reposit
 import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_sync_repository.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// テスト用モックユーザー（MockFolderRepository / MockWordRepository のサンプルデータと同じ ID）
 const testUser = AppUser(id: 'mock-user-id', email: 'dev@example.com');
@@ -36,6 +38,7 @@ Widget buildWithMockRepositories({
   List<Override> extra = const [],
 }) {
   return ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(MockAuthRepository()),
       folderRepositoryProvider.overrideWithValue(MockFolderRepository()),

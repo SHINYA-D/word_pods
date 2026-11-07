@@ -80,7 +80,7 @@ class WithdrawnElsewhereUseCase {
 
     final localIds = (await _repository.findLocalUserIds())
         .getOrElse((_) => const <String>[]);
-    final targets = <String>{...localIds, if (signedIn != null) signedIn};
+    final targets = <String>{...localIds, ?signedIn};
     final withdrawn = <String>[];
     for (final userId in targets) {
       final result = await _repository.isWithdrawnOnServer(userId);

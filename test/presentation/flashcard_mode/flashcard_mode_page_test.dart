@@ -6,9 +6,11 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_flashcard_result
 import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_page.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 Widget buildFlashcardModePage() {
   return ProviderScope(
+    retry: noRetry,
     overrides: [
       // テスト結果の保存先のみモックに差し替える（Firebase 回避）
       flashcardResultRepositoryProvider

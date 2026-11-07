@@ -9,6 +9,8 @@ import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/repositories/account_repository.dart';
 import 'package:word_pods/presentation/shell/shell_view_model.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _u1 = AppUser(id: 'u1', email: 'u1@example.com');
 const _u2 = AppUser(id: 'u2', email: 'u2@example.com');
@@ -42,6 +44,7 @@ final _userState = StateProvider<AppUser?>((ref) => null);
 class _Env {
   _Env({AppUser? user}) {
     container = ProviderContainer(
+      retry: noRetry,
       overrides: [
         accountRepositoryProvider.overrideWithValue(repo),
         currentUserProvider.overrideWith((ref) => ref.watch(_userState)),

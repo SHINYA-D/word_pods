@@ -18,13 +18,11 @@ class WordRepositoryImpl implements WordRepository {
     required WordLocalDataSource localDataSource,
     required FolderLocalDataSource folderLocalDataSource,
     required SyncQueueDataSource syncQueueDataSource,
-    required DatabaseHelper dbHelper,
-    required void Function() onLocalChanged,
+    required this._dbHelper,
+    required this._onLocalChanged,
   })  : _local = localDataSource,
         _folderLocal = folderLocalDataSource,
-        _syncQueue = syncQueueDataSource,
-        _dbHelper = dbHelper,
-        _onLocalChanged = onLocalChanged;
+        _syncQueue = syncQueueDataSource;
 
   final WordLocalDataSource _local;
   final FolderLocalDataSource _folderLocal;

@@ -3,10 +3,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseAuthDataSource {
   FirebaseAuthDataSource({
-    required FirebaseAuth firebaseAuth,
-    required GoogleSignIn googleSignIn,
-  })  : _firebaseAuth = firebaseAuth,
-        _googleSignIn = googleSignIn;
+    required this._firebaseAuth,
+    required this._googleSignIn,
+  });
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
@@ -34,17 +33,18 @@ class FirebaseAuthDataSource {
   }
 
   Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code != GoogleSignInExceptionCode.canceled) rethrow;
       throw FirebaseAuthException(
         code: 'sign_in_cancelled',
         message: 'Google sign in was cancelled.',
       );
     }
-    final googleAuth = await googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
+      idToken: googleUser.authentication.idToken,
     );
     return _firebaseAuth.signInWithCredential(credential);
   }

@@ -99,7 +99,7 @@ class FakeSyncRemoteDataSource implements SyncRemoteDataSource {
 /// 共有ヘルパーの `FakeConnectivityMonitor`（`test/helpers/fake_infrastructure.dart`）は
 /// 固定値の `Stream.value` しか返せないため、複数の状態変化を検証するこのファイル専用に用意する。
 class StreamConnectivityMonitor implements ConnectivityMonitor {
-  StreamConnectivityMonitor({bool online = true}) : _online = online;
+  StreamConnectivityMonitor({this._online = true});
 
   bool _online;
   final _controller = StreamController<bool>.broadcast();

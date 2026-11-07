@@ -62,7 +62,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
     final isLoading = state.isLoading;
     // 読み込んでいる間は null（ボタンとリンクを押せない）
-    final LegalConfig? legalConfig = ref.watch(signUpLegalConfigProvider).valueOrNull;
+    final LegalConfig? legalConfig = ref.watch(signUpLegalConfigProvider).value;
     final canSubmit =
         !isLoading && legalConfig != null && _termsChecked && _privacyChecked;
 

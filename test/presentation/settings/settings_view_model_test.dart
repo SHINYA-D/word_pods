@@ -7,6 +7,7 @@ import 'package:word_pods/core/di/settings_providers.dart';
 import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/domain/entities/user_settings.dart';
 import 'package:word_pods/presentation/settings/settings_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _userId = 'user-1';
 
@@ -51,7 +52,7 @@ ProviderContainer _makeContainer({
   required GetSettingsUseCase getSettingsUseCase,
   UpdateSettingsUseCase? updateSettingsUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     getSettingsUseCaseProvider.overrideWithValue(getSettingsUseCase),
     if (updateSettingsUseCase != null)
       updateSettingsUseCaseProvider.overrideWithValue(updateSettingsUseCase),

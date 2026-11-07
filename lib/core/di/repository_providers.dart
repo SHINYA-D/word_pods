@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/firebase_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';

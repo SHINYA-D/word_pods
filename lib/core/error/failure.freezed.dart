@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'failure.dart';
@@ -9,376 +9,337 @@ part of 'failure.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$Failure {
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is Failure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Failure);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
     return 'Failure()';
-  }
+}
+
+
 }
 
 /// @nodoc
-class $FailureCopyWith<$Res> {
-  $FailureCopyWith(Failure _, $Res Function(Failure) __);
+class $FailureCopyWith<$Res>  {
+$FailureCopyWith(Failure _, $Res Function(Failure) __);
 }
+
 
 /// Adds pattern-matching-related methods to [Failure].
 extension FailurePatterns on Failure {
-  /// A variant of `map` that fallback to returning `orElse`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(NetworkFailure value)? network,
-    TResult Function(AuthFailure value)? auth,
-    TResult Function(NotFoundFailure value)? notFound,
-    TResult Function(UnknownFailure value)? unknown,
-    TResult Function(RecentLoginRequiredFailure value)? recentLoginRequired,
-    TResult Function(TooManyRequestsFailure value)? tooManyRequests,
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure() when network != null:
-        return network(_that);
-      case AuthFailure() when auth != null:
-        return auth(_that);
-      case NotFoundFailure() when notFound != null:
-        return notFound(_that);
-      case UnknownFailure() when unknown != null:
-        return unknown(_that);
-      case RecentLoginRequiredFailure() when recentLoginRequired != null:
-        return recentLoginRequired(_that);
-      case TooManyRequestsFailure() when tooManyRequests != null:
-        return tooManyRequests(_that);
-      case _:
-        return orElse();
-    }
-  }
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( NetworkFailure value)?  network,TResult Function( AuthFailure value)?  auth,TResult Function( NotFoundFailure value)?  notFound,TResult Function( UnknownFailure value)?  unknown,TResult Function( RecentLoginRequiredFailure value)?  recentLoginRequired,TResult Function( TooManyRequestsFailure value)?  tooManyRequests,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case NetworkFailure() when network != null:
+return network(_that);case AuthFailure() when auth != null:
+return auth(_that);case NotFoundFailure() when notFound != null:
+return notFound(_that);case UnknownFailure() when unknown != null:
+return unknown(_that);case RecentLoginRequiredFailure() when recentLoginRequired != null:
+return recentLoginRequired(_that);case TooManyRequestsFailure() when tooManyRequests != null:
+return tooManyRequests(_that);case _:
+  return orElse();
 
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// Callbacks receives the raw object, upcasted.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case final Subclass2 value:
-  ///     return ...;
-  /// }
-  /// ```
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(NetworkFailure value) network,
-    required TResult Function(AuthFailure value) auth,
-    required TResult Function(NotFoundFailure value) notFound,
-    required TResult Function(UnknownFailure value) unknown,
-    required TResult Function(RecentLoginRequiredFailure value)
-        recentLoginRequired,
-    required TResult Function(TooManyRequestsFailure value) tooManyRequests,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure():
-        return network(_that);
-      case AuthFailure():
-        return auth(_that);
-      case NotFoundFailure():
-        return notFound(_that);
-      case UnknownFailure():
-        return unknown(_that);
-      case RecentLoginRequiredFailure():
-        return recentLoginRequired(_that);
-      case TooManyRequestsFailure():
-        return tooManyRequests(_that);
-    }
-  }
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( NetworkFailure value)  network,required TResult Function( AuthFailure value)  auth,required TResult Function( NotFoundFailure value)  notFound,required TResult Function( UnknownFailure value)  unknown,required TResult Function( RecentLoginRequiredFailure value)  recentLoginRequired,required TResult Function( TooManyRequestsFailure value)  tooManyRequests,}){
+final _that = this;
+switch (_that) {
+case NetworkFailure():
+return network(_that);case AuthFailure():
+return auth(_that);case NotFoundFailure():
+return notFound(_that);case UnknownFailure():
+return unknown(_that);case RecentLoginRequiredFailure():
+return recentLoginRequired(_that);case TooManyRequestsFailure():
+return tooManyRequests(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
 
-  /// A variant of `map` that fallback to returning `null`.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case final Subclass value:
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( NetworkFailure value)?  network,TResult? Function( AuthFailure value)?  auth,TResult? Function( NotFoundFailure value)?  notFound,TResult? Function( UnknownFailure value)?  unknown,TResult? Function( RecentLoginRequiredFailure value)?  recentLoginRequired,TResult? Function( TooManyRequestsFailure value)?  tooManyRequests,}){
+final _that = this;
+switch (_that) {
+case NetworkFailure() when network != null:
+return network(_that);case AuthFailure() when auth != null:
+return auth(_that);case NotFoundFailure() when notFound != null:
+return notFound(_that);case UnknownFailure() when unknown != null:
+return unknown(_that);case RecentLoginRequiredFailure() when recentLoginRequired != null:
+return recentLoginRequired(_that);case TooManyRequestsFailure() when tooManyRequests != null:
+return tooManyRequests(_that);case _:
+  return null;
 
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(NetworkFailure value)? network,
-    TResult? Function(AuthFailure value)? auth,
-    TResult? Function(NotFoundFailure value)? notFound,
-    TResult? Function(UnknownFailure value)? unknown,
-    TResult? Function(RecentLoginRequiredFailure value)? recentLoginRequired,
-    TResult? Function(TooManyRequestsFailure value)? tooManyRequests,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure() when network != null:
-        return network(_that);
-      case AuthFailure() when auth != null:
-        return auth(_that);
-      case NotFoundFailure() when notFound != null:
-        return notFound(_that);
-      case UnknownFailure() when unknown != null:
-        return unknown(_that);
-      case RecentLoginRequiredFailure() when recentLoginRequired != null:
-        return recentLoginRequired(_that);
-      case TooManyRequestsFailure() when tooManyRequests != null:
-        return tooManyRequests(_that);
-      case _:
-        return null;
-    }
-  }
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
 
-  /// A variant of `when` that fallback to an `orElse` callback.
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return orElse();
-  /// }
-  /// ```
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  network,TResult Function()?  auth,TResult Function()?  notFound,TResult Function( String message)?  unknown,TResult Function()?  recentLoginRequired,TResult Function()?  tooManyRequests,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case NetworkFailure() when network != null:
+return network();case AuthFailure() when auth != null:
+return auth();case NotFoundFailure() when notFound != null:
+return notFound();case UnknownFailure() when unknown != null:
+return unknown(_that.message);case RecentLoginRequiredFailure() when recentLoginRequired != null:
+return recentLoginRequired();case TooManyRequestsFailure() when tooManyRequests != null:
+return tooManyRequests();case _:
+  return orElse();
 
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? network,
-    TResult Function()? auth,
-    TResult Function()? notFound,
-    TResult Function(String message)? unknown,
-    TResult Function()? recentLoginRequired,
-    TResult Function()? tooManyRequests,
-    required TResult orElse(),
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure() when network != null:
-        return network();
-      case AuthFailure() when auth != null:
-        return auth();
-      case NotFoundFailure() when notFound != null:
-        return notFound();
-      case UnknownFailure() when unknown != null:
-        return unknown(_that.message);
-      case RecentLoginRequiredFailure() when recentLoginRequired != null:
-        return recentLoginRequired();
-      case TooManyRequestsFailure() when tooManyRequests != null:
-        return tooManyRequests();
-      case _:
-        return orElse();
-    }
-  }
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
 
-  /// A `switch`-like method, using callbacks.
-  ///
-  /// As opposed to `map`, this offers destructuring.
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case Subclass2(:final field2):
-  ///     return ...;
-  /// }
-  /// ```
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  network,required TResult Function()  auth,required TResult Function()  notFound,required TResult Function( String message)  unknown,required TResult Function()  recentLoginRequired,required TResult Function()  tooManyRequests,}) {final _that = this;
+switch (_that) {
+case NetworkFailure():
+return network();case AuthFailure():
+return auth();case NotFoundFailure():
+return notFound();case UnknownFailure():
+return unknown(_that.message);case RecentLoginRequiredFailure():
+return recentLoginRequired();case TooManyRequestsFailure():
+return tooManyRequests();}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
 
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() network,
-    required TResult Function() auth,
-    required TResult Function() notFound,
-    required TResult Function(String message) unknown,
-    required TResult Function() recentLoginRequired,
-    required TResult Function() tooManyRequests,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure():
-        return network();
-      case AuthFailure():
-        return auth();
-      case NotFoundFailure():
-        return notFound();
-      case UnknownFailure():
-        return unknown(_that.message);
-      case RecentLoginRequiredFailure():
-        return recentLoginRequired();
-      case TooManyRequestsFailure():
-        return tooManyRequests();
-    }
-  }
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  network,TResult? Function()?  auth,TResult? Function()?  notFound,TResult? Function( String message)?  unknown,TResult? Function()?  recentLoginRequired,TResult? Function()?  tooManyRequests,}) {final _that = this;
+switch (_that) {
+case NetworkFailure() when network != null:
+return network();case AuthFailure() when auth != null:
+return auth();case NotFoundFailure() when notFound != null:
+return notFound();case UnknownFailure() when unknown != null:
+return unknown(_that.message);case RecentLoginRequiredFailure() when recentLoginRequired != null:
+return recentLoginRequired();case TooManyRequestsFailure() when tooManyRequests != null:
+return tooManyRequests();case _:
+  return null;
 
-  /// A variant of `when` that fallback to returning `null`
-  ///
-  /// It is equivalent to doing:
-  /// ```dart
-  /// switch (sealedClass) {
-  ///   case Subclass(:final field):
-  ///     return ...;
-  ///   case _:
-  ///     return null;
-  /// }
-  /// ```
+}
+}
 
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? network,
-    TResult? Function()? auth,
-    TResult? Function()? notFound,
-    TResult? Function(String message)? unknown,
-    TResult? Function()? recentLoginRequired,
-    TResult? Function()? tooManyRequests,
-  }) {
-    final _that = this;
-    switch (_that) {
-      case NetworkFailure() when network != null:
-        return network();
-      case AuthFailure() when auth != null:
-        return auth();
-      case NotFoundFailure() when notFound != null:
-        return notFound();
-      case UnknownFailure() when unknown != null:
-        return unknown(_that.message);
-      case RecentLoginRequiredFailure() when recentLoginRequired != null:
-        return recentLoginRequired();
-      case TooManyRequestsFailure() when tooManyRequests != null:
-        return tooManyRequests();
-      case _:
-        return null;
-    }
-  }
 }
 
 /// @nodoc
+
 
 class NetworkFailure implements Failure {
   const NetworkFailure();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is NetworkFailure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
-    return 'Failure.network()';
-  }
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkFailure);
 }
 
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'Failure.network()';
+}
+
+
+}
+
+
+
+
 /// @nodoc
+
 
 class AuthFailure implements Failure {
   const AuthFailure();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is AuthFailure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
-    return 'Failure.auth()';
-  }
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthFailure);
 }
 
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'Failure.auth()';
+}
+
+
+}
+
+
+
+
 /// @nodoc
+
 
 class NotFoundFailure implements Failure {
   const NotFoundFailure();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is NotFoundFailure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
-    return 'Failure.notFound()';
-  }
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is NotFoundFailure);
 }
 
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'Failure.notFound()';
+}
+
+
+}
+
+
+
+
 /// @nodoc
+
 
 class UnknownFailure implements Failure {
   const UnknownFailure(this.message);
+  
 
-  final String message;
+ final  String message;
 
-  /// Create a copy of Failure
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @pragma('vm:prefer-inline')
-  $UnknownFailureCopyWith<UnknownFailure> get copyWith =>
-      _$UnknownFailureCopyWithImpl<UnknownFailure>(this, _$identity);
+/// Create a copy of Failure
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UnknownFailureCopyWith<UnknownFailure> get copyWith => _$UnknownFailureCopyWithImpl<UnknownFailure>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is UnknownFailure &&
-            (identical(other.message, message) || other.message == message));
-  }
 
-  @override
-  int get hashCode => Object.hash(runtimeType, message);
 
-  @override
-  String toString() {
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UnknownFailure&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
     return 'Failure.unknown(message: $message)';
-  }
+}
+
+
 }
 
 /// @nodoc
-abstract mixin class $UnknownFailureCopyWith<$Res>
-    implements $FailureCopyWith<$Res> {
-  factory $UnknownFailureCopyWith(
-          UnknownFailure value, $Res Function(UnknownFailure) _then) =
-      _$UnknownFailureCopyWithImpl;
-  @useResult
-  $Res call({String message});
-}
+abstract mixin class $UnknownFailureCopyWith<$Res> implements $FailureCopyWith<$Res> {
+  factory $UnknownFailureCopyWith(UnknownFailure value, $Res Function(UnknownFailure) _then) = _$UnknownFailureCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
 
+
+
+
+}
 /// @nodoc
 class _$UnknownFailureCopyWithImpl<$Res>
     implements $UnknownFailureCopyWith<$Res> {
@@ -387,60 +348,80 @@ class _$UnknownFailureCopyWithImpl<$Res>
   final UnknownFailure _self;
   final $Res Function(UnknownFailure) _then;
 
-  /// Create a copy of Failure
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  $Res call({
-    Object? message = null,
-  }) {
-    return _then(UnknownFailure(
-      null == message
-          ? _self.message
-          : message // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
-  }
+/// Create a copy of Failure
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(UnknownFailure(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc
+
 
 class RecentLoginRequiredFailure implements Failure {
   const RecentLoginRequiredFailure();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is RecentLoginRequiredFailure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
-    return 'Failure.recentLoginRequired()';
-  }
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentLoginRequiredFailure);
 }
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'Failure.recentLoginRequired()';
+}
+
+
+}
+
+
+
 
 /// @nodoc
 
+
 class TooManyRequestsFailure implements Failure {
   const TooManyRequestsFailure();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is TooManyRequestsFailure);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
 
-  @override
-  String toString() {
-    return 'Failure.tooManyRequests()';
-  }
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is TooManyRequestsFailure);
 }
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'Failure.tooManyRequests()';
+}
+
+
+}
+
+
+
 
 // dart format on

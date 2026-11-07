@@ -20,6 +20,8 @@ import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 import '../../helpers/fake_auth_use_case_repositories.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// 仕様書（docs/detailed_design/legal_consent/legal_consent.md）4章の
 /// LegalConsentViewModel のテスト。期待値は仕様書から作っている。
@@ -152,6 +154,7 @@ class _Pending {
 class _Env {
   _Env({AppUser? user = _userA}) {
     container = ProviderContainer(
+      retry: noRetry,
       overrides: [
         _userState.overrideWith((ref) => user),
         currentUserProvider.overrideWith((ref) => ref.watch(_userState)),
@@ -169,6 +172,9 @@ class _Env {
       ],
     );
     addTearDown(container.dispose);
+    // アプリでは画面が listen している。Riverpod 3 は listen されていない Provider を一時停止し、
+    // その中の ref.listen（ログイン中の uid の変化など）が動かなくなるため、テストでも listen しておく
+    container.listen(legalConsentViewModelProvider, (_, _) {});
     vm = container.read(legalConsentViewModelProvider.notifier);
     withdrawn = container.read(withdrawnElsewhereViewModelProvider.notifier)
         as _FakeWithdrawnViewModel;
