@@ -22,6 +22,7 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.
 import 'package:word_pods/presentation/shell/shell_page.dart';
 
 import '../../helpers/fake_infrastructure.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _u1 = AppUser(id: 'u1', email: 'u1@example.com');
 const _u2 = AppUser(id: 'u2', email: 'u2@example.com');
@@ -123,6 +124,7 @@ Future<_Env> _launch(
   final env = _Env();
   configure?.call(env);
   await tester.pumpWidget(ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountRepositoryProvider.overrideWithValue(env.accounts),

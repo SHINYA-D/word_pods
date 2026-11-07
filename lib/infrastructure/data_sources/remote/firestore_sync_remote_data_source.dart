@@ -8,8 +8,7 @@ import 'sync_remote_data_source.dart';
 /// 各ドキュメントは、データの項目に加えて updatedAt / deletedAt / serverUpdatedAt を持つ。
 /// serverUpdatedAt はサーバーの時刻（`FieldValue.serverTimestamp()`）で、差分取得の基準に使う。
 class FirestoreSyncRemoteDataSource implements SyncRemoteDataSource {
-  FirestoreSyncRemoteDataSource({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+  FirestoreSyncRemoteDataSource({required this._firestore});
 
   final FirebaseFirestore _firestore;
 

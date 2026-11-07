@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
@@ -33,7 +32,7 @@ FirebaseFunctions firebaseFunctions(Ref ref) =>
     FirebaseFunctions.instanceFor(region: 'asia-northeast1');
 
 @Riverpod(keepAlive: true)
-GoogleSignIn googleSignIn(Ref ref) => GoogleSignIn();
+GoogleSignIn googleSignIn(Ref ref) => GoogleSignIn.instance;
 
 @Riverpod(keepAlive: true)
 FirebaseAuthDataSource firebaseAuthDataSource(Ref ref) =>

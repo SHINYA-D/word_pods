@@ -40,7 +40,7 @@ class _FlashcardModeSettingsPageState extends ConsumerState<FlashcardModeSetting
             const SizedBox(height: 8),
             wordsState.when(
               loading: () => const Text('単語数を読み込み中...'),
-              error: (_, __) => const Text('単語数の取得に失敗しました'),
+              error: (_, _) => const Text('単語数の取得に失敗しました'),
               data: (words) => Text('単語数: ${words.length}枚', style: Theme.of(context).textTheme.bodyLarge),
             ),
             const Divider(height: 32),
@@ -52,13 +52,13 @@ class _FlashcardModeSettingsPageState extends ConsumerState<FlashcardModeSetting
             ),
             const Spacer(),
             FilledButton.icon(
-              onPressed: wordsState.valueOrNull?.isEmpty ?? true
+              onPressed: wordsState.value?.isEmpty ?? true
                   ? null
                   : () {
                       FlashcardModeRoute(
                         folderId: widget.folderId,
                         $extra: FlashcardModeRouteExtra(
-                          words: wordsState.valueOrNull!,
+                          words: wordsState.value!,
                           shuffle: _shuffle,
                           folderName: widget.folderName,
                           userId: userId,
@@ -68,7 +68,7 @@ class _FlashcardModeSettingsPageState extends ConsumerState<FlashcardModeSetting
               icon: const Icon(Icons.play_arrow),
               label: const Text('テスト開始'),
             ),
-            if (wordsState.valueOrNull?.isEmpty ?? false)
+            if (wordsState.value?.isEmpty ?? false)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(

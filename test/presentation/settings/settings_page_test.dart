@@ -30,6 +30,8 @@ import 'package:word_pods/presentation/settings/withdrawn_elsewhere_gate.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _userId = 'mock-user-id';
 
@@ -451,6 +453,7 @@ Future<_Env> _launch(
   final env = _Env(user: user, recordUserId: recordUserId, status: status);
   configure?.call(env);
   await tester.pumpWidget(ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.repo),
@@ -1358,6 +1361,7 @@ Future<void> _startApp(WidgetTester tester, _Env env) async {
   _useTallView(tester);
   await tester.pumpWidget(const SizedBox());
   await tester.pumpWidget(ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(env.auth),
       accountDeletionRepositoryProvider.overrideWithValue(env.repo),

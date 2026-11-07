@@ -22,14 +22,12 @@ class FolderRepositoryImpl implements FolderRepository {
     required WordLocalDataSource wordLocalDataSource,
     required FlashcardResultLocalDataSource flashcardResultLocalDataSource,
     required SyncQueueDataSource syncQueueDataSource,
-    required DatabaseHelper dbHelper,
-    required void Function() onLocalChanged,
+    required this._dbHelper,
+    required this._onLocalChanged,
   })  : _local = localDataSource,
         _wordLocal = wordLocalDataSource,
         _flashcardResultLocal = flashcardResultLocalDataSource,
-        _syncQueue = syncQueueDataSource,
-        _dbHelper = dbHelper,
-        _onLocalChanged = onLocalChanged;
+        _syncQueue = syncQueueDataSource;
 
   final FolderLocalDataSource _local;
   final WordLocalDataSource _wordLocal;

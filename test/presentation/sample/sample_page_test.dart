@@ -22,6 +22,8 @@ import 'package:word_pods/presentation/shell/shell_page.dart';
 
 import '../../helpers/fake_infrastructure.dart';
 import '../../helpers/test_helpers.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 // ─── フィクスチャ ──────────────────────────────────────────────
 
@@ -77,18 +79,19 @@ final _testRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
-      final isLoggedIn = authState.valueOrNull != null;
+      final isLoggedIn = authState.value != null;
       final loc = state.matchedLocation;
       if (!isLoggedIn && loc != '/login') return '/login';
       return null;
     },
   );
-  ref.listen(authStateProvider, (_, __) => router.refresh());
+  ref.listen(authStateProvider, (_, _) => router.refresh());
   return router;
 });
 
 Widget _buildPageWithRouter(FakeSampleRepository repo, {List<Override> extra = const []}) {
   return ProviderScope(
+    retry: noRetry,
     overrides: [
       authRepositoryProvider.overrideWithValue(MockAuthRepository()),
       folderRepositoryProvider.overrideWithValue(MockFolderRepository()),

@@ -63,9 +63,6 @@ class _FakeAuth implements FirebaseAuth {
 
 class _FakeGoogleAuthentication implements GoogleSignInAuthentication {
   @override
-  String? get accessToken => 'access-token';
-
-  @override
   String? get idToken => 'id-token';
 
   @override
@@ -74,8 +71,7 @@ class _FakeGoogleAuthentication implements GoogleSignInAuthentication {
 
 class _FakeGoogleAccount implements GoogleSignInAccount {
   @override
-  Future<GoogleSignInAuthentication> get authentication async =>
-      _FakeGoogleAuthentication();
+  GoogleSignInAuthentication get authentication => _FakeGoogleAuthentication();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -88,9 +84,10 @@ class _FakeGoogleSignIn implements GoogleSignIn {
   int signInCalls = 0;
 
   @override
-  Future<GoogleSignInAccount?> signIn() async {
+  Future<GoogleSignInAccount> authenticate({List<String> scopeHint = const []}) async {
     signInCalls++;
-    return cancel ? null : _FakeGoogleAccount();
+    if (cancel) throw const GoogleSignInException(code: GoogleSignInExceptionCode.canceled);
+    return _FakeGoogleAccount();
   }
 
   @override

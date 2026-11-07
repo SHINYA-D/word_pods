@@ -94,7 +94,7 @@
 - **事前条件**: build 済みで `state.value` が空リスト。
 - **入力値・テスト条件**: `createWordUseCaseProvider` が新規 `Word` を返す。
 - **操作手順**: `notifier.createWord(front: 'grape', back: 'ぶどう')` を呼ぶ。
-- **期待結果**: `state.value` が `[newWord]` になる（`state.valueOrNull ?? []` の空リスト分岐を確認）。
+- **期待結果**: `state.value` が `[newWord]` になる（`state.value ?? []` の空リスト分岐を確認）。
 
 ### テストケース8: 作成に失敗した場合、AsyncError になり既存のリストは失われる
 - **カテゴリ**: 異常系

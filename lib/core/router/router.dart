@@ -40,7 +40,7 @@ GoRouter router(Ref ref) {
       final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
       // 強制ログアウトした uid は、Firebase 上でログイン中でもログインしていないものとして扱う
-      final user = authState.valueOrNull;
+      final user = authState.value;
       final forced = ref.read(withdrawnElsewhereViewModelProvider).forcedUserId;
       final isLoggedIn = user != null && user.id != forced;
       final isSyncing = ref.read(authSyncInProgressProvider);
@@ -61,12 +61,12 @@ GoRouter router(Ref ref) {
   );
 
   // 認証状態・同期状態が変わったら redirect を再評価させる
-  ref.listen(authStateProvider, (_, __) => goRouter.refresh());
-  ref.listen(authSyncInProgressProvider, (_, __) => goRouter.refresh());
-  ref.listen(isDeveloperProvider, (_, __) => goRouter.refresh());
+  ref.listen(authStateProvider, (_, _) => goRouter.refresh());
+  ref.listen(authSyncInProgressProvider, (_, _) => goRouter.refresh());
+  ref.listen(isDeveloperProvider, (_, _) => goRouter.refresh());
   ref.listen(
     withdrawnElsewhereViewModelProvider.select((s) => s.forcedUserId),
-    (_, __) => goRouter.refresh(),
+    (_, _) => goRouter.refresh(),
   );
 
   return goRouter;
@@ -90,7 +90,7 @@ class FlashcardModeRouteExtra {
 
 @immutable
 @TypedGoRoute<SplashRoute>(path: '/')
-class SplashRoute extends GoRouteData {
+class SplashRoute extends GoRouteData with $SplashRoute {
   const SplashRoute();
 
   @override
@@ -99,7 +99,7 @@ class SplashRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<LoginRoute>(path: '/login')
-class LoginRoute extends GoRouteData {
+class LoginRoute extends GoRouteData with $LoginRoute {
   const LoginRoute();
 
   @override
@@ -108,7 +108,7 @@ class LoginRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<SignUpRoute>(path: '/sign-up')
-class SignUpRoute extends GoRouteData {
+class SignUpRoute extends GoRouteData with $SignUpRoute {
   const SignUpRoute();
 
   @override
@@ -117,7 +117,7 @@ class SignUpRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<PasswordResetRoute>(path: '/password-reset')
-class PasswordResetRoute extends GoRouteData {
+class PasswordResetRoute extends GoRouteData with $PasswordResetRoute {
   const PasswordResetRoute();
 
   @override
@@ -128,7 +128,7 @@ class PasswordResetRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<AccountRoute>(path: '/account')
-class AccountRoute extends GoRouteData {
+class AccountRoute extends GoRouteData with $AccountRoute {
   const AccountRoute();
 
   @override
@@ -139,7 +139,7 @@ class AccountRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<FlashcardModeSettingsRoute>(path: '/test-settings/:folderId')
-class FlashcardModeSettingsRoute extends GoRouteData {
+class FlashcardModeSettingsRoute extends GoRouteData with $FlashcardModeSettingsRoute {
   const FlashcardModeSettingsRoute({required this.folderId, this.$extra});
 
   final String folderId;
@@ -153,7 +153,7 @@ class FlashcardModeSettingsRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<FlashcardModeRoute>(path: '/test/:folderId')
-class FlashcardModeRoute extends GoRouteData {
+class FlashcardModeRoute extends GoRouteData with $FlashcardModeRoute {
   const FlashcardModeRoute({required this.folderId, required this.$extra});
 
   final String folderId;
@@ -173,7 +173,7 @@ class FlashcardModeRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<WordEditRoute>(path: '/word-edit/:folderId')
-class WordEditRoute extends GoRouteData {
+class WordEditRoute extends GoRouteData with $WordEditRoute {
   const WordEditRoute({required this.folderId, required this.$extra});
 
   final String folderId;
@@ -187,7 +187,7 @@ class WordEditRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<WordCreateRoute>(path: '/word-create/:folderId')
-class WordCreateRoute extends GoRouteData {
+class WordCreateRoute extends GoRouteData with $WordCreateRoute {
   const WordCreateRoute({required this.folderId});
 
   final String folderId;
@@ -200,7 +200,7 @@ class WordCreateRoute extends GoRouteData {
 
 @immutable
 @TypedGoRoute<FlashcardModeResultRoute>(path: '/flashcard-result')
-class FlashcardModeResultRoute extends GoRouteData {
+class FlashcardModeResultRoute extends GoRouteData with $FlashcardModeResultRoute {
   const FlashcardModeResultRoute({required this.correctCount, required this.total});
 
   final int correctCount;
@@ -245,7 +245,7 @@ class AppShellRoute extends ShellRouteData {
 }
 
 @immutable
-class HomeRoute extends GoRouteData {
+class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
 
   @override
@@ -253,7 +253,7 @@ class HomeRoute extends GoRouteData {
 }
 
 @immutable
-class FolderRoute extends GoRouteData {
+class FolderRoute extends GoRouteData with $FolderRoute {
   const FolderRoute({required this.folderId, this.$extra});
 
   final String folderId;
@@ -266,7 +266,7 @@ class FolderRoute extends GoRouteData {
 }
 
 @immutable
-class ResultsRoute extends GoRouteData {
+class ResultsRoute extends GoRouteData with $ResultsRoute {
   const ResultsRoute();
 
   @override
@@ -274,7 +274,7 @@ class ResultsRoute extends GoRouteData {
 }
 
 @immutable
-class SampleRoute extends GoRouteData {
+class SampleRoute extends GoRouteData with $SampleRoute {
   const SampleRoute();
 
   @override
@@ -282,7 +282,7 @@ class SampleRoute extends GoRouteData {
 }
 
 @immutable
-class SettingsRoute extends GoRouteData {
+class SettingsRoute extends GoRouteData with $SettingsRoute {
   const SettingsRoute();
 
   @override

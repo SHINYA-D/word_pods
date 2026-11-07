@@ -6,6 +6,59 @@ part of 'legal_consent_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// 利用規約・プライバシーポリシーへの同意。
+///
+/// ログインしたとき・起動時・復帰時・オンラインに戻ったときに同意が必要かを判定し、必要なら同意ダイアログを出す状態にする。
+/// ログイン直後は、ログインの処理（新規登録では同意の送信を含む）と初回の同期が終わってから判定する。
+/// 退会関係のダイアログ（再開・他の端末での退会）を優先し、それらの間は判定しない。
+/// ログアウト・他の端末での退会で待機に戻したら、それより前に始めた処理の結果は捨てる（[_generation]）。
+
+@ProviderFor(LegalConsentViewModel)
+final legalConsentViewModelProvider = LegalConsentViewModelProvider._();
+
+/// 利用規約・プライバシーポリシーへの同意。
+///
+/// ログインしたとき・起動時・復帰時・オンラインに戻ったときに同意が必要かを判定し、必要なら同意ダイアログを出す状態にする。
+/// ログイン直後は、ログインの処理（新規登録では同意の送信を含む）と初回の同期が終わってから判定する。
+/// 退会関係のダイアログ（再開・他の端末での退会）を優先し、それらの間は判定しない。
+/// ログアウト・他の端末での退会で待機に戻したら、それより前に始めた処理の結果は捨てる（[_generation]）。
+final class LegalConsentViewModelProvider
+    extends $NotifierProvider<LegalConsentViewModel, LegalConsentState> {
+  /// 利用規約・プライバシーポリシーへの同意。
+  ///
+  /// ログインしたとき・起動時・復帰時・オンラインに戻ったときに同意が必要かを判定し、必要なら同意ダイアログを出す状態にする。
+  /// ログイン直後は、ログインの処理（新規登録では同意の送信を含む）と初回の同期が終わってから判定する。
+  /// 退会関係のダイアログ（再開・他の端末での退会）を優先し、それらの間は判定しない。
+  /// ログアウト・他の端末での退会で待機に戻したら、それより前に始めた処理の結果は捨てる（[_generation]）。
+  LegalConsentViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'legalConsentViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$legalConsentViewModelHash();
+
+  @$internal
+  @override
+  LegalConsentViewModel create() => LegalConsentViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LegalConsentState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LegalConsentState>(value),
+    );
+  }
+}
+
 String _$legalConsentViewModelHash() =>
     r'00b42af47b180ba99cc49223134e44768122a7fe';
 
@@ -15,20 +68,21 @@ String _$legalConsentViewModelHash() =>
 /// ログイン直後は、ログインの処理（新規登録では同意の送信を含む）と初回の同期が終わってから判定する。
 /// 退会関係のダイアログ（再開・他の端末での退会）を優先し、それらの間は判定しない。
 /// ログアウト・他の端末での退会で待機に戻したら、それより前に始めた処理の結果は捨てる（[_generation]）。
-///
-/// Copied from [LegalConsentViewModel].
-@ProviderFor(LegalConsentViewModel)
-final legalConsentViewModelProvider =
-    NotifierProvider<LegalConsentViewModel, LegalConsentState>.internal(
-  LegalConsentViewModel.new,
-  name: r'legalConsentViewModelProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$legalConsentViewModelHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
 
-typedef _$LegalConsentViewModel = Notifier<LegalConsentState>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$LegalConsentViewModel extends $Notifier<LegalConsentState> {
+  LegalConsentState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<LegalConsentState, LegalConsentState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<LegalConsentState, LegalConsentState>,
+              LegalConsentState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

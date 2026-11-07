@@ -13,6 +13,7 @@ import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/entities/sample.dart';
 import 'package:word_pods/presentation/sample/sample_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// 仕様書（docs/detailed_design/presentation/sample/sample_page.md）4章の
 /// 「条件のログイン中のユーザーは id が u1 のユーザーとする」に合わせたテスト用ユーザー。
@@ -139,7 +140,7 @@ ProviderContainer _makeContainer({
   FakeUpdateSampleUseCase? updateSampleUseCase,
   FakeDeleteSampleUseCase? deleteSampleUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     getSamplesUseCaseProvider.overrideWithValue(getSamplesUseCase),
     createSampleUseCaseProvider
         .overrideWithValue(createSampleUseCase ?? FakeCreateSampleUseCase()),
@@ -154,7 +155,7 @@ ProviderContainer _makeContainer({
   // sampleViewModelProvider は AutoDispose のため、リスナーが無いまま read するだけだと
   // build() 内の Future.microtask(() => _initState()) が走る前に provider が破棄され、
   // 新しい notifier インスタンスが作られて _userId が未初期化のままになる。
-  container.listen(sampleViewModelProvider, (_, __) {}, fireImmediately: true);
+  container.listen(sampleViewModelProvider, (_, _) {}, fireImmediately: true);
   return container;
 }
 

@@ -11,6 +11,7 @@ import 'package:word_pods/presentation/settings/account_deletion_state.dart';
 import 'package:word_pods/presentation/settings/account_deletion_view_model.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_state.dart';
 import 'package:word_pods/presentation/settings/withdrawn_elsewhere_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'legal_consent_view_model.g.dart';
 

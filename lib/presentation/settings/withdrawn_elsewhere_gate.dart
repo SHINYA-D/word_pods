@@ -104,7 +104,7 @@ class _WithdrawnElsewhereGateState
   Widget build(BuildContext context) {
     ref.listen(
       withdrawnElsewhereViewModelProvider.select((s) => s.phase),
-      (_, __) => _scheduleUpdate(),
+      (_, _) => _scheduleUpdate(),
     );
     return widget.child;
   }

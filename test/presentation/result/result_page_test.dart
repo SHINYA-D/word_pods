@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_pods/domain/entities/flashcard_result.dart';
 import 'package:word_pods/presentation/result/result_page.dart';
 import 'package:word_pods/presentation/result/result_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:flutter_riverpod/misc.dart';
 
 Widget buildResultPage({List<Override> extra = const []}) {
   return buildWithMockRepositories(child: const ResultPage(), extra: extra);

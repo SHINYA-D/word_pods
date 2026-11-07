@@ -12,10 +12,9 @@ import 'sync_service.dart';
 /// | 登録・編集・削除をした | 送信だけ |
 class AutoSyncService {
   AutoSyncService({
-    required ConnectivityMonitor connectivityMonitor,
-    required SyncService syncService,
-  })  : _connectivityMonitor = connectivityMonitor,
-        _syncService = syncService;
+    required this._connectivityMonitor,
+    required this._syncService,
+  });
 
   final ConnectivityMonitor _connectivityMonitor;
   final SyncService _syncService;

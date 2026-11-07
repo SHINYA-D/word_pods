@@ -125,7 +125,7 @@ class _LegalConsentGateState extends ConsumerState<LegalConsentGate> {
   Widget build(BuildContext context) {
     ref.listen(
       legalConsentViewModelProvider.select((s) => s.phase),
-      (_, __) => _scheduleUpdate(),
+      (_, _) => _scheduleUpdate(),
     );
     return widget.child;
   }

@@ -10,6 +10,7 @@ import 'package:word_pods/core/di/sync_status_providers.dart';
 import 'package:word_pods/core/error/failure.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/presentation/auth/login/login_view_model.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _testAppUser = AppUser(id: 'user-1', email: 'user@example.com');
 
@@ -60,7 +61,7 @@ ProviderContainer _makeContainer({
   SignInWithEmailUseCase? signInWithEmailUseCase,
   SignInWithGoogleUseCase? signInWithGoogleUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     if (signInWithEmailUseCase != null)
       signInWithEmailUseCaseProvider.overrideWithValue(signInWithEmailUseCase),
     if (signInWithGoogleUseCase != null)
@@ -109,7 +110,7 @@ void main() {
       );
       // autoDispose のため、購読を保持しないと非同期処理の途中で
       // プロバイダが破棄され state が initial に戻ってしまう。
-      container.listen(loginViewModelProvider, (_, __) {}, fireImmediately: true);
+      container.listen(loginViewModelProvider, (_, _) {}, fireImmediately: true);
       final notifier = container.read(loginViewModelProvider.notifier);
 
       final future =
@@ -228,7 +229,7 @@ void main() {
       );
       // autoDispose のため、購読を保持しないと非同期処理の途中で
       // プロバイダが破棄され state が initial に戻ってしまう。
-      container.listen(loginViewModelProvider, (_, __) {}, fireImmediately: true);
+      container.listen(loginViewModelProvider, (_, _) {}, fireImmediately: true);
       final notifier = container.read(loginViewModelProvider.notifier);
 
       final future = notifier.signInWithGoogle();

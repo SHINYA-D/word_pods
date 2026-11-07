@@ -10,6 +10,7 @@ import 'package:word_pods/domain/entities/flashcard_result.dart';
 import 'package:word_pods/presentation/flashcard_mode/flashcard_mode_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _userId = 'user-1';
 const _folderId = 'folder-1';
@@ -61,7 +62,7 @@ FlashcardResult _makeResult({int totalCount = 3, int correctCount = 3}) {
 ProviderContainer _makeContainer({
   required SaveFlashcardResultUseCase saveFlashcardResultUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     saveFlashcardResultUseCaseProvider.overrideWithValue(
       saveFlashcardResultUseCase,
     ),

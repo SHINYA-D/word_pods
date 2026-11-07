@@ -12,6 +12,7 @@ import 'package:word_pods/domain/entities/word.dart';
 import 'package:word_pods/presentation/word/word_list_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 const _folderId = 'folder-1';
 
@@ -91,7 +92,7 @@ ProviderContainer _makeContainer({
   UpdateWordUseCase? updateWordUseCase,
   DeleteWordUseCase? deleteWordUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     getWordsUseCaseProvider.overrideWithValue(getWordsUseCase),
     if (createWordUseCase != null)
       createWordUseCaseProvider.overrideWithValue(createWordUseCase),

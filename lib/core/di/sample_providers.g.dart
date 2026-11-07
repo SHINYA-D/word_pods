@@ -6,76 +6,196 @@ part of 'sample_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(getSamplesUseCase)
+final getSamplesUseCaseProvider = GetSamplesUseCaseProvider._();
+
+final class GetSamplesUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetSamplesUseCase,
+          GetSamplesUseCase,
+          GetSamplesUseCase
+        >
+    with $Provider<GetSamplesUseCase> {
+  GetSamplesUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getSamplesUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getSamplesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetSamplesUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetSamplesUseCase create(Ref ref) {
+    return getSamplesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetSamplesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetSamplesUseCase>(value),
+    );
+  }
+}
+
 String _$getSamplesUseCaseHash() => r'54ca5ac22c710f22c5e84a3b5304cdc72c71333a';
 
-/// See also [getSamplesUseCase].
-@ProviderFor(getSamplesUseCase)
-final getSamplesUseCaseProvider = Provider<GetSamplesUseCase>.internal(
-  getSamplesUseCase,
-  name: r'getSamplesUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getSamplesUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(createSampleUseCase)
+final createSampleUseCaseProvider = CreateSampleUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetSamplesUseCaseRef = ProviderRef<GetSamplesUseCase>;
+final class CreateSampleUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreateSampleUseCase,
+          CreateSampleUseCase,
+          CreateSampleUseCase
+        >
+    with $Provider<CreateSampleUseCase> {
+  CreateSampleUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createSampleUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createSampleUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateSampleUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateSampleUseCase create(Ref ref) {
+    return createSampleUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateSampleUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateSampleUseCase>(value),
+    );
+  }
+}
+
 String _$createSampleUseCaseHash() =>
     r'1ec3e671ce898601d3d77b2a573602f49a3342a4';
 
-/// See also [createSampleUseCase].
-@ProviderFor(createSampleUseCase)
-final createSampleUseCaseProvider = Provider<CreateSampleUseCase>.internal(
-  createSampleUseCase,
-  name: r'createSampleUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$createSampleUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(updateSampleUseCase)
+final updateSampleUseCaseProvider = UpdateSampleUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CreateSampleUseCaseRef = ProviderRef<CreateSampleUseCase>;
+final class UpdateSampleUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UpdateSampleUseCase,
+          UpdateSampleUseCase,
+          UpdateSampleUseCase
+        >
+    with $Provider<UpdateSampleUseCase> {
+  UpdateSampleUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateSampleUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateSampleUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateSampleUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdateSampleUseCase create(Ref ref) {
+    return updateSampleUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateSampleUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateSampleUseCase>(value),
+    );
+  }
+}
+
 String _$updateSampleUseCaseHash() =>
     r'f29138f73da21925551db0de2239c65bcfe6fed0';
 
-/// See also [updateSampleUseCase].
-@ProviderFor(updateSampleUseCase)
-final updateSampleUseCaseProvider = Provider<UpdateSampleUseCase>.internal(
-  updateSampleUseCase,
-  name: r'updateSampleUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$updateSampleUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(deleteSampleUseCase)
+final deleteSampleUseCaseProvider = DeleteSampleUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef UpdateSampleUseCaseRef = ProviderRef<UpdateSampleUseCase>;
+final class DeleteSampleUseCaseProvider
+    extends
+        $FunctionalProvider<
+          DeleteSampleUseCase,
+          DeleteSampleUseCase,
+          DeleteSampleUseCase
+        >
+    with $Provider<DeleteSampleUseCase> {
+  DeleteSampleUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteSampleUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteSampleUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteSampleUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DeleteSampleUseCase create(Ref ref) {
+    return deleteSampleUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteSampleUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteSampleUseCase>(value),
+    );
+  }
+}
+
 String _$deleteSampleUseCaseHash() =>
     r'2d21e4ce8bb7f365aba65292026457cc3f129da8';
-
-/// See also [deleteSampleUseCase].
-@ProviderFor(deleteSampleUseCase)
-final deleteSampleUseCaseProvider = Provider<DeleteSampleUseCase>.internal(
-  deleteSampleUseCase,
-  name: r'deleteSampleUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$deleteSampleUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DeleteSampleUseCaseRef = ProviderRef<DeleteSampleUseCase>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

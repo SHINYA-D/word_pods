@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 /// ログイン直後の初回同期（Firestore → SQLite）が進行中かどうか。
 ///

@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:word_pods/app.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 import 'package:word_pods/core/firebase/options/firebase_options_dev.dart'
     as dev;
 import 'package:word_pods/core/firebase/options/firebase_options_prod.dart'
@@ -31,17 +33,19 @@ Future<void> main() async {
   // Firebase へのアクセスに「本物のアプリから来た」証明を付ける（App Check）。
   // デバッグビルドは端末の証明を取れないため、Firebase コンソールに登録したデバッグ用トークンを使う。
   await FirebaseAppCheck.instance.activate(
-    androidProvider:
-        kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode
-        ? AppleProvider.debug
-        : AppleProvider.appAttestWithDeviceCheckFallback,
+    providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode ? const AppleDebugProvider() : const AppleAppAttestWithDeviceCheckFallbackProvider(),
   );
+
+  // Google ログインは、ログイン・再認証の前に1回だけ初期化しておく必要がある（google_sign_in 7 から）。
+  // クライアント ID は google-services.json / GoogleService-Info.plist から読まれる
+  await GoogleSignIn.instance.initialize();
 
   FlutterNativeSplash.remove();
 
   runApp(
     const ProviderScope(
+      retry: noRetry,
       child: App(),
     ),
   );

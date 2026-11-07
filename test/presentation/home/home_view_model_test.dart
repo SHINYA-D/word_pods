@@ -13,6 +13,7 @@ import 'package:word_pods/domain/entities/folder.dart';
 import 'package:word_pods/presentation/home/home_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// GetFoldersUseCase の手書き Fake。
 /// `call()` が呼ばれるたびに `results` を先頭から1つ消費して返す。
@@ -93,7 +94,7 @@ ProviderContainer _makeContainer({
   DeleteFolderUseCase? deleteFolderUseCase,
   AppUser? currentUser = testUser,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     getFoldersUseCaseProvider.overrideWithValue(getFoldersUseCase),
     if (createFolderUseCase != null)
       createFolderUseCaseProvider.overrideWithValue(createFolderUseCase),
@@ -106,7 +107,7 @@ ProviderContainer _makeContainer({
   addTearDown(container.dispose);
   // build() は Future.microtask で初期ロードを行うだけの同期 Notifier のため、
   // autoDispose によって初期ロード完了前に破棄されないようリスナーを張り続ける。
-  container.listen(homeViewModelProvider, (_, __) {});
+  container.listen(homeViewModelProvider, (_, _) {});
   return container;
 }
 

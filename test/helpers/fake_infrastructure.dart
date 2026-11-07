@@ -86,7 +86,7 @@ class FakeFirestoreDataSource implements FirestoreDataSource {
 
 /// [ConnectivityMonitor] のオンライン/オフライン状態をテストから固定するためのフェイク。
 class FakeConnectivityMonitor implements ConnectivityMonitor {
-  FakeConnectivityMonitor({bool online = true}) : _online = online;
+  FakeConnectivityMonitor({this._online = true});
 
   bool _online;
 

@@ -12,6 +12,7 @@ import 'package:word_pods/domain/entities/folder.dart';
 import 'package:word_pods/presentation/result/result_view_model.dart';
 
 import '../../helpers/test_helpers.dart';
+import 'package:word_pods/core/di/provider_retry.dart';
 
 /// GetFlashcardResultsUseCase の手書き Fake。
 /// `call()` が呼ばれるたびに `results` を先頭から1つ消費して返す
@@ -68,7 +69,7 @@ ProviderContainer _makeContainer({
   required GetFlashcardResultsUseCase getFlashcardResultsUseCase,
   GetFoldersUseCase? getFoldersUseCase,
 }) {
-  final container = ProviderContainer(overrides: [
+  final container = ProviderContainer(retry: noRetry, overrides: [
     getFlashcardResultsUseCaseProvider
         .overrideWithValue(getFlashcardResultsUseCase),
     if (getFoldersUseCase != null)
@@ -185,7 +186,7 @@ void main() {
 
   group('folderNamesProvider', () {
     test('取得に成功した場合、id をキーに name を値とする Map になる', () async {
-      final container = ProviderContainer(overrides: [
+      final container = ProviderContainer(retry: noRetry, overrides: [
         getFoldersUseCaseProvider
             .overrideWithValue(FakeGetFoldersUseCase(Right(testFolders))),
         currentUserProvider.overrideWithValue(testUser),
@@ -201,7 +202,7 @@ void main() {
     });
 
     test('フォルダが0件の場合、空の Map になる', () async {
-      final container = ProviderContainer(overrides: [
+      final container = ProviderContainer(retry: noRetry, overrides: [
         getFoldersUseCaseProvider
             .overrideWithValue(FakeGetFoldersUseCase(const Right([]))),
         currentUserProvider.overrideWithValue(testUser),
@@ -214,7 +215,7 @@ void main() {
     });
 
     test('取得に失敗した場合、例外を投げず空の Map になる', () async {
-      final container = ProviderContainer(overrides: [
+      final container = ProviderContainer(retry: noRetry, overrides: [
         getFoldersUseCaseProvider.overrideWithValue(
           FakeGetFoldersUseCase(const Left(Failure.network())),
         ),

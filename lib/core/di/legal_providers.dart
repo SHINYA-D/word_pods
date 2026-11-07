@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/application/use_cases/legal/check_legal_consent_use_case.dart';
 import 'package:word_pods/application/use_cases/legal/get_legal_config_use_case.dart';

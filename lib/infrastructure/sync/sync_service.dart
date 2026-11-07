@@ -21,15 +21,13 @@ class SyncService implements SyncRepository {
     required SyncQueueDataSource syncQueueDataSource,
     required SyncRemoteDataSource remoteDataSource,
     required ConnectivityMonitor connectivityMonitor,
-    required String? Function() getCurrentUserId,
-    Future<bool> Function(String userId)? isAccountDeletionPending,
+    required this._getCurrentUserId,
+    this._isAccountDeletionPending,
     DateTime Function()? clock,
   })  : _local = localDataSource,
         _queue = syncQueueDataSource,
         _remote = remoteDataSource,
         _connectivity = connectivityMonitor,
-        _getCurrentUserId = getCurrentUserId,
-        _isAccountDeletionPending = isAccountDeletionPending,
         _now = clock ?? DateTime.now;
 
   final SyncLocalDataSource _local;

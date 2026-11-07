@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/application/use_cases/flashcard_result/get_flashcard_results_use_case.dart';
 import 'package:word_pods/application/use_cases/flashcard_result/save_flashcard_result_use_case.dart';
