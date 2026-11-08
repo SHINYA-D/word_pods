@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LegalConsentState {
 
- LegalConsentPhase get phase;/// その文書の行を表示するか
+ LegalConsentPhase get phase;/// ログイン中のユーザーが現行の版に同意済みだと確認できているか。
+/// 確認できるまでは false で、クラッシュ情報・利用状況を集めない
+ bool get consented;/// その文書の行を表示するか
  bool get termsRequired; bool get privacyRequired;/// その文書のチェックボックスがチェックされているか
  bool get termsChecked; bool get privacyChecked;/// 判定に使った現行の規約の情報（送信する版数と閲覧画面の URL）
  LegalConfig? get config; LegalConsentMessage? get message;
@@ -30,20 +32,20 @@ $LegalConsentStateCopyWith<LegalConsentState> get copyWith => _$LegalConsentStat
 @override
 bool operator ==(Object other) {
   final _this = this as LegalConsentState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LegalConsentState&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&(identical(other.termsRequired, _this.termsRequired) || other.termsRequired == _this.termsRequired)&&(identical(other.privacyRequired, _this.privacyRequired) || other.privacyRequired == _this.privacyRequired)&&(identical(other.termsChecked, _this.termsChecked) || other.termsChecked == _this.termsChecked)&&(identical(other.privacyChecked, _this.privacyChecked) || other.privacyChecked == _this.privacyChecked)&&(identical(other.config, _this.config) || other.config == _this.config)&&(identical(other.message, _this.message) || other.message == _this.message));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LegalConsentState&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&(identical(other.consented, _this.consented) || other.consented == _this.consented)&&(identical(other.termsRequired, _this.termsRequired) || other.termsRequired == _this.termsRequired)&&(identical(other.privacyRequired, _this.privacyRequired) || other.privacyRequired == _this.privacyRequired)&&(identical(other.termsChecked, _this.termsChecked) || other.termsChecked == _this.termsChecked)&&(identical(other.privacyChecked, _this.privacyChecked) || other.privacyChecked == _this.privacyChecked)&&(identical(other.config, _this.config) || other.config == _this.config)&&(identical(other.message, _this.message) || other.message == _this.message));
 }
 
 
 @override
 int get hashCode {
   final _this = this as LegalConsentState;
-  return Object.hash(runtimeType,_this.phase,_this.termsRequired,_this.privacyRequired,_this.termsChecked,_this.privacyChecked,_this.config,_this.message);
+  return Object.hash(runtimeType,_this.phase,_this.consented,_this.termsRequired,_this.privacyRequired,_this.termsChecked,_this.privacyChecked,_this.config,_this.message);
 }
 
 @override
 String toString() {
   final _this = this as LegalConsentState;
-  return 'LegalConsentState(phase: ${_this.phase}, termsRequired: ${_this.termsRequired}, privacyRequired: ${_this.privacyRequired}, termsChecked: ${_this.termsChecked}, privacyChecked: ${_this.privacyChecked}, config: ${_this.config}, message: ${_this.message})';
+  return 'LegalConsentState(phase: ${_this.phase}, consented: ${_this.consented}, termsRequired: ${_this.termsRequired}, privacyRequired: ${_this.privacyRequired}, termsChecked: ${_this.termsChecked}, privacyChecked: ${_this.privacyChecked}, config: ${_this.config}, message: ${_this.message})';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $LegalConsentStateCopyWith<$Res>  {
   factory $LegalConsentStateCopyWith(LegalConsentState value, $Res Function(LegalConsentState) _then) = _$LegalConsentStateCopyWithImpl;
 @useResult
 $Res call({
- LegalConsentPhase phase, bool termsRequired, bool privacyRequired, bool termsChecked, bool privacyChecked, LegalConfig? config, LegalConsentMessage? message
+ LegalConsentPhase phase, bool consented, bool termsRequired, bool privacyRequired, bool termsChecked, bool privacyChecked, LegalConfig? config, LegalConsentMessage? message
 });
 
 
@@ -71,10 +73,11 @@ class _$LegalConsentStateCopyWithImpl<$Res>
 
 /// Create a copy of LegalConsentState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? phase = null,Object? termsRequired = null,Object? privacyRequired = null,Object? termsChecked = null,Object? privacyChecked = null,Object? config = freezed,Object? message = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? phase = null,Object? consented = null,Object? termsRequired = null,Object? privacyRequired = null,Object? termsChecked = null,Object? privacyChecked = null,Object? config = freezed,Object? message = freezed,}) {
   return _then(LegalConsentState(
 phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
-as LegalConsentPhase,termsRequired: null == termsRequired ? _self.termsRequired : termsRequired // ignore: cast_nullable_to_non_nullable
+as LegalConsentPhase,consented: null == consented ? _self.consented : consented // ignore: cast_nullable_to_non_nullable
+as bool,termsRequired: null == termsRequired ? _self.termsRequired : termsRequired // ignore: cast_nullable_to_non_nullable
 as bool,privacyRequired: null == privacyRequired ? _self.privacyRequired : privacyRequired // ignore: cast_nullable_to_non_nullable
 as bool,termsChecked: null == termsChecked ? _self.termsChecked : termsChecked // ignore: cast_nullable_to_non_nullable
 as bool,privacyChecked: null == privacyChecked ? _self.privacyChecked : privacyChecked // ignore: cast_nullable_to_non_nullable
@@ -177,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LegalConsentPhase phase,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LegalConsentPhase phase,  bool consented,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LegalConsentState() when $default != null:
-return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
+return $default(_that.phase,_that.consented,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
   return orElse();
 
 }
@@ -198,10 +201,10 @@ return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.term
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LegalConsentPhase phase,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LegalConsentPhase phase,  bool consented,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)  $default,) {final _that = this;
 switch (_that) {
 case _LegalConsentState():
-return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
+return $default(_that.phase,_that.consented,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -218,10 +221,10 @@ return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.term
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LegalConsentPhase phase,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LegalConsentPhase phase,  bool consented,  bool termsRequired,  bool privacyRequired,  bool termsChecked,  bool privacyChecked,  LegalConfig? config,  LegalConsentMessage? message)?  $default,) {final _that = this;
 switch (_that) {
 case _LegalConsentState() when $default != null:
-return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
+return $default(_that.phase,_that.consented,_that.termsRequired,_that.privacyRequired,_that.termsChecked,_that.privacyChecked,_that.config,_that.message);case _:
   return null;
 
 }
@@ -233,10 +236,13 @@ return $default(_that.phase,_that.termsRequired,_that.privacyRequired,_that.term
 
 
 class _LegalConsentState extends LegalConsentState {
-  const _LegalConsentState({this.phase = LegalConsentPhase.idle, this.termsRequired = false, this.privacyRequired = false, this.termsChecked = false, this.privacyChecked = false, this.config, this.message}): super._();
+  const _LegalConsentState({this.phase = LegalConsentPhase.idle, this.consented = false, this.termsRequired = false, this.privacyRequired = false, this.termsChecked = false, this.privacyChecked = false, this.config, this.message}): super._();
   
 
 @override@JsonKey() final  LegalConsentPhase phase;
+/// ログイン中のユーザーが現行の版に同意済みだと確認できているか。
+/// 確認できるまでは false で、クラッシュ情報・利用状況を集めない
+@override@JsonKey() final  bool consented;
 /// その文書の行を表示するか
 @override@JsonKey() final  bool termsRequired;
 @override@JsonKey() final  bool privacyRequired;
@@ -257,18 +263,18 @@ _$LegalConsentStateCopyWith<_LegalConsentState> get copyWith => __$LegalConsentS
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LegalConsentState&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.termsRequired, termsRequired) || other.termsRequired == termsRequired)&&(identical(other.privacyRequired, privacyRequired) || other.privacyRequired == privacyRequired)&&(identical(other.termsChecked, termsChecked) || other.termsChecked == termsChecked)&&(identical(other.privacyChecked, privacyChecked) || other.privacyChecked == privacyChecked)&&(identical(other.config, config) || other.config == config)&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LegalConsentState&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.consented, consented) || other.consented == consented)&&(identical(other.termsRequired, termsRequired) || other.termsRequired == termsRequired)&&(identical(other.privacyRequired, privacyRequired) || other.privacyRequired == privacyRequired)&&(identical(other.termsChecked, termsChecked) || other.termsChecked == termsChecked)&&(identical(other.privacyChecked, privacyChecked) || other.privacyChecked == privacyChecked)&&(identical(other.config, config) || other.config == config)&&(identical(other.message, message) || other.message == message));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,phase,termsRequired,privacyRequired,termsChecked,privacyChecked,config,message);
+    return Object.hash(runtimeType,phase,consented,termsRequired,privacyRequired,termsChecked,privacyChecked,config,message);
 }
 
 @override
 String toString() {
-    return 'LegalConsentState(phase: $phase, termsRequired: $termsRequired, privacyRequired: $privacyRequired, termsChecked: $termsChecked, privacyChecked: $privacyChecked, config: $config, message: $message)';
+    return 'LegalConsentState(phase: $phase, consented: $consented, termsRequired: $termsRequired, privacyRequired: $privacyRequired, termsChecked: $termsChecked, privacyChecked: $privacyChecked, config: $config, message: $message)';
 }
 
 
@@ -279,7 +285,7 @@ abstract mixin class _$LegalConsentStateCopyWith<$Res> implements $LegalConsentS
   factory _$LegalConsentStateCopyWith(_LegalConsentState value, $Res Function(_LegalConsentState) _then) = __$LegalConsentStateCopyWithImpl;
 @override @useResult
 $Res call({
- LegalConsentPhase phase, bool termsRequired, bool privacyRequired, bool termsChecked, bool privacyChecked, LegalConfig? config, LegalConsentMessage? message
+ LegalConsentPhase phase, bool consented, bool termsRequired, bool privacyRequired, bool termsChecked, bool privacyChecked, LegalConfig? config, LegalConsentMessage? message
 });
 
 
@@ -296,10 +302,11 @@ class __$LegalConsentStateCopyWithImpl<$Res>
 
 /// Create a copy of LegalConsentState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? phase = null,Object? termsRequired = null,Object? privacyRequired = null,Object? termsChecked = null,Object? privacyChecked = null,Object? config = freezed,Object? message = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? phase = null,Object? consented = null,Object? termsRequired = null,Object? privacyRequired = null,Object? termsChecked = null,Object? privacyChecked = null,Object? config = freezed,Object? message = freezed,}) {
   return _then(_LegalConsentState(
 phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
-as LegalConsentPhase,termsRequired: null == termsRequired ? _self.termsRequired : termsRequired // ignore: cast_nullable_to_non_nullable
+as LegalConsentPhase,consented: null == consented ? _self.consented : consented // ignore: cast_nullable_to_non_nullable
+as bool,termsRequired: null == termsRequired ? _self.termsRequired : termsRequired // ignore: cast_nullable_to_non_nullable
 as bool,privacyRequired: null == privacyRequired ? _self.privacyRequired : privacyRequired // ignore: cast_nullable_to_non_nullable
 as bool,termsChecked: null == termsChecked ? _self.termsChecked : termsChecked // ignore: cast_nullable_to_non_nullable
 as bool,privacyChecked: null == privacyChecked ? _self.privacyChecked : privacyChecked // ignore: cast_nullable_to_non_nullable

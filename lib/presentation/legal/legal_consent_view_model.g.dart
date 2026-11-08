@@ -60,7 +60,7 @@ final class LegalConsentViewModelProvider
 }
 
 String _$legalConsentViewModelHash() =>
-    r'00b42af47b180ba99cc49223134e44768122a7fe';
+    r'4a264c1cd523be50ceab19e78d9e93599b851609';
 
 /// 利用規約・プライバシーポリシーへの同意。
 ///

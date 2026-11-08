@@ -9,16 +9,22 @@ part of 'reporting_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// クラッシュ・非致命的エラーの報告口。Mock モードでは何もしない実装を渡す。
+/// Firebase が初期化されていない場合（Widget テストでアプリ全体を組み立てた場合など）も、
+/// 報告のためにアプリを止めないよう、何もしない実装を渡す。
 
 @ProviderFor(crashReporter)
 final crashReporterProvider = CrashReporterProvider._();
 
 /// クラッシュ・非致命的エラーの報告口。Mock モードでは何もしない実装を渡す。
+/// Firebase が初期化されていない場合（Widget テストでアプリ全体を組み立てた場合など）も、
+/// 報告のためにアプリを止めないよう、何もしない実装を渡す。
 
 final class CrashReporterProvider
     extends $FunctionalProvider<CrashReporter, CrashReporter, CrashReporter>
     with $Provider<CrashReporter> {
   /// クラッシュ・非致命的エラーの報告口。Mock モードでは何もしない実装を渡す。
+  /// Firebase が初期化されていない場合（Widget テストでアプリ全体を組み立てた場合など）も、
+  /// 報告のためにアプリを止めないよう、何もしない実装を渡す。
   CrashReporterProvider._()
     : super(
         from: null,
@@ -52,14 +58,14 @@ final class CrashReporterProvider
   }
 }
 
-String _$crashReporterHash() => r'04d9fcca1b56bff7a9baf64abf0ee527fb23f684';
+String _$crashReporterHash() => r'acfcd9f23129b942e4653642035cccde3d4af045';
 
-/// 利用状況の記録口。Mock モードでは何もしない実装を渡す。
+/// 利用状況の記録口。Mock モード・Firebase が初期化されていない場合は何もしない実装を渡す。
 
 @ProviderFor(analyticsReporter)
 final analyticsReporterProvider = AnalyticsReporterProvider._();
 
-/// 利用状況の記録口。Mock モードでは何もしない実装を渡す。
+/// 利用状況の記録口。Mock モード・Firebase が初期化されていない場合は何もしない実装を渡す。
 
 final class AnalyticsReporterProvider
     extends
@@ -69,7 +75,7 @@ final class AnalyticsReporterProvider
           AnalyticsReporter
         >
     with $Provider<AnalyticsReporter> {
-  /// 利用状況の記録口。Mock モードでは何もしない実装を渡す。
+  /// 利用状況の記録口。Mock モード・Firebase が初期化されていない場合は何もしない実装を渡す。
   AnalyticsReporterProvider._()
     : super(
         from: null,
@@ -104,4 +110,4 @@ final class AnalyticsReporterProvider
   }
 }
 
-String _$analyticsReporterHash() => r'fbbca05401c0b50cf760f3e959faf3de3b455a66';
+String _$analyticsReporterHash() => r'c972f92bfc8f30901f3e3c5fa71d68100b03cbc1';

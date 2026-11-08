@@ -26,6 +26,8 @@ platform :ios do
     # bundle exec の中のままだと Gemfile に無い cocoapods（pod コマンド）を使えず、
     # flutter build の途中の pod install が失敗するため、bundler の環境を外して呼ぶ
     Bundler.with_unbundled_env do
+      # Swift Package Manager で Firebase Analytics を広告 ID なしの構成（FirebaseAnalyticsCore）にする
+      ENV["FIREBASE_ANALYTICS_WITHOUT_ADID"] = "true"
       Dir.chdir(ROOT_DIR) do
         sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
       end
@@ -33,6 +35,11 @@ platform :ios do
 
     ipa_path = Dir.glob(File.join(ROOT_DIR, "build/ios/ipa/*.ipa")).first
     UI.user_error!("ipa が見つかりません（build/ios/ipa/）") if ipa_path.nil?
+
+    # 環境変数なしのビルドが build/ に残っていると、環境変数が効かず広告 ID 対応の構成のままになる。
+    # そのまま配布しないよう、ここで止める
+    identity_support = File.join(ROOT_DIR, "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Frameworks/GoogleAppMeasurementIdentitySupport.framework")
+    UI.user_error!("広告 ID 対応のフレームワークが入っています。fvm flutter clean をしてから、もう一度実行してください") if File.exist?(identity_support)
 
     # dSYM（クラッシュの番号を「どのファイルの何行目か」に直す対応表）を prod の Crashlytics に送る。
     # iOS のクラッシュは dSYM が届くまで Crashlytics で「未処理」のまま保留され、Slack にも通知されない。
