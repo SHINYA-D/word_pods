@@ -308,6 +308,7 @@ State の項目は `samples`（`AsyncValue<List<Sample>>`）と `operationFailur
 - `MockSampleRepository` の初期データ（`mock-user-id` の「サンプルA」「サンプルB」）と応答の待ち時間: テスト用のデータ・待ち時間で、振る舞いの仕様ではない
 - オフライン同期（`sync_queue`・競合解決）: `online_offline.md` に本機能の記載がないため扱わない
 - 削除の「同じ値」「入力の境界」: 削除は名前を入力しない操作のため該当しない
+- AppBar の「クラッシュテスト」ボタン（`Icons.bug_report_outlined`）: 開発者がクラッシュの記録と Slack への通知を確かめるための道具で、サンプルの一覧・作成・編集・削除の振る舞いではない。押すと受け止められない例外を起こすだけで、その後の記録の扱いは `docs/detailed_design/crash_reporting/crash_reporting.md`（CRS-I05）で扱う
 
 ## 8. 要確認事項
 
