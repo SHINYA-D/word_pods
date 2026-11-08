@@ -1,8 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/flashcard_result.dart';
 import 'package:word_pods/domain/repositories/flashcard_result_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_pods/infrastructure/data_sources/local/flashcard_result_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
@@ -19,6 +21,7 @@ class FlashcardResultRepositoryImpl implements FlashcardResultRepository {
     required SyncQueueDataSource syncQueueDataSource,
     required this._dbHelper,
     required this._onLocalChanged,
+    this._crashReporter,
   })  : _local = localDataSource,
         _folderLocal = folderLocalDataSource,
         _syncQueue = syncQueueDataSource;
@@ -28,6 +31,7 @@ class FlashcardResultRepositoryImpl implements FlashcardResultRepository {
   final SyncQueueDataSource _syncQueue;
   final DatabaseHelper _dbHelper;
   final void Function() _onLocalChanged;
+  final CrashReporter? _crashReporter;
 
   static const _uuid = Uuid();
 
@@ -39,8 +43,8 @@ class FlashcardResultRepositoryImpl implements FlashcardResultRepository {
     try {
       final results = await _local.findByUserId(userId, folderId: folderId);
       return Right(results);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -79,8 +83,8 @@ class FlashcardResultRepositoryImpl implements FlashcardResultRepository {
       if (!saved) return const Left(Failure.notFound());
       _onLocalChanged();
       return Right(result);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 }

@@ -1,7 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/user_settings.dart';
 import 'package:word_pods/domain/repositories/settings_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_pods/infrastructure/data_sources/local/settings_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
@@ -16,6 +18,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     required SyncQueueDataSource syncQueueDataSource,
     required this._dbHelper,
     required this._onLocalChanged,
+    this._crashReporter,
   })  : _local = localDataSource,
         _syncQueue = syncQueueDataSource;
 
@@ -23,6 +26,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   final SyncQueueDataSource _syncQueue;
   final DatabaseHelper _dbHelper;
   final void Function() _onLocalChanged;
+  final CrashReporter? _crashReporter;
 
   @override
   Future<Either<Failure, UserSettings>> getSettings({
@@ -32,8 +36,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final local = await _local.findByUserId(userId);
       if (local != null) return Right(local);
       return const Right(UserSettings());
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -57,8 +61,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
       });
       _onLocalChanged();
       return const Right(unit);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 }

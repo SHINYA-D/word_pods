@@ -2,8 +2,10 @@ import 'package:fpdart/fpdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/folder.dart';
 import 'package:word_pods/domain/repositories/folder_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_pods/infrastructure/data_sources/local/flashcard_result_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
@@ -24,6 +26,7 @@ class FolderRepositoryImpl implements FolderRepository {
     required SyncQueueDataSource syncQueueDataSource,
     required this._dbHelper,
     required this._onLocalChanged,
+    this._crashReporter,
   })  : _local = localDataSource,
         _wordLocal = wordLocalDataSource,
         _flashcardResultLocal = flashcardResultLocalDataSource,
@@ -35,6 +38,7 @@ class FolderRepositoryImpl implements FolderRepository {
   final SyncQueueDataSource _syncQueue;
   final DatabaseHelper _dbHelper;
   final void Function() _onLocalChanged;
+  final CrashReporter? _crashReporter;
 
   static const _uuid = Uuid();
 
@@ -47,8 +51,8 @@ class FolderRepositoryImpl implements FolderRepository {
       final folders =
           await _local.findByUserId(userId, parentFolderId: parentFolderId);
       return Right(folders);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -80,8 +84,8 @@ class FolderRepositoryImpl implements FolderRepository {
       if (!saved) return const Left(Failure.notFound());
       _onLocalChanged();
       return Right(folder);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -104,8 +108,8 @@ class FolderRepositoryImpl implements FolderRepository {
       if (updated == null) return const Left(Failure.notFound());
       _onLocalChanged();
       return Right(updated);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -143,8 +147,8 @@ class FolderRepositoryImpl implements FolderRepository {
       if (!deleted) return const Left(Failure.notFound());
       _onLocalChanged();
       return const Right(unit);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 

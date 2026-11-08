@@ -1,9 +1,18 @@
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { defineSecret } from "firebase-functions/params";
 import * as functionsV1 from "firebase-functions/v1";
+import {
+  CrashlyticsEvent,
+  onNewFatalIssuePublished,
+  onNewNonfatalIssuePublished,
+  onRegressionAlertPublished,
+  onVelocityAlertPublished,
+} from "firebase-functions/v2/alerts/crashlytics";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { acceptLegal as recordLegalConsent } from "./accept_legal";
+import { CrashAlertInput, notifyCrashAlert } from "./crash_alert";
 import { createAccountDoc } from "./create_account";
 import { deleteUserAccount, isRecentLogin } from "./delete_account";
 
@@ -60,3 +69,56 @@ export const onAuthUserCreated = functionsV1
   .onCreate(async (user) => {
     await createAccountDoc(user.uid, getFirestore(), new Date(user.metadata.creationTime));
   });
+
+/**
+ * Crashlytics のアラート（新しいクラッシュ・新しい非致命的エラー・再発・急増）を Slack に送る
+ * （docs/high_level_design/crash_reporting.md）。
+ * 送り先の Webhook URL は Secret Manager の SLACK_WEBHOOK_URL に、開発・本番のプロジェクトごとに登録する
+ * （開発は #word-pods-app-alert-dev、本番は #word-pods-app-alert-prod）。
+ * 送信に失敗したら関数をエラーで終わらせる（Cloud Logging に残る）。再送はしない。
+ */
+const slackWebhookUrl = defineSecret("SLACK_WEBHOOK_URL");
+
+const sendCrashAlert = (
+  event: CrashlyticsEvent<unknown>,
+  input: Omit<CrashAlertInput, "projectId" | "appId">,
+) =>
+  notifyCrashAlert(
+    { ...input, projectId: process.env.GCLOUD_PROJECT, appId: event.appId },
+    slackWebhookUrl.value(),
+    (url, init) => fetch(url, init),
+  );
+
+export const notifyNewFatalIssue = onNewFatalIssuePublished(
+  { region: "asia-northeast1", secrets: [slackWebhookUrl] },
+  (event) =>
+    sendCrashAlert(event, { kind: "newFatal", issue: event.data.payload.issue }),
+);
+
+export const notifyNewNonfatalIssue = onNewNonfatalIssuePublished(
+  { region: "asia-northeast1", secrets: [slackWebhookUrl] },
+  (event) =>
+    sendCrashAlert(event, { kind: "newNonfatal", issue: event.data.payload.issue }),
+);
+
+export const notifyRegression = onRegressionAlertPublished(
+  { region: "asia-northeast1", secrets: [slackWebhookUrl] },
+  (event) =>
+    sendCrashAlert(event, {
+      kind: "regression",
+      issue: event.data.payload.issue,
+      resolveTime: event.data.payload.resolveTime,
+    }),
+);
+
+export const notifyVelocity = onVelocityAlertPublished(
+  { region: "asia-northeast1", secrets: [slackWebhookUrl] },
+  (event) =>
+    sendCrashAlert(event, {
+      kind: "velocity",
+      issue: event.data.payload.issue,
+      crashCount: event.data.payload.crashCount,
+      crashPercentage: event.data.payload.crashPercentage,
+      firstVersion: event.data.payload.firstVersion,
+    }),
+);

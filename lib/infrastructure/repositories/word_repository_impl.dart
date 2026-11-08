@@ -2,8 +2,10 @@ import 'package:fpdart/fpdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/word.dart';
 import 'package:word_pods/domain/repositories/word_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/database_helper.dart';
 import 'package:word_pods/infrastructure/data_sources/local/folder_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
@@ -20,6 +22,7 @@ class WordRepositoryImpl implements WordRepository {
     required SyncQueueDataSource syncQueueDataSource,
     required this._dbHelper,
     required this._onLocalChanged,
+    this._crashReporter,
   })  : _local = localDataSource,
         _folderLocal = folderLocalDataSource,
         _syncQueue = syncQueueDataSource;
@@ -29,6 +32,7 @@ class WordRepositoryImpl implements WordRepository {
   final SyncQueueDataSource _syncQueue;
   final DatabaseHelper _dbHelper;
   final void Function() _onLocalChanged;
+  final CrashReporter? _crashReporter;
 
   static const _uuid = Uuid();
 
@@ -40,8 +44,8 @@ class WordRepositoryImpl implements WordRepository {
     try {
       final words = await _local.findByFolderId(folderId, userId: userId);
       return Right(words);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -74,8 +78,8 @@ class WordRepositoryImpl implements WordRepository {
       if (!saved) return const Left(Failure.notFound());
       _onLocalChanged();
       return Right(word);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -105,8 +109,8 @@ class WordRepositoryImpl implements WordRepository {
       if (updated == null) return const Left(Failure.notFound());
       _onLocalChanged();
       return Right(updated);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -129,8 +133,8 @@ class WordRepositoryImpl implements WordRepository {
       if (!deleted) return const Left(Failure.notFound());
       _onLocalChanged();
       return const Right(unit);
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 

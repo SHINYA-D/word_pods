@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:word_pods/app.dart';
 import 'package:word_pods/core/di/provider_retry.dart';
+import 'package:word_pods/core/di/reporting_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/core/firebase/options/firebase_options_dev.dart'
     as dev;
 import 'package:word_pods/core/firebase/options/firebase_options_prod.dart'
@@ -41,12 +44,25 @@ Future<void> main() async {
   // クライアント ID は google-services.json / GoogleService-Info.plist から読まれる
   await GoogleSignIn.instance.initialize();
 
+  // 報告口を Provider から取り出して、アプリより先にクラッシュの収集を始めるため、
+  // ProviderScope ではなく自分で作った ProviderContainer をアプリに渡す
+  final container = ProviderContainer(retry: noRetry);
+
+  // クラッシュ・利用状況の収集（docs/high_level_design/crash_reporting.md）。
+  // デバッグビルドと Mock モードでは集めず、エラーは今までどおりコンソールに出す
+  initCrashReporting(
+    isDebug: kDebugMode,
+    useMocks: kUseMocks,
+    reporter: container.read(crashReporterProvider),
+    analytics: container.read(analyticsReporterProvider),
+  );
+
   FlutterNativeSplash.remove();
 
   runApp(
-    const ProviderScope(
-      retry: noRetry,
-      child: App(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const App(),
     ),
   );
 }

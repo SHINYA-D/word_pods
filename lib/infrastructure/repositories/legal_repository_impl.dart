@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/legal_consent.dart';
 import 'package:word_pods/domain/repositories/legal_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/legal_remote_data_source.dart';
 
@@ -12,11 +14,13 @@ class LegalRepositoryImpl implements LegalRepository {
   LegalRepositoryImpl({
     required LegalRemoteDataSource remoteDataSource,
     required ConnectivityMonitor connectivityMonitor,
+    this._crashReporter,
   })  : _remote = remoteDataSource,
         _connectivity = connectivityMonitor;
 
   final LegalRemoteDataSource _remote;
   final ConnectivityMonitor _connectivity;
+  final CrashReporter? _crashReporter;
 
   @override
   Future<Either<Failure, LegalConfig>> fetchLegalConfig() => _read(() async {
@@ -61,7 +65,7 @@ class LegalRepositoryImpl implements LegalRepository {
         'privacy': ?privacyVersion,
       });
       return const Right(LegalAcceptResult.accepted);
-    } on FirebaseFunctionsException catch (e) {
+    } on FirebaseFunctionsException catch (e, stack) {
       switch (e.code) {
         case 'failed-precondition':
           return const Right(LegalAcceptResult.outdated);
@@ -72,10 +76,11 @@ class LegalRepositoryImpl implements LegalRepository {
         case 'unauthenticated':
           return const Left(Failure.auth());
         default:
-          return Left(Failure.unknown(e.message ?? e.code));
+          return Left(reportUnknownFailure(_crashReporter, e, stack,
+              message: e.message ?? e.code));
       }
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -85,11 +90,12 @@ class LegalRepositoryImpl implements LegalRepository {
     if (!await _connectivity.isOnline()) return const Left(Failure.network());
     try {
       return await body();
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
       if (e.code == 'unavailable') return const Left(Failure.network());
-      return Left(Failure.unknown(e.message ?? e.code));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+      return Left(reportUnknownFailure(_crashReporter, e, stack,
+          message: e.message ?? e.code));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 

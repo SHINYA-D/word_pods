@@ -48,7 +48,7 @@ final class SyncServiceProvider
   }
 }
 
-String _$syncServiceHash() => r'aa39a9c997fda18ea8b9321efda87e7a9d64b038';
+String _$syncServiceHash() => r'00d00bcf69992c7905c06508d5eb749e27e94541';
 
 @ProviderFor(syncRepository)
 final syncRepositoryProvider = SyncRepositoryProvider._();
