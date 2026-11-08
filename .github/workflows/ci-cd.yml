@@ -61,6 +61,15 @@ jobs:
       - name: Run static analysis
         run: flutter analyze
 
+      # pubspec.yaml で、Linux では OS の SQLite（libsqlite3.so）を使う設定にしている。
+      # ランナーのイメージに無い場合だけ入れる
+      - name: Ensure system SQLite
+        run: |
+          if ! ldconfig -p | grep -q 'libsqlite3\.so '; then
+            sudo apt-get update
+            sudo apt-get install -y libsqlite3-dev
+          fi
+
       - name: Run Widget Tests
         run: flutter test
 
