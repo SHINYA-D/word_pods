@@ -11,7 +11,7 @@ default_platform(:ios)
 ROOT_DIR = File.expand_path("../..", __dir__)
 
 platform :ios do
-  desc "prod をビルドして TestFlight にアップロードする"
+  desc "prod をビルドし、dSYM を Crashlytics に送ってから TestFlight にアップロードする"
   lane :beta do
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("ASC_KEY_ID"),
@@ -23,12 +23,36 @@ platform :ios do
     # （バージョン名 1.0.0 は pubspec.yaml の version をそのまま使う）
     build_number = latest_testflight_build_number(api_key: api_key, initial_build_number: 0) + 1
 
-    Dir.chdir(ROOT_DIR) do
-      sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
+    # bundle exec の中のままだと Gemfile に無い cocoapods（pod コマンド）を使えず、
+    # flutter build の途中の pod install が失敗するため、bundler の環境を外して呼ぶ
+    Bundler.with_unbundled_env do
+      Dir.chdir(ROOT_DIR) do
+        sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
+      end
     end
 
     ipa_path = Dir.glob(File.join(ROOT_DIR, "build/ios/ipa/*.ipa")).first
     UI.user_error!("ipa が見つかりません（build/ios/ipa/）") if ipa_path.nil?
+
+    # dSYM（クラッシュの番号を「どのファイルの何行目か」に直す対応表）を prod の Crashlytics に送る。
+    # iOS のクラッシュは dSYM が届くまで Crashlytics で「未処理」のまま保留され、Slack にも通知されない。
+    # dSYM はビルドごとに別物なので、毎回このビルドの分を送る。
+    # TestFlight より先に送る（送れなかったら配布前に止まり、通知されないビルドを出さないため）
+    dsym_paths = Dir.glob(File.join(ROOT_DIR, "build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM"))
+    UI.user_error!("dSYM が見つかりません（build/ios/archive/Runner.xcarchive/dSYMs/）") if dsym_paths.empty?
+
+    # 送信用のプログラムは Firebase の SDK に入っている。
+    # flutter build は Swift Package を Xcode 標準の場所ではなく build/ios/SourcePackages/ に置く
+    upload_symbols_binary = File.join(ROOT_DIR, "build/ios/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols")
+    UI.user_error!("dSYM の送信用プログラムが見つかりません（#{upload_symbols_binary}）") unless File.exist?(upload_symbols_binary)
+
+    upload_symbols_to_crashlytics(
+      dsym_paths: dsym_paths,
+      gsp_path: File.join(ROOT_DIR, "ios/config/prod/GoogleService-Info.plist"),
+      binary_path: upload_symbols_binary,
+      # 初期値（false）だと、一部の dSYM の送信に失敗しても成功扱いで先に進んでしまうため
+      fail_on_error: true
+    )
 
     # Apple 側の処理（10〜30分ほど）の完了は待たない。終わるとメールが届く
     upload_to_testflight(
