@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:word_pods/core/app_lifecycle_observer.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';
 import 'package:word_pods/core/di/reporting_providers.dart';
+import 'package:word_pods/core/di/repository_providers.dart';
 import 'package:word_pods/core/di/sync_providers.dart';
 import 'package:word_pods/core/router/router.dart';
 import 'package:word_pods/core/theme/app_theme.dart';
@@ -53,6 +55,19 @@ class _AppState extends ConsumerState<App> {
     ref.listenManual(currentUserProvider, (_, next) {
       updateCrashUserIdentifier(crashReporter, next);
     }, fireImmediately: true);
+
+    // クラッシュ情報・利用状況は、同意済みだと確認できている間だけ集める
+    final analyticsReporter = ref.read(analyticsReporterProvider);
+    ref.listenManual(
+      legalConsentViewModelProvider.select((s) => s.consented),
+      (_, consented) => updateReportingCollection(
+        isDebug: kDebugMode,
+        useMocks: kUseMocks,
+        consented: consented,
+        reporter: crashReporter,
+        analytics: analyticsReporter,
+      ),
+    );
 
     // resumed 時に同期する（前回の取得から5分以上たっていれば）
     _lifecycleObserver = AppLifecycleObserver(onResumed: () {

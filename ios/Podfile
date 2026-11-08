@@ -6,6 +6,8 @@ ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 # Firebase Analytics を広告 ID（IDFA）の収集なしで組み込む（広告を出していないため。
 # docs/high_level_design/crash_reporting.md）
+# これは CocoaPods で Firebase を入れるときだけ効く。今は Swift Package Manager で入るため、
+# 実際には環境変数 FIREBASE_ANALYTICS_WITHOUT_ADID で切り替える（ios/fastlane/Fastfile）
 $FirebaseAnalyticsWithoutAdIdSupport = true
 
 project 'Runner', {

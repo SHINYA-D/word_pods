@@ -42,6 +42,10 @@ abstract class LegalConsentState with _$LegalConsentState {
   const factory LegalConsentState({
     @Default(LegalConsentPhase.idle) LegalConsentPhase phase,
 
+    /// ログイン中のユーザーが現行の版に同意済みだと確認できているか。
+    /// 確認できるまでは false で、クラッシュ情報・利用状況を集めない
+    @Default(false) bool consented,
+
     /// その文書の行を表示するか
     @Default(false) bool termsRequired,
     @Default(false) bool privacyRequired,

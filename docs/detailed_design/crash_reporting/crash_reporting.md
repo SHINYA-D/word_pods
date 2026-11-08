@@ -5,6 +5,7 @@ status: approved
 targets:
   - lib/core/utils/crash_reporting.dart
   - lib/core/utils/screen_view_tracking.dart
+  - lib/presentation/legal/legal_consent_view_model.dart
   - lib/domain/services/crash_reporter.dart
   - lib/domain/services/analytics_reporter.dart
   - functions/src/crash_alert.ts
@@ -64,8 +65,9 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | `reporter` | CrashReporter | 報告口 |
 | `analytics` | AnalyticsReporter | 利用状況の記録口 |
 
-- 「収集が有効」は `isDebug` と `useMocks` がともに `false` の場合を指す。それ以外は「収集が無効」。Crashlytics と Analytics の両方に同じ判定を使う
-- 収集が有効な場合、Flutter の処理中のエラーを受ける `FlutterError.onError` と、Flutter の処理の外のエラーを受ける `PlatformDispatcher.instance.onError` を、報告する処理に置き換える
+- 「収集の対象のビルド」は `isDebug` と `useMocks` がともに `false` の場合を指す。Crashlytics と Analytics の両方に同じ判定を使う
+- 収集の初期化は、収集の対象のビルドかどうかによらず、`setCollectionEnabled(false)` を呼ぶ（同意を確認できるまで送らない。2.3.4）
+- 収集の対象のビルドの場合、Flutter の処理中のエラーを受ける `FlutterError.onError` と、Flutter の処理の外のエラーを受ける `PlatformDispatcher.instance.onError` を、報告する処理に置き換える
 
 ### 2.3.1 ユーザーの識別子の同期
 
@@ -96,6 +98,20 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
   - `aborted`・`resource-exhausted`・`cancelled`（一時的な失敗で、次の同期でやり直されるため）
 - 1回の同期（取得または送信）は、最初の失敗で止まる（SYN-S14・SYN-P32）ため、報告は1回の同期につき最大1回
 - Repository の実装と同期処理は `isDebug`・`useMocks` を受け取らず、常に報告を呼ぶ（収集が無効の場合は SDK の側で送られない。Mock モードは何もしない実装を使う）
+
+### 2.3.4 同意と収集の開始
+
+- 入口は「収集の切り替え」。引数は `isDebug`・`useMocks`・`consented`（同意済みと確認できているか）・`reporter`・`analytics`
+- `isDebug` と `useMocks` がともに `false` で、`consented` が `true` の場合だけ、`setCollectionEnabled(true)` を呼ぶ。それ以外は `setCollectionEnabled(false)` を呼ぶ
+- `consented` は `LegalConsentState` の項目で、初期値は `false`。アプリは値が変わるたびに収集の切り替えを呼ぶ
+- `consented` は、ログイン中のユーザーが利用規約とプライバシーポリシーの**両方**の現行の版に同意済みと確認できている場合に `true` になる（プライバシーポリシー第5条が両方への同意を利用の条件にしているため。8章 Q13）
+- `FlutterError.onError`・`PlatformDispatcher.instance.onError` の置き換えは `consented` によらない。`consented` が `false` の間に `recordError` が呼ばれた場合の扱いは SDK の動作（8章 Q16）
+
+### 2.3.5 SQLite のエラーの報告
+
+- 報告する `error` が sqflite の `DatabaseException` の場合は、そのまま渡さず、SQLite の結果コードだけを持つエラーに置き換えて `recordError` に渡す。置き換えは `CrashReporter` を呼ぶ前に行い、`CrashReporter` の Fake が受け取る引数で観測する
+- 置き換えたエラーの文字列は `DatabaseException(resultCode: <結果コード>)`。結果コードが無い場合は `DatabaseException(resultCode: unknown)`
+- 他のエラーは置き換えない。スタックトレースと `fatal` は置き換えの有無で変わらない
 
 ### 2.4 Crashlytics のアラート（関数が受け取るもの）
 
@@ -166,7 +182,7 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
-| CRS-I01 | `isDebug: false`・`useMocks: false` で収集を初期化した | `setCollectionEnabled(true)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき | 確定 |
+| CRS-I01 | `isDebug: false`・`useMocks: false` で収集を初期化した | `setCollectionEnabled(true)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき | 廃止（同意を確認するまで集めないことになったため。CRS-I23 に置き換え。8章 Q13） |
 | CRS-I02 | `isDebug: true`・`useMocks: false` で収集を初期化した | `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき | 確定 |
 | CRS-I03 | `isDebug: false`・`useMocks: true` で収集を初期化した | `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき | 確定 |
 | CRS-I04 | `isDebug: true`・`useMocks: true` で収集を初期化した | `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき | 確定 |
@@ -186,8 +202,44 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | CRS-I18 | uid が「u1」でメールアドレスが未確認のユーザーで、ログイン済みになった | 最後に呼ばれた `setUserIdentifier` の引数が「u1」 | 概要 §集めるもの（確認待ちの間もログイン済みのため） | 確定 |
 | CRS-I19 | `isDebug: false`・`useMocks: false` で収集を初期化し、`recordError` が例外を投げる状態で、`FlutterError.onError` にエラー情報が渡された | `FlutterError.onError` の呼び出しから例外が出ない | 原則-10、ユーザー決定 2026-11-08 | 確定 |
 | CRS-I20 | `isDebug: false`・`useMocks: false` で収集を初期化し、`recordError` が例外を投げる状態で、`PlatformDispatcher.instance.onError` にエラーが渡された | `PlatformDispatcher.instance.onError` は例外を出さずに `true` を返す | 原則-10、ユーザー決定 2026-11-08 | 確定 |
-| CRS-I21 | `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false` で収集を初期化した | 初期化の呼び出しから例外が出ない（起動が続く）。`FlutterError.onError` と `PlatformDispatcher.instance.onError` は報告する処理に置き換わっている（クラッシュの記録は続く）。`analytics` の `setCollectionEnabled(true)` は1回呼ばれる | 原則-10、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I21 | `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false` で収集を初期化した | 初期化の呼び出しから例外が出ない（起動が続く）。`FlutterError.onError` と `PlatformDispatcher.instance.onError` は報告する処理に置き換わっている（クラッシュの記録は続く）。`analytics` の `setCollectionEnabled(false)` は1回呼ばれる | 原則-10、ユーザー決定 2026-11-08 | 確定 |
 | CRS-I22 | 未ログインの状態で起動した後、`setUserIdentifier` が例外を投げる状態にして、uid が「u1」のユーザーでログイン済みになった | ユーザーの識別子の同期から例外が出ない | 原則-10、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I23 | `isDebug: false`・`useMocks: false` で収集を初期化した | `setCollectionEnabled(false)` が1回呼ばれる。`setCollectionEnabled(true)` は0回 | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I24 | `isDebug: false`・`useMocks: false`・`consented: true` で収集を切り替えた | `reporter` の `setCollectionEnabled(true)` が1回呼ばれる | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I25 | `isDebug: false`・`useMocks: false`・`consented: false` で収集を切り替えた | `reporter` の `setCollectionEnabled(false)` が1回呼ばれる | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I26 | `isDebug: true`・`useMocks: false`・`consented: true` で収集を切り替えた | `reporter` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき、2.3.4 | 確定 |
+| CRS-I27 | `isDebug: false`・`useMocks: true`・`consented: true` で収集を切り替えた | `reporter` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき、2.3.4 | 確定 |
+| CRS-I28 | `reporter` の `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false`・`consented: true` で収集を切り替えた | 収集の切り替えから例外が出ない。`analytics` の `setCollectionEnabled(true)` は1回呼ばれる | 原則-10、8章 Q7 | 確定 |
+| CRS-I29 | ログイン前の `LegalConsentViewModel` の状態を読んだ | `consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I30 | uid「u1」でログイン済みの状態で判定し、同意が不要（現行の版に同意済み）だった | `phase` は `idle`、`consented` は `true` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I31 | uid「u1」でログイン済みの状態で判定し、プライバシーポリシーへの同意が必要だった | `phase` は `required`、`consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I32 | 同意ダイアログの表示中に両方をチェックして「同意する」を呼び、`LegalAcceptResult.accepted` が返った | `phase` は `idle`、`consented` は `true` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I33 | 同意ダイアログの表示中に「同意する」を呼び、送信が `UnknownFailure` で失敗した | `phase` は `required`、`consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I34 | `consented` が `true` の状態で、判定が `UnknownFailure` で失敗した | `phase` は `idle`、`consented` は `true` のまま | 8章 Q15、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I35 | `consented` が `true` の状態で、もう一度判定し、改定によりプライバシーポリシーへの同意が必要だった | `phase` は `required`、`consented` は `false` | 2.3.4、概要（legal_consent）§同意が必要かの判定 | 確定 |
+| CRS-I36 | `consented` が `true` の状態で、ログアウトした（ログイン中のユーザーが `null` になった） | `consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I37 | `consented` が `false` のまま、一度も同意済みと確認できていない状態で、判定が `UnknownFailure` で失敗した | `phase` は `idle`、`consented` は `false` のまま | 8章 Q15、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I38 | `isDebug: false`・`useMocks: false` で収集を初期化した後、`FlutterError.onError` に、SQL「INSERT INTO words」・引数「secret」・結果コード 1555 の `DatabaseException` のエラー情報が渡された | `recordError` が1回呼ばれる。第1引数の文字列は `DatabaseException(resultCode: 1555)` で、「INSERT」「secret」を含まない。第2引数は渡したスタックトレース。`fatal` は `true` | 概要 §集めるもの（単語などの入力内容を送らない）、2.3.5、8章 Q14 | 確定 |
+| CRS-I39 | `isDebug: false`・`useMocks: false` で収集を初期化した後、`PlatformDispatcher.instance.onError` に、SQL「INSERT INTO words」・引数「secret」・結果コード 1555 の `DatabaseException` が渡された | `recordError` が1回呼ばれる。第1引数の文字列は `DatabaseException(resultCode: 1555)` で、「INSERT」「secret」を含まない。第2引数は渡したスタックトレース。`fatal` は `true` | 概要 §集めるもの（単語などの入力内容を送らない）、2.3.5、8章 Q14 | 確定 |
+| CRS-I40 | uid「u1」でログイン済みの状態で判定し、利用規約への同意だけが必要だった | `phase` は `required`、`consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I41 | uid「u1」でログイン済みの状態で判定し、利用規約とプライバシーポリシーの両方への同意が必要だった | `phase` は `required`、`consented` は `false` | 2.3.4、8章 Q13 | 確定 |
+| CRS-I42 | 利用規約だけの同意ダイアログの表示中にチェックして「同意する」を呼び、`LegalAcceptResult.accepted` が返った | `phase` は `idle`、`consented` は `true` | 2.3.4、LGL-V22 | 確定 |
+| CRS-I43 | uid「u1」の判定中にログアウトし、その後に判定が「同意は不要」を返した | `consented` は `false` のまま | 原則-9、LGL-V34 | 確定 |
+| CRS-I44 | uid「u1」の同意の送信中にログアウトし、その後に送信が `LegalAcceptResult.accepted` を返した | `consented` は `false` のまま | 原則-9、LGL-V41 | 確定 |
+| CRS-I45 | uid「u1」で `consented` が `true` の状態からログアウトし、uid「u2」でログインして判定し、プライバシーポリシーへの同意が必要だった | `consented` は `false` | 原則-9、2.3.4 | 確定 |
+| CRS-I46 | uid「u1」で `consented` が `true` の状態で、ログイン中のユーザーが `null` を挟まずに uid「u2」に変わった | 判定の結果が返る前の `consented` は `false` | 原則-9、LGL-V46 | 確定 |
+| CRS-I47 | 同意ダイアログの表示中に「同意する」を呼び、送信が `NetworkFailure` で失敗した | `phase` は `networkError`、`consented` は `false` | 原則-11、LGL-V29 | 確定 |
+| CRS-I48 | 同意ダイアログの表示中に「同意する」を呼び、送信が `AuthFailure` で失敗した | `phase` は `networkError`、`consented` は `false` | 原則-11、LGL-V30 | 確定 |
+| CRS-I49 | 同意ダイアログの表示中に「同意する」を呼び、表示中に改定されていたことが返り、判定し直した結果もプライバシーポリシーへの同意が必要だった | `phase` は `required`、`consented` は `false` | LGL-V27、2.3.4 | 確定 |
+| CRS-I50 | `consented` が `true` の状態で、もう一度判定を始め、結果を待っている | `phase` は `checking`、`consented` は `true` のまま | 2.3.4 | 確定 |
+| CRS-I51 | `consented` が `true` の状態で、退会処理の記録があるときに判定を呼んだ | `phase` は `idle`、`consented` は `true` のまま | 8章 Q17、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I52 | `isDebug: true`・`useMocks: true`・`consented: true` で収集を切り替えた | `reporter` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §クラッシュ情報を集めるとき・集めないとき、2.3.4 | 確定 |
+| CRS-I53 | 同意ダイアログの表示中に「同意する」を呼び、表示中に改定されていたことが返り、判定し直した結果は同意が不要だった | `phase` は `idle`、`consented` は `true` | 2.3.4、LGL-V55 | 確定 |
+| CRS-I54 | 同意ダイアログの表示中に「同意する」を呼び、表示中に改定されていたことが返り、判定し直しが `NetworkFailure` で失敗した | `phase` は `idle`、`consented` は `false` のまま | 2.3.4、LGL-V54、8章 Q15、ユーザー決定 2026-11-08 | 確定 |
+| CRS-I55 | uid「u1」の判定中に退会処理の記録が `requested` になり、その後に判定が「同意は不要」を返した | `consented` は `false` のまま | 2.3.4、LGL-V36 | 確定 |
+| CRS-I56 | uid「u1」の同意の送信中に他の端末での退会の `phase` が `notifying` になり、その後に送信が `LegalAcceptResult.accepted` を返した | `consented` は `false` のまま | 2.3.4、LGL-V39 | 確定 |
+| CRS-I57 | uid「u1」の判定中に、`null` を挟まずログイン中のユーザーが uid「u2」に変わり、その後に u1 の判定が「同意は不要」を返した | `consented` は `false` のまま | 原則-9、LGL-V46 | 確定 |
+| CRS-I58 | uid「u1」の同意の送信中に、`null` を挟まずログイン中のユーザーが uid「u2」に変わり、その後に送信が `LegalAcceptResult.accepted` を返した | `consented` は `false` のまま | 原則-9、LGL-V46 | 確定 |
 
 ### 6.2 Slack 通知（Cloud Functions：`functions/src/crash_alert.ts`）
 
@@ -281,6 +333,9 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | CRS-F27 | `FolderRepositoryImpl` が、例外を受けずに `Left(UnknownFailure('x'))` を返した | `recordError` は0回 | 2.3.3、8章 Q10、ユーザー決定 2026-11-08 | 確定 |
 | CRS-F28 | ログイン済み・オンラインで同期（取得）を始め、リモートのデータソースが `code` が「aborted」の `FirebaseException` を投げた | `recordError` は0回 | 2.3.3、8章 Q11、ユーザー決定 2026-11-08 | 確定 |
 | CRS-F29 | キューにフォルダ F の登録、単語 W の登録がこの順で積まれ、F の書き込みでリモートのデータソースが例外 `StateError('x')` を投げる状態で、送信した | `recordError` は1回だけ呼ばれる（W の書き込みは行われないため） | 2.3.3、SYN-S14 | 確定 |
+| CRS-F30 | `WordRepositoryImpl.getWords` で、ローカルのデータソースが SQL「SELECT * FROM words」・引数「secret」・結果コード 1555 の `DatabaseException` を投げた | `recordError` が1回呼ばれる。第1引数の文字列は `DatabaseException(resultCode: 1555)` で、「SELECT」「secret」を含まない。第2引数は `null` でない。`fatal` は `false` | 概要 §集めるもの（単語などの入力内容を送らない）、2.3.5、8章 Q14 | 確定 |
+| CRS-F31 | ログイン済み・オンラインで同期（送信）を始め、SQL「UPDATE words」・引数「secret」・結果コード 1555 の `DatabaseException` が投げられた | `recordError` が1回呼ばれる。第1引数の文字列は `DatabaseException(resultCode: 1555)` で、「UPDATE」「secret」を含まない。第2引数は `null` でない。`fatal` は `false` | 概要 §集めるもの（単語などの入力内容を送らない）、2.3.5、8章 Q14 | 確定 |
+| CRS-F32 | `WordRepositoryImpl.getWords` で、ローカルのデータソースが結果コードを持たない `DatabaseException` を投げた | `recordError` が1回呼ばれる。第1引数の文字列は `DatabaseException(resultCode: unknown)` | 2.3.5、8章 Q14 | 確定 |
 
 ### 6.4 利用状況の記録（Analytics）
 
@@ -288,11 +343,11 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
-| CRS-A01 | `isDebug: false`・`useMocks: false` で収集を初期化した | `analytics` の `setCollectionEnabled(true)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics） | 確定 |
+| CRS-A01 | `isDebug: false`・`useMocks: false` で収集を初期化した | `analytics` の `setCollectionEnabled(true)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics） | 廃止（同意を確認するまで集めないことになったため。CRS-A17 に置き換え。8章 Q13） |
 | CRS-A02 | `isDebug: true`・`useMocks: false` で収集を初期化した | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics） | 確定 |
 | CRS-A03 | `isDebug: false`・`useMocks: true` で収集を初期化した | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics） | 確定 |
 | CRS-A04 | `isDebug: true`・`useMocks: true` で収集を初期化した | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics） | 確定 |
-| CRS-A05 | `analytics` の `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false` で収集を初期化した | 初期化の呼び出しから例外が出ない。`reporter` の `setCollectionEnabled(true)` は1回呼ばれる | 原則-10、8章 Q7、ユーザー決定 2026-11-08 | 確定 |
+| CRS-A05 | `analytics` の `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false` で収集を初期化した | 初期化の呼び出しから例外が出ない。`reporter` の `setCollectionEnabled(false)` は1回呼ばれる | 原則-10、8章 Q7、ユーザー決定 2026-11-08 | 確定 |
 | CRS-A06 | `/login` を表示している状態から `/home` を表示した | 最後に呼ばれた `logScreenView` の引数が「/home」 | 概要 §利用状況（Firebase Analytics）（見た画面） | 確定 |
 | CRS-A07 | `/home` を表示している状態から、フォルダの ID が「abc123」のフォルダ画面（`/folder/abc123`）を表示した | 最後に呼ばれた `logScreenView` の引数が「/folder/:folderId」。引数に「abc123」を含む呼び出しが0回 | 概要 §利用状況（Firebase Analytics）（ID などの値を入れない） | 確定 |
 | CRS-A08 | `/home` を表示している状態から、ボトムナビゲーションで `/settings` に切り替えた | 最後に呼ばれた `logScreenView` の引数が「/settings」 | 概要 §利用状況（Firebase Analytics）（見た画面） | 確定 |
@@ -304,6 +359,13 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | CRS-A14 | `/home` を表示している状態で記録を開始し、`/settings`、`/home` の順に切り替えた | `logScreenView` が3回呼ばれ、引数は順に「/home」「/settings」「/home」 | 2.3.2（直前の記録とだけ比べる） | 確定 |
 | CRS-A15 | `/home` を表示している状態で、ボトムシートを開いて閉じた | `logScreenView` の呼び出しが増えない | 概要 §利用状況（Firebase Analytics）（ボトムシートは画面として記録しない） | 確定 |
 | CRS-A16 | `logScreenView` が例外を投げる状態で、`/login` を表示している状態から見た画面の記録を開始した | 記録の開始から例外が出ない | 原則-10、8章 Q7、ユーザー決定 2026-11-08 | 確定 |
+| CRS-A17 | `isDebug: false`・`useMocks: false` で収集を初期化した | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる。`setCollectionEnabled(true)` は0回 | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-A18 | `isDebug: false`・`useMocks: false`・`consented: true` で収集を切り替えた | `analytics` の `setCollectionEnabled(true)` が1回呼ばれる | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-A19 | `isDebug: false`・`useMocks: false`・`consented: false` で収集を切り替えた | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 2.3.4、8章 Q13、ユーザー決定 2026-11-08 | 確定 |
+| CRS-A20 | `isDebug: true`・`useMocks: false`・`consented: true` で収集を切り替えた | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics）、2.3.4 | 確定 |
+| CRS-A21 | `isDebug: false`・`useMocks: true`・`consented: true` で収集を切り替えた | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics）、2.3.4 | 確定 |
+| CRS-A22 | `analytics` の `setCollectionEnabled` が例外を投げる状態で、`isDebug: false`・`useMocks: false`・`consented: true` で収集を切り替えた | 収集の切り替えから例外が出ない。`reporter` の `setCollectionEnabled(true)` は1回呼ばれる | 原則-10、8章 Q7 | 確定 |
+| CRS-A23 | `isDebug: true`・`useMocks: true`・`consented: true` で収集を切り替えた | `analytics` の `setCollectionEnabled(false)` が1回呼ばれる | 概要 §利用状況（Firebase Analytics）、2.3.4 | 確定 |
 
 
 ---
@@ -317,7 +379,17 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 - **リリースビルドでのコンソール出力**: 利用者の端末ではコンソールを見られないため、出すかどうかを定めない
 - **`CrashReporter` の Crashlytics 実装・Mock 実装**（SDK に渡すだけ・何もしない、の薄い実装）: 独自の分岐がないため単体テストしない。Crashlytics 実装は実機の確認（概要 §テスト）で確かめる
 - **Provider 経由で渡すこと**（概要 §設計上の決まり）: 構造の規約で、振る舞いではない。`architecture-guard` のレビューで確かめる
-- **`recordError` に渡すエラーの中身に入力内容が含まれないこと**: エラーの中身は、エラーを起こしたコードが作るもので、この機能では加工しない。送らないことを保証できるのは識別子（CRS-I15）だけ
+- **`recordError` に渡すエラーの中身に入力内容が含まれないこと**: SQLite のエラーは置き換える（CRS-I38・I39・F30〜F32）。それ以外のエラーの中身は、エラーを起こしたコードが作るもので、この機能では加工しない
+- **起動時に SDK が既定で集めないこと**（`Info.plist` の `FirebaseCrashlyticsCollectionEnabled`・`FIREBASE_ANALYTICS_COLLECTION_ENABLED`、`AndroidManifest.xml` の `firebase_crashlytics_collection_enabled`・`firebase_analytics_collection_enabled`）: ビルドの設定で、実機の確認で確かめる
+- **同意前に端末に保存されたクラッシュ情報の扱い**: SDK の動作（8章 Q16）
+- **判定の失敗の種類ごとの網羅**: `checkLegalConsentUseCase` の Failure は種類によらず同じ処理を通るため、`UnknownFailure` で代表する（CRS-I34・I37）
+- **同意の送信の `NotFoundFailure`**: 送信の失敗のうち `NetworkFailure`・`AuthFailure` 以外は同じ扱いのため、`UnknownFailure`（CRS-I33）で代表する
+- **`consented` の変化と収集の切り替えをつなぐこと**: アプリ全体を組み立てる `App` の配線で、切り替えの判定（CRS-I24〜I27・A18〜A21）と `consented` の値（CRS-I29〜I37・I40〜I51・I53〜I58）は別々に確かめる。つながっていることは実機の確認で確かめる
+- **同意を確認した時点で表示中の画面の記録**: 見た画面の記録はルートが変わったときに呼ばれ（2.3.2）、同意の確認では呼ばれない。同意の前に呼ばれた記録は SDK の側で送られないため、同意を確認した時点の画面は、次にルートが変わるまで記録されない
+- **「戻し」の切り替えで報告口が例外を投げる場合**: `true` への切り替え（CRS-I28・A22）と同じ処理を通る
+- **結果コードの取り出しの失敗**: `getResultCode` はエラー文の解析で、読めない場合は結果コードなしを返す（CRS-F32）
+- **既存の行 CRS-I02〜I04・I21・A05 の書き方**: 仕様の改訂で既存の行を作り直さない（spec-authoring「承認後の改訂」）。呼び出し先は 2.3 と観測点の節で決まる
+- **同意ダイアログの「ログアウト」・強制ログアウトでの `consented` の取り消し**: どちらもログイン中のユーザーが `null` になる変化で、CRS-I36 と同じ処理を通る
 - **端末の機種・OS・アプリのバージョンの付与、ネイティブのクラッシュの収集、次の起動時に送ること**: Crashlytics の SDK の動作
 - **アラートが出る条件**（同じ原因を1つの問題にまとめること、何を「新しい問題」「再発」「急増」とするか）: Crashlytics 側の判定で、アプリ・関数からは変えられない
 - **アプリが Cloud Functions を直接呼ばないこと**: アプリと関数をつなぐコードを作らないことで満たす。テストする振る舞いがない
@@ -335,7 +407,7 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 - **Failure 4種類（Unknown / NotFound / Network / Auth）の扱い**: この機能のどの処理も `Either<Failure, T>` を返さない（アプリ側は報告口、関数側は Slack への送信）。関数側の失敗の扱いは CRS-S10〜S14・S18・S19・S28〜S30 で定める
 - **App Store Connect の申告・プライバシーポリシーの本文の更新・実機での確認・Firebase コンソールと Slack での設定**: コードの外の手作業
 - **Analytics が自動で集めるもの**（起動・利用時間など）: SDK の動作で、アプリのコードの分岐がない
-- **広告 ID を集めない設定・Google Analytics の連携**: ビルドの設定（`AndroidManifest.xml`・`Info.plist`）と Firebase コンソールの設定で、実機の確認で確かめる
+- **広告 ID を集めない設定・Google Analytics の連携**: ビルドの設定（`AndroidManifest.xml`、iOS は環境変数 `FIREBASE_ANALYTICS_WITHOUT_ADID` による `FirebaseAnalyticsCore` の構成）と Firebase コンソールの設定で、配布の手順（fastlane の `beta`）と実機の確認で確かめる
 - **Analytics に uid を付けないこと**: `AnalyticsReporter` が識別子を設定するメソッドを持たない（2.1.1）ため、テストする振る舞いがない
 - **独自の操作の記録**（「単語を追加した」等）: 今回は集めない（概要 §利用状況）
 - **非致命的エラーの報告の、Repository のメソッドごとの網羅**: 各 Repository につき、`UnknownFailure` を返すメソッドの1つを代表にして確かめる（CRS-F01〜F11）。報告しない Failure（`NotFoundFailure`・`NetworkFailure`・`AuthFailure`）は、それが起きる Repository の1つで代表する（CRS-F12〜F14）。同じ Repository の他のメソッドは、それぞれの Repository の仕様書のテストで `UnknownFailure` を返すことを確かめているため、報告の呼び出しはテスト工程の網羅性レビューで確かめる
@@ -364,6 +436,11 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | Q10 | Repository が、例外を受けずに `UnknownFailure` を返したとき、報告するか（CRS-F27） | A: 報告しない（スタックトレースが無く、原因を調べる手がかりが少ないため） ／ B: `UnknownFailure` のメッセージで報告用のエラーを作って報告する | A（シンプルさを優先。例外を経由する場合はすべて報告されるため） | 決定: 案A（2026-11-08） |
 | Q11 | 同期の失敗のうち、報告しない `FirebaseException` の `code`（CRS-F20・F21・F26・F28） | A: `unavailable`・`deadline-exceeded`・`unauthenticated`・`aborted`・`resource-exhausted`・`cancelled` は報告しない（一時的な失敗・ログイン切れ） ／ B: `unavailable`・`deadline-exceeded` だけ報告しない | A（次の同期でやり直される失敗で通知が埋もれないようにするため） | 決定: 案A（2026-11-08） |
 | Q12 | Crashlytics のアラートの `issue.title`・`issue.subtitle` を、本文のどの見出しに載せるか（2.4。CRS-S01〜S03・S08・S09・S15・S22〜S24・S34・S40・S44・S46・S47） | A: `issue.subtitle`（例外の型・エラーのメッセージ）を「問題」、`issue.title`（ファイル名・関数名）を「発生箇所」に載せる ／ B: `issue.title` を「問題」、`issue.subtitle` を「発生箇所」に載せる | A（実機で受けたアラートでは、`issue.title` に発生箇所、`issue.subtitle` にエラーの内容が入っていたため） | 決定: 案A（2026-11-08） |
+| Q13 | クラッシュ情報・利用状況の送信を、利用規約・プライバシーポリシーへの同意の前から始めるか（CRS-I23〜I33・I35・I36・I40〜I50・I52・I53・I55〜I58・A17〜A23） | A: 同意済みと確認できてから始める ／ B: 同意の前から送り、プライバシーポリシーにその旨を書く | A（プライバシーポリシー第5条の「同意した場合にのみ利用できる」に合わせるため） | 決定: 案A（2026-11-08） |
+| Q14 | SQLite のエラー文（SQL と引数を含む）の扱い（CRS-I38・I39・F30〜F32） | A: 結果コードだけのエラーに置き換えて送る ／ B: そのまま送る | A（単語などの入力内容が Crashlytics・Slack に渡らないようにするため） | 決定: 案A（2026-11-08） |
+| Q15 | 同意の判定が失敗したとき（オフライン等）の収集（CRS-I34・I37・I54） | A: 判定の前の状態を保つ（確認済みなら続ける、未確認なら始めない） ／ B: 判定に失敗したら止める | A（同意済みと確認できた利用者が圏外に入るだけで収集が止まらないようにするため） | 決定: 案A（2026-11-08） |
+| Q16 | 同意の前に端末に保存されたクラッシュ情報を、同意の後に送ってよいか | A: 送ってよい（SDK の標準の動作。送信自体は同意の後） ／ B: 送らない（同意時に未送信の情報を削除する。同意前の不具合は分からなくなる） | A（追加の処理が要らず、送信は同意の後になるため） | 決定: 案A（2026-11-08） |
+| Q17 | 同意済みの利用者の退会処理の記録がある間、収集を続けるか（CRS-I51） | A: 続ける（判定を行わないので、直前の状態を保つ） ／ B: 止める | A（退会が完了すると、ログアウトで `consented` が `false` に戻るため） | 決定: 案A（2026-11-08） |
 
 ---
 
@@ -384,7 +461,11 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | §今回やらないこと：プライバシーポリシーの本文の修正 | 7章（コードの外の手作業） |
 | §今回やらないこと：メンションしない | CRS-S09。値の置き換えの規則は CRS-S08, CRS-S20, CRS-S21, CRS-S22（8章 Q9） |
 | §今回やらないこと：PagerDuty・Jira・Google Play | 7章（PagerDuty・Jira・Google Play 向けの申告） |
-| §集めるとき・集めないとき：リリースビルドは集める | CRS-I01, CRS-I05, CRS-I06 |
+| §集めるとき・集めないとき：リリースビルドは集める | CRS-I24, CRS-I05, CRS-I06（同意の後。8章 Q13） |
+| 8章 Q13：同意を確認するまで集めない | CRS-I23〜I33, CRS-I35, CRS-I36, CRS-I40〜I50, CRS-I52, CRS-I53, CRS-I55〜I58, CRS-A17〜A23 |
+| 8章 Q15：判定の失敗で状態を保つ | CRS-I34, CRS-I37, CRS-I54 |
+| 8章 Q16：同意の前に保存された情報 | 7章（同意前に端末に保存されたクラッシュ情報の扱い） |
+| 8章 Q17：退会処理の記録がある間の収集 | CRS-I51 |
 | §集めるとき・集めないとき：デバッグビルドは集めない | CRS-I02, CRS-I04, CRS-I07, CRS-I08 |
 | §集めるとき・集めないとき：デバッグビルドのエラーは今までどおりコンソールに出す | CRS-I07 |
 | §集めるとき・集めないとき：Mock モードは集めない | CRS-I03, CRS-I04, CRS-I09, CRS-I10 |
@@ -394,7 +475,7 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | §集めるもの：ネイティブのクラッシュ | 7章（SDK の動作） |
 | §集めるもの：ログイン中の uid、ログアウトで外す | CRS-I11, CRS-I12, CRS-I13, CRS-I14, CRS-I16, CRS-I17, CRS-I18。設定の失敗は CRS-I22（8章 Q7） |
 | §集めるもの：メールアドレス・表示名を送らない | CRS-I15 |
-| §集めるもの：単語などの入力内容を送らない | 7章（`recordError` に渡すエラーの中身） |
+| §集めるもの：単語などの入力内容を送らない | CRS-I38, CRS-I39, CRS-F30, CRS-F31, CRS-F32。それ以外のエラーは 7章（`recordError` に渡すエラーの中身） |
 | §集めるもの：機種・OS・バージョンは自動 | 7章（SDK の動作） |
 | §設計上の決まり：domain のインターフェース経由・Provider で渡す | 7章（Provider 経由で渡すこと） |
 | §設計上の決まり：Fake で検証 | 6.1 の観測点 |
@@ -424,13 +505,13 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | §テスト：実機での確認 | 7章（コードの外の手作業） |
 | §Firebase コンソール・Slack での設定 | 7章（コードの外の手作業） |
 | §目的：非致命的エラーにも気づける | CRS-F01〜F11, CRS-F16, CRS-F17 |
-| §目的：利用状況を知る | CRS-A01, CRS-A06 |
-| §方式：Analytics が利用状況を集める | CRS-A01〜A04。自動で集めるものは 7章（Analytics が自動で集めるもの） |
+| §目的：利用状況を知る | CRS-A18, CRS-A06 |
+| §方式：Analytics が利用状況を集める | CRS-A17〜A21, CRS-A23。自動で集めるものは 7章（Analytics が自動で集めるもの） |
 | §非致命的エラー：Repository の `UnknownFailure` を送る | CRS-F01〜F11。例外を受けない場合は CRS-F27（8章 Q10）。メソッドごとの網羅は 7章（非致命的エラーの報告の、Repository のメソッドごとの網羅） |
 | §非致命的エラー：Network・Auth・NotFound は送らない | CRS-F12, CRS-F13, CRS-F14 |
 | §非致命的エラー：同期の失敗のうち通信以外は送る | CRS-F16, CRS-F17, CRS-F22。1回の同期で1回は CRS-F29 |
 | §非致命的エラー：同期の通信の失敗は送らない | CRS-F18, CRS-F19, CRS-F20, CRS-F21。ログイン切れ・一時的な失敗は CRS-F26, CRS-F28（8章 Q11） |
-| §非致命的エラー：集めるとき・集めないときはクラッシュと同じ | CRS-I01〜I04（同じ `setCollectionEnabled` で決まる）。7章（収集の有効・無効による違い） |
+| §非致命的エラー：集めるとき・集めないときはクラッシュと同じ | CRS-I23〜I27（同じ `setCollectionEnabled` で決まる）。7章（収集の有効・無効による違い） |
 | §非致命的エラー：Provider 経由で渡す | 7章（Provider 経由で渡すこと） |
 | §利用状況：自動で集めるもの | 7章（Analytics が自動で集めるもの） |
 | §利用状況：見た画面・パスの形・ID を入れない | CRS-A06, CRS-A07, CRS-A08, CRS-A09, CRS-A12, CRS-A13, CRS-A14 |
@@ -449,7 +530,10 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 
 | 操作 | 成功 | Unknown | NotFound | Network | Auth | キャンセル | 外側タップ | 処理中（無効化） | 二重操作 | 対象の不在 | 同じ値 | 入力の境界 |
 |-----|-----|---------|----------|---------|------|-----------|-----------|----------------|---------|-----------|--------|-----------|
-| 収集の初期化 | CRS-I01〜I04, I07〜I10 | 設定の失敗 CRS-I21 | — 同左 | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — 起動時に1回 | — 対象なし | — | — 入力なし |
+| 収集の切り替え（同意の確認結果） | CRS-I24〜I27, I52, A18〜A21, A23 | 設定の失敗 CRS-I28, A22 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — 呼び出しごとに設定するだけ | — 対象なし | — 7章（`consented` の変化と収集の切り替えをつなぐこと） | — 入力なし |
+| 同意の判定・送信（`consented`） | CRS-I29〜I32, I35, I36, I40〜I42, I50 | 判定の失敗 CRS-I34, I37、送信の失敗 CRS-I33 | 判定は 7章（判定の失敗の種類ごとの網羅）、送信は 7章（同意の送信の `NotFoundFailure`） | 送信 CRS-I47、判定は 7章（同左） | 送信 CRS-I48、判定は 7章（同左） | — 同意ダイアログの閉じ方は legal_consent の仕様 | — 閉じられないダイアログ（legal_consent の仕様） | — 判定中 CRS-I50 | — 二重送信は LGL-V38 | 改定 CRS-I49, I53, I54、別ユーザー CRS-I43〜I46, I57, I58、退会処理 CRS-I51, I55, I56 | — 同意済みの再判定 CRS-I30 | — 入力なし |
+| SQLite のエラーの報告 | CRS-I38, I39, F30, F31 | 結果コードなし CRS-F32 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — | — 対象なし | — | 7章（結果コードの取り出しの失敗） |
+| 収集の初期化 | CRS-I23, I02〜I04, I07〜I10 | 設定の失敗 CRS-I21 | — 同左 | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — 起動時に1回 | — 対象なし | — | — 入力なし |
 | Flutter の処理中のエラー | CRS-I05 | 記録の失敗 CRS-I19 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — | — 対象なし | — | — 入力なし |
 | Flutter の処理の外のエラー | CRS-I06 | 記録の失敗 CRS-I20 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — | — 対象なし | — | — 入力なし |
 | ログイン状態の変化 | CRS-I11〜I14, I17, I18 | 設定の失敗 CRS-I22 | — 同左 | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — | — | CRS-I16 | CRS-I15（送らない値） |
@@ -460,7 +544,7 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | Repository が例外を受けずに `UnknownFailure` を返す | CRS-F27 | — | — | — | — | — | — | — | — | — | — | — |
 | Repository が成功する | CRS-F15 | — | — | — | — | — | — | — | — | — | — | — |
 | 同期の失敗 | CRS-F16, F17, F22, F23（成功）, F29（複数件） | 報告の失敗 CRS-F25 | — 同期は Failure を返さない | 報告しない CRS-F18〜F21, F28 | 報告しない CRS-F26 | — 操作なし | — 画面なし | — 画面なし | — 同期は直列化済み | 7章（オフライン・未ログイン） | — | — |
-| Analytics の初期化 | CRS-A01〜A04 | 設定の失敗 CRS-A05 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — 起動時に1回 | — | — | — |
+| Analytics の初期化 | CRS-A17, A02〜A04 | 設定の失敗 CRS-A05 | — Failure を返さない | — 同左 | — 同左 | — 操作なし | — 画面なし | — 画面なし | — 起動時に1回 | — | — | — |
 | 画面の切り替え | CRS-A06, A07, A08, A12, A13, A14 | 記録の失敗 CRS-A11, A16 | — Failure を返さない | — 同左 | — 同左 | — | ダイアログ CRS-A10・ボトムシート CRS-A15 | — | — | — | 同じパターン CRS-A09 | ID を含むパス CRS-A07 |
 | 新しい非致命的エラーのアラート | CRS-S15 | CRS-S28 | 7章（アラートの種類ごとの観点の代表） | 7章（同左） | 7章（同左） | — 操作なし | — 画面なし | — 画面なし | — 再送しない | — | — | 7章（同左） |
 
@@ -471,6 +555,9 @@ Mock モードでは、何もしない実装を Provider から渡す。ユー�
 | 操作 | 原則-1 | 原則-2〜8 | 原則-9 | 原則-10 | 原則-11 |
 |-----|-------|----------|-------|--------|--------|
 | 収集の初期化 | — 表示中のデータに触れない | — 画面の操作でない | — データを扱わない | CRS-I21（設定の失敗で起動を止めない） | — Failure を返さない |
+| 収集の切り替え | — 表示中のデータに触れない | — 画面の操作でない | — データを扱わない | CRS-I28, CRS-A22 | — Failure を返さない |
+| 同意の判定・送信（`consented`） | — 表示中のデータに触れない | — 画面の操作は legal_consent の仕様 | CRS-I43〜I46, I57, I58（別ユーザーの結果を持ち越さない） | CRS-I34, I37（判定の失敗で収集の状態を壊さない） | CRS-I47, I48（送信の Network・Auth） |
+| SQLite のエラーの報告 | — | — 画面の操作でない | CRS-I38, I39, F30, F31（利用者のデータを渡さない） | 7章（結果コードの取り出しの失敗） | — Failure を返さない |
 | Flutter の処理中・処理の外のエラー | — | — 画面の操作でない | — | CRS-I19, CRS-I20（記録の失敗で新たな例外を出さない） | — |
 | ログイン状態の変化 | — | — 画面の操作でない | CRS-I12, CRS-I14, CRS-I17（ログイン中の本人の uid だけを付ける） | CRS-I22（設定の失敗で例外を出さない） | — |
 | アラートの受信（関数） | — 画面なし | — 画面なし | — 利用者のデータを扱わない | — アプリの外の処理 | — 関数の処理 |

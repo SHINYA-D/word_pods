@@ -114,7 +114,9 @@ class LegalConsentViewModel extends _$LegalConsentViewModel {
               );
       },
       (accepted) async {
-        if (accepted == LegalAcceptResult.accepted) return _reset();
+        if (accepted == LegalAcceptResult.accepted) {
+          return _reset(consented: true);
+        }
         // 表示中に改定された。判定し直した結果で表示し直す
         final recheck =
             await ref.read(checkLegalConsentUseCaseProvider).call(userId);
@@ -158,10 +160,11 @@ class LegalConsentViewModel extends _$LegalConsentViewModel {
     required LegalConsentMessage? message,
   }) {
     result.fold(
-      // 判定の失敗は伝えない（裏の確認のため）。次のきっかけでもう一度判定する
-      (_) => _reset(),
+      // 判定の失敗は伝えない（裏の確認のため）。次のきっかけでもう一度判定する。
+      // 同意済みの確認は、失敗では取り消さない（オフラインへの切り替わりで収集が止まらないように）
+      (_) => _reset(consented: state.consented),
       (requirement) {
-        if (!requirement.isRequired) return _reset();
+        if (!requirement.isRequired) return _reset(consented: true);
         state = LegalConsentState(
           phase: LegalConsentPhase.required,
           termsRequired: requirement.termsRequired,
@@ -173,10 +176,10 @@ class LegalConsentViewModel extends _$LegalConsentViewModel {
     );
   }
 
-  void _reset() {
+  void _reset({bool consented = false}) {
     _generation++;
     _acknowledging = false;
-    state = const LegalConsentState();
+    state = LegalConsentState(consented: consented);
   }
 
   /// ログイン中の uid。強制ログアウトの記録がある uid は、ログインしていないものとして扱う。
