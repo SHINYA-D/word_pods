@@ -104,8 +104,9 @@ export function buildSlackText(input: CrashAlertInput): string {
   const issue = input.issue ?? {};
   const lines = [
     `${environmentLabel(input.projectId)}${HEADLINES[input.kind]}`,
-    `問題: ${sanitize(issue.title)}`,
-    `発生箇所: ${sanitize(issue.subtitle)}`,
+    // Crashlytics の issue は title に発生箇所（ファイル名・関数名）、subtitle にエラーの内容が入る
+    `問題: ${sanitize(issue.subtitle)}`,
+    `発生箇所: ${sanitize(issue.title)}`,
     `アプリ: ${platformLabel(input.appId)} ${sanitize(issue.appVersion)}`,
   ];
   if (input.kind === "regression") {
