@@ -73,6 +73,17 @@ dev_dependencies:
   sqflite_common_ffi: ^2.4.5
   fake_cloud_firestore: ^4.4.0
 
+# sqlite3 パッケージは、SQLite 本体を GitHub の Releases からダウンロードする。
+# Linux（CI のテスト環境。sqflite_common_ffi が使う）では、ダウンロードせず OS の SQLite（libsqlite3.so）を使う
+# （GitHub の障害でダウンロードがエラーページになり、CI のテストが動かなくなったため）。
+# アプリ本体（iOS・Android）と macOS の開発環境は、今までどおりダウンロードした SQLite を使う
+hooks:
+  user_defines:
+    sqlite3:
+      source:
+        linux: system
+        default: sqlite3
+
 flutter:
   # --flavor を省略したときは開発環境でビルドする
   default-flavor: dev

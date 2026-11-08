@@ -1,12 +1,12 @@
-// 仕様: docs/detailed_design/crash_reporting/crash_reporting.md 6.2（CRS-S01〜S45）
+// 仕様: docs/detailed_design/crash_reporting/crash_reporting.md 6.2（CRS-S01〜S47）
 // Slack には実際には送らず、POST を差し替えて回数・宛先・本文を確かめる。
 import { CrashAlertInput, FetchLike, notifyCrashAlert } from "../src/crash_alert";
 
 const URL = "https://hooks.slack.com/services/T/B/X";
 const IOS_APP = "1:707895340348:ios:450ada432e1ac1d5aac239";
 const ISSUE = {
-  title: "StateError",
-  subtitle: "word_list_page.dart line 42",
+  title: "word_list_page.dart line 42",
+  subtitle: "StateError",
   appVersion: "1.2.0 (5)",
 };
 
@@ -107,12 +107,12 @@ describe("新しいクラッシュのアラート", () => {
   });
 
   it("CRS-S08 問題名に < > & を含む場合、Slack の書式の記号に置き換わる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, title: "a<b>&c" } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "a<b>&c" } }));
     expect(lines[1]).toBe("問題: a&lt;b&gt;&amp;c");
   });
 
   it("CRS-S09 発生箇所が <!channel> の場合、チャンネル全員への呼び出しにならない文字に置き換わる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "<!channel>" } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, title: "<!channel>" } }));
     expect(lines[2]).toBe("発生箇所: &lt;!channel&gt;");
   });
 
@@ -122,23 +122,23 @@ describe("新しいクラッシュのアラート", () => {
   });
 
   it("CRS-S22 問題名が &lt; の場合、& が二重に置き換わり &amp;lt; になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, title: "&lt;" } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "&lt;" } }));
     expect(lines[1]).toBe("問題: &amp;lt;");
   });
 
   it("CRS-S23 問題名の途中に改行を含む場合、本文は5行のままで改行が空白になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, title: "a\nb" } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "a\nb" } }));
     expect(lines).toHaveLength(5);
     expect(lines[1]).toBe("問題: a b");
   });
 
   it("CRS-S24 発生箇所が空文字の場合、（不明）になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "" } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, title: "" } }));
     expect(lines[2]).toBe("発生箇所: （不明）");
   });
 
   it("CRS-S34 問題名が無い場合、（不明）になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, title: undefined } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: undefined } }));
     expect(lines[1]).toBe("問題: （不明）");
   });
 
@@ -148,13 +148,24 @@ describe("新しいクラッシュのアラート", () => {
   });
 
   it("CRS-S40 発生箇所が無い場合、（不明）になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: undefined } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, title: undefined } }));
     expect(lines[2]).toBe("発生箇所: （不明）");
   });
 
   it("CRS-S44 問題名が全角・半角スペースだけの場合、（不明）になる", async () => {
-    const lines = await sentLines(input({ issue: { ...ISSUE, title: "　 " } }));
+    const lines = await sentLines(input({ issue: { ...ISSUE, subtitle: "　 " } }));
     expect(lines[1]).toBe("問題: （不明）");
+  });
+
+  it("CRS-S46 発生箇所の途中に改行を含む場合、本文は5行のままで改行が空白になる", async () => {
+    const lines = await sentLines(input({ issue: { ...ISSUE, title: "a\nb" } }));
+    expect(lines).toHaveLength(5);
+    expect(lines[2]).toBe("発生箇所: a b");
+  });
+
+  it("CRS-S47 発生箇所が全角・半角スペースだけの場合、（不明）になる", async () => {
+    const lines = await sentLines(input({ issue: { ...ISSUE, title: "　 " } }));
+    expect(lines[2]).toBe("発生箇所: （不明）");
   });
 
   it("CRS-S39 Slack が HTTP 204 を返した場合、POST は1回で正常に終わる", async () => {
@@ -340,8 +351,8 @@ describe("新しい非致命的エラーのアラート", () => {
     input({
       kind: "newNonfatal",
       issue: {
-        title: "FormatException",
-        subtitle: "settings_repository_impl.dart line 36",
+        title: "settings_repository_impl.dart line 36",
+        subtitle: "FormatException",
         appVersion: "1.2.0 (5)",
       },
     });
