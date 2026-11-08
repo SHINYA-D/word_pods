@@ -23,8 +23,12 @@ platform :ios do
     # （バージョン名 1.0.0 は pubspec.yaml の version をそのまま使う）
     build_number = latest_testflight_build_number(api_key: api_key, initial_build_number: 0) + 1
 
-    Dir.chdir(ROOT_DIR) do
-      sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
+    # bundle exec の中のままだと Gemfile に無い cocoapods（pod コマンド）を使えず、
+    # flutter build の途中の pod install が失敗するため、bundler の環境を外して呼ぶ
+    Bundler.with_unbundled_env do
+      Dir.chdir(ROOT_DIR) do
+        sh("fvm", "flutter", "build", "ipa", "--release", "--flavor", "prod", "--build-number=#{build_number}")
+      end
     end
 
     ipa_path = Dir.glob(File.join(ROOT_DIR, "build/ios/ipa/*.ipa")).first

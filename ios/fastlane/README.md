@@ -21,7 +21,7 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane ios beta
 ```
 
-prod をビルドして TestFlight にアップロードする
+prod をビルドし、dSYM を Crashlytics に送ってから TestFlight にアップロードする
 
 ----
 
