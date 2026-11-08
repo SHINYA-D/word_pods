@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/repositories/sync_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/sync_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/local/sync_queue_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
@@ -23,6 +25,7 @@ class SyncService implements SyncRepository {
     required ConnectivityMonitor connectivityMonitor,
     required this._getCurrentUserId,
     this._isAccountDeletionPending,
+    this._crashReporter,
     DateTime Function()? clock,
   })  : _local = localDataSource,
         _queue = syncQueueDataSource,
@@ -39,6 +42,9 @@ class SyncService implements SyncRepository {
   /// そのユーザーの退会処理が途中か。途中の間は同期しない（削除したデータを送り返さないため）
   final Future<bool> Function(String userId)? _isAccountDeletionPending;
   final DateTime Function() _now;
+
+  /// 想定外の失敗（通信・ログイン切れ・一時的な失敗以外）を非致命的エラーとして報告する
+  final CrashReporter? _crashReporter;
 
   /// resumed 時に取得するまでの間隔
   static const Duration resumedInterval = Duration(minutes: 5);
@@ -139,13 +145,14 @@ class SyncService implements SyncRepository {
     }
   }
 
-  /// 同期の失敗は画面に出さず、ログに残して false を返す。
+  /// 同期の失敗は画面に出さず、ログに残して false を返す。想定外の失敗は非致命的エラーとして報告する。
   Future<bool> _guard(String label, Future<void> Function() body) async {
     try {
       await body();
       return true;
     } catch (e, stack) {
       if (kDebugMode) debugPrint('Sync $label failed: $e\n$stack');
+      if (!isExpectedSyncError(e)) reportNonFatal(_crashReporter, e, stack);
       return false;
     }
   }

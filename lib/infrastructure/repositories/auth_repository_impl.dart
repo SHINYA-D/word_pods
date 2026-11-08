@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/app_user.dart';
 import 'package:word_pods/domain/repositories/auth_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/firebase_auth_data_source.dart';
 
 /// Firebase のユーザーを [AppUser] にする（[AuthRepositoryImpl] と `EmailVerificationRepositoryImpl` で共通）
@@ -17,9 +19,10 @@ AppUser appUserFromFirebase(User user) {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._dataSource);
+  AuthRepositoryImpl(this._dataSource, {this._crashReporter});
 
   final FirebaseAuthDataSource _dataSource;
+  final CrashReporter? _crashReporter;
 
   @override
   Stream<AppUser?> get authStateChanges {
@@ -39,10 +42,10 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       return Right(_toAppUser(result.user!));
-    } on FirebaseAuthException catch (e) {
-      return Left(_mapFirebaseAuthException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseAuthException catch (e, stack) {
+      return Left(_mapFirebaseAuthException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -57,10 +60,10 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       return Right(_toAppUser(result.user!));
-    } on FirebaseAuthException catch (e) {
-      return Left(_mapFirebaseAuthException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseAuthException catch (e, stack) {
+      return Left(_mapFirebaseAuthException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -69,10 +72,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await _dataSource.signInWithGoogle();
       return Right(_toAppUser(result.user!));
-    } on FirebaseAuthException catch (e) {
-      return Left(_mapFirebaseAuthException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseAuthException catch (e, stack) {
+      return Left(_mapFirebaseAuthException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -81,10 +84,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _dataSource.signOut();
       return const Right(unit);
-    } on FirebaseAuthException catch (e) {
-      return Left(_mapFirebaseAuthException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseAuthException catch (e, stack) {
+      return Left(_mapFirebaseAuthException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -95,16 +98,16 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _dataSource.sendPasswordResetEmail(email: email);
       return const Right(unit);
-    } on FirebaseAuthException catch (e) {
-      return Left(_mapFirebaseAuthException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseAuthException catch (e, stack) {
+      return Left(_mapFirebaseAuthException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
   AppUser _toAppUser(User user) => appUserFromFirebase(user);
 
-  Failure _mapFirebaseAuthException(FirebaseAuthException e) {
+  Failure _mapFirebaseAuthException(FirebaseAuthException e, StackTrace stack) {
     switch (e.code) {
       case 'network-request-failed':
         return const Failure.network();
@@ -114,7 +117,8 @@ class AuthRepositoryImpl implements AuthRepository {
       case 'email-already-in-use':
         return const Failure.auth();
       default:
-        return Failure.unknown(e.message ?? e.code);
+        return reportUnknownFailure(_crashReporter, e, stack,
+            message: e.message ?? e.code);
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/firebase_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';
+import 'package:word_pods/core/di/reporting_providers.dart';
 import 'package:word_pods/core/di/sync_providers.dart';
 import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
 import 'package:word_pods/domain/repositories/account_repository.dart';
@@ -49,7 +50,10 @@ void Function() _onLocalChanged(Ref ref) =>
 @Riverpod(keepAlive: true)
 AuthRepository authRepository(Ref ref) {
   if (kUseMocks) return MockAuthRepository();
-  return AuthRepositoryImpl(ref.watch(firebaseAuthDataSourceProvider));
+  return AuthRepositoryImpl(
+    ref.watch(firebaseAuthDataSourceProvider),
+    crashReporter: ref.watch(crashReporterProvider),
+  );
 }
 
 @Riverpod(keepAlive: true)
@@ -58,7 +62,9 @@ EmailVerificationRepository emailVerificationRepository(Ref ref) {
     return MockEmailVerificationRepository(ref.watch(authRepositoryProvider));
   }
   return EmailVerificationRepositoryImpl(
-      ref.watch(firebaseAuthDataSourceProvider));
+    ref.watch(firebaseAuthDataSourceProvider),
+    crashReporter: ref.watch(crashReporterProvider),
+  );
 }
 
 @Riverpod(keepAlive: true)
@@ -71,6 +77,7 @@ FolderRepository folderRepository(Ref ref) {
     syncQueueDataSource: ref.watch(syncQueueDataSourceProvider),
     dbHelper: ref.watch(databaseHelperProvider),
     onLocalChanged: _onLocalChanged(ref),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -83,6 +90,7 @@ WordRepository wordRepository(Ref ref) {
     syncQueueDataSource: ref.watch(syncQueueDataSourceProvider),
     dbHelper: ref.watch(databaseHelperProvider),
     onLocalChanged: _onLocalChanged(ref),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -95,6 +103,7 @@ FlashcardResultRepository flashcardResultRepository(Ref ref) {
     syncQueueDataSource: ref.watch(syncQueueDataSourceProvider),
     dbHelper: ref.watch(databaseHelperProvider),
     onLocalChanged: _onLocalChanged(ref),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -106,6 +115,7 @@ SettingsRepository settingsRepository(Ref ref) {
     syncQueueDataSource: ref.watch(syncQueueDataSourceProvider),
     dbHelper: ref.watch(databaseHelperProvider),
     onLocalChanged: _onLocalChanged(ref),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -117,6 +127,7 @@ AccountDeletionRepository accountDeletionRepository(Ref ref) {
     remoteDataSource: ref.watch(accountDeletionRemoteDataSourceProvider),
     withdrawnRemoteDataSource: ref.watch(withdrawnAccountRemoteDataSourceProvider),
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -125,6 +136,7 @@ ReauthenticationRepository reauthenticationRepository(Ref ref) {
   if (kUseMocks) return MockReauthenticationRepository();
   return ReauthenticationRepositoryImpl(
     ref.watch(reauthenticationRemoteDataSourceProvider),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -133,6 +145,7 @@ AccountRepository accountRepository(Ref ref) {
   if (kUseMocks) return MockAccountRepository();
   return AccountRepositoryImpl(
     remoteDataSource: ref.watch(accountRemoteDataSourceProvider),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 
@@ -142,6 +155,7 @@ LegalRepository legalRepository(Ref ref) {
   return LegalRepositoryImpl(
     remoteDataSource: ref.watch(legalRemoteDataSourceProvider),
     connectivityMonitor: ref.watch(connectivityMonitorProvider),
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 

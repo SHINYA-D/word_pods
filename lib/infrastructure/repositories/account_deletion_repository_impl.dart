@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:word_pods/core/error/failure.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/domain/entities/account_deletion_request.dart';
 import 'package:word_pods/domain/repositories/account_deletion_repository.dart';
+import 'package:word_pods/domain/services/crash_reporter.dart';
 import 'package:word_pods/infrastructure/data_sources/local/account_deletion_local_data_source.dart';
 import 'package:word_pods/infrastructure/data_sources/network/connectivity_monitor.dart';
 import 'package:word_pods/infrastructure/data_sources/remote/account_deletion_remote_data_source.dart';
@@ -16,6 +18,7 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
     required AccountDeletionRemoteDataSource remoteDataSource,
     required WithdrawnAccountRemoteDataSource withdrawnRemoteDataSource,
     required ConnectivityMonitor connectivityMonitor,
+    this._crashReporter,
   })  : _local = localDataSource,
         _remote = remoteDataSource,
         _withdrawn = withdrawnRemoteDataSource,
@@ -25,6 +28,7 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
   final AccountDeletionRemoteDataSource _remote;
   final WithdrawnAccountRemoteDataSource _withdrawn;
   final ConnectivityMonitor _connectivity;
+  final CrashReporter? _crashReporter;
 
   @override
   Future<Either<Failure, Option<AccountDeletionRequest>>> findPending() =>
@@ -52,10 +56,10 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
     try {
       await _remote.deleteAccount();
       return const Right(unit);
-    } on FirebaseFunctionsException catch (e) {
-      return Left(_mapFunctionsException(e));
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } on FirebaseFunctionsException catch (e, stack) {
+      return Left(_mapFunctionsException(e, stack));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 
@@ -94,12 +98,12 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
   /// ストリームのエラーを `Left(UnknownFailure)` の通知に変える（ストリームは止めない）。
   StreamTransformer<Either<Failure, bool>, Either<Failure, bool>> _toFailure() =>
       StreamTransformer.fromHandlers(
-        handleError: (error, _, sink) =>
-            sink.add(Left(Failure.unknown(error.toString()))),
+        handleError: (error, stack, sink) =>
+            sink.add(Left(reportUnknownFailure(_crashReporter, error, stack))),
       );
 
   /// `unavailable` は関数に届かなかったことが確か。それ以外（時間切れを含む）は届いたか分からない。
-  Failure _mapFunctionsException(FirebaseFunctionsException e) {
+  Failure _mapFunctionsException(FirebaseFunctionsException e, StackTrace stack) {
     switch (e.code) {
       case 'unavailable':
         return const Failure.network();
@@ -108,7 +112,8 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
       case 'failed-precondition':
         return const Failure.recentLoginRequired();
       default:
-        return Failure.unknown(e.message ?? e.code);
+        return reportUnknownFailure(_crashReporter, e, stack,
+            message: e.message ?? e.code);
     }
   }
 
@@ -117,8 +122,8 @@ class AccountDeletionRepositoryImpl implements AccountDeletionRepository {
   Future<Either<Failure, T>> _guard<T>(Future<T> Function() body) async {
     try {
       return Right(await body());
-    } catch (e) {
-      return Left(Failure.unknown(e.toString()));
+    } catch (e, stack) {
+      return Left(reportUnknownFailure(_crashReporter, e, stack));
     }
   }
 }

@@ -4,6 +4,10 @@ platform :ios, '15.0'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# Firebase Analytics を広告 ID（IDFA）の収集なしで組み込む（広告を出していないため。
+# docs/high_level_design/crash_reporting.md）
+$FirebaseAnalyticsWithoutAdIdSupport = true
+
 project 'Runner', {
   'Debug-dev' => :debug,
   'Profile-dev' => :release,

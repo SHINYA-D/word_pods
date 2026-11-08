@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/firebase_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';
+import 'package:word_pods/core/di/reporting_providers.dart';
 import 'package:word_pods/core/di/repository_providers.dart';
 import 'package:word_pods/core/utils/sync_trigger.dart';
 import 'package:word_pods/domain/repositories/sync_repository.dart';
@@ -33,6 +34,7 @@ SyncService syncService(Ref ref) {
     },
     isAccountDeletionPending:
         ref.watch(accountDeletionLocalDataSourceProvider).shouldSkipSync,
+    crashReporter: ref.watch(crashReporterProvider),
   );
 }
 

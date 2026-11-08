@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:word_pods/core/app_lifecycle_observer.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
 import 'package:word_pods/core/di/local_data_source_providers.dart';
+import 'package:word_pods/core/di/reporting_providers.dart';
 import 'package:word_pods/core/di/sync_providers.dart';
 import 'package:word_pods/core/router/router.dart';
 import 'package:word_pods/core/theme/app_theme.dart';
+import 'package:word_pods/core/utils/crash_reporting.dart';
 import 'package:word_pods/core/utils/sync_trigger.dart';
 import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
 import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
@@ -44,6 +46,12 @@ class _AppState extends ConsumerState<App> {
     // メールアドレスが確認済みに変わった場合を含む）
     ref.listenManual(currentUserProvider, (previous, next) {
       if (shouldStartSync(previous, next)) autoSync.onSignedIn();
+    }, fireImmediately: true);
+
+    // クラッシュの記録に、ログイン中のユーザーの uid を付ける（ログアウトしたら外す）
+    final crashReporter = ref.read(crashReporterProvider);
+    ref.listenManual(currentUserProvider, (_, next) {
+      updateCrashUserIdentifier(crashReporter, next);
     }, fireImmediately: true);
 
     // resumed 時に同期する（前回の取得から5分以上たっていれば）

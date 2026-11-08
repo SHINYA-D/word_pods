@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:word_pods/core/di/auth_providers.dart';
+import 'package:word_pods/core/di/reporting_providers.dart';
 import 'package:word_pods/core/di/sync_status_providers.dart';
 import 'package:word_pods/core/utils/auth_redirect.dart';
+import 'package:word_pods/core/utils/screen_view_tracking.dart';
 import 'package:word_pods/domain/entities/word.dart';
 import 'package:word_pods/presentation/account/account_page.dart';
 import 'package:word_pods/presentation/auth/login/login_page.dart';
@@ -70,6 +72,11 @@ GoRouter router(Ref ref) {
     withdrawnElsewhereViewModelProvider.select((s) => s.forcedUserId),
     (_, _) => goRouter.refresh(),
   );
+
+  // 見た画面を Analytics に記録する（docs/high_level_design/crash_reporting.md）
+  final stopScreenViewTracking =
+      startScreenViewTracking(goRouter, ref.read(analyticsReporterProvider));
+  ref.onDispose(stopScreenViewTracking);
 
   return goRouter;
 }

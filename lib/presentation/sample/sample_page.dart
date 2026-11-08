@@ -51,6 +51,15 @@ class _SamplePageState extends ConsumerState<SamplePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('サンプル'),
+        actions: [
+          // 開発者向け: 受け止められない例外をわざと起こし、Crashlytics への記録と Slack への通知を確かめる
+          // （docs/high_level_design/crash_reporting.md）。この画面は開発者だけが開ける
+          IconButton(
+            tooltip: 'クラッシュテスト',
+            icon: const Icon(Icons.bug_report_outlined),
+            onPressed: () => throw StateError('クラッシュテスト（開発者向けの動作確認用）'),
+          ),
+        ],
       ),
       body: state.samples.when(
         loading: () => const Center(child: CircularProgressIndicator()),

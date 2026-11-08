@@ -48,7 +48,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'f89f6ed7ca2d0be302d1a07b308c1073ee0c3189';
+String _$authRepositoryHash() => r'221923d777489d5b28dcec7534236fa303ac7bad';
 
 @ProviderFor(emailVerificationRepository)
 final emailVerificationRepositoryProvider =
@@ -97,7 +97,7 @@ final class EmailVerificationRepositoryProvider
 }
 
 String _$emailVerificationRepositoryHash() =>
-    r'96e4b002d1cf87154a9c5437e30b723ab3730ef4';
+    r'8a7ec4b3b5e8f1a25a1da3044d7286094f2c2efd';
 
 @ProviderFor(folderRepository)
 final folderRepositoryProvider = FolderRepositoryProvider._();
@@ -143,7 +143,7 @@ final class FolderRepositoryProvider
   }
 }
 
-String _$folderRepositoryHash() => r'6405fcf791e1e0a4fb70cce1097f549164726e61';
+String _$folderRepositoryHash() => r'b8d7818ec69a65b2e916c1597b97f46e17bdd6df';
 
 @ProviderFor(wordRepository)
 final wordRepositoryProvider = WordRepositoryProvider._();
@@ -184,7 +184,7 @@ final class WordRepositoryProvider
   }
 }
 
-String _$wordRepositoryHash() => r'954034ed12dee9f61749276066857f8edf2bdea5';
+String _$wordRepositoryHash() => r'79fa81dbcc0738ac80d0cf508607c201eb61c353';
 
 @ProviderFor(flashcardResultRepository)
 final flashcardResultRepositoryProvider = FlashcardResultRepositoryProvider._();
@@ -232,7 +232,7 @@ final class FlashcardResultRepositoryProvider
 }
 
 String _$flashcardResultRepositoryHash() =>
-    r'b89170cc4ee8682e1f8f7015318bc08f825ffb41';
+    r'7104754bebdb77cafc7d23b2e2e9e2208677d023';
 
 @ProviderFor(settingsRepository)
 final settingsRepositoryProvider = SettingsRepositoryProvider._();
@@ -280,7 +280,7 @@ final class SettingsRepositoryProvider
 }
 
 String _$settingsRepositoryHash() =>
-    r'449ff54683c488ba0c303e0358f7be3d66b42a0d';
+    r'65a12bcd8af2a0c2bebb4d7684f1a777a62dcccd';
 
 @ProviderFor(accountDeletionRepository)
 final accountDeletionRepositoryProvider = AccountDeletionRepositoryProvider._();
@@ -328,7 +328,7 @@ final class AccountDeletionRepositoryProvider
 }
 
 String _$accountDeletionRepositoryHash() =>
-    r'8ba5193a6316c3da0aa1657286f7123c24d69b00';
+    r'85dd6e8efdcbb26b700951cdcc61b1307426de4f';
 
 @ProviderFor(reauthenticationRepository)
 final reauthenticationRepositoryProvider =
@@ -377,7 +377,7 @@ final class ReauthenticationRepositoryProvider
 }
 
 String _$reauthenticationRepositoryHash() =>
-    r'36f248bfb0c45a0e3ebf82ca696605107f2ff8b9';
+    r'adad5eb1550ffc4c4923c29e6a780652b2edece7';
 
 @ProviderFor(accountRepository)
 final accountRepositoryProvider = AccountRepositoryProvider._();
@@ -424,7 +424,7 @@ final class AccountRepositoryProvider
   }
 }
 
-String _$accountRepositoryHash() => r'4cac53b40f7596c77a707f79eb948207d7b32dcf';
+String _$accountRepositoryHash() => r'203bdba36b71b763dd33ac15ef8545e545a5f5ec';
 
 @ProviderFor(legalRepository)
 final legalRepositoryProvider = LegalRepositoryProvider._();
@@ -466,7 +466,7 @@ final class LegalRepositoryProvider
   }
 }
 
-String _$legalRepositoryHash() => r'8e24180fddf67521933bb21c2556afccbd8e6d7f';
+String _$legalRepositoryHash() => r'a537cecef903115b8593ba4ecafbc13a22e8f798';
 
 @ProviderFor(sampleRepository)
 final sampleRepositoryProvider = SampleRepositoryProvider._();
