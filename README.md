@@ -65,7 +65,7 @@ SQLite（sqflite）をローカルキャッシュとして導入し、UI層は�
 ### CI/CD 設計
 - GitHub Secrets に Firebase キーを設定し、本番同等の環境で CI テストを実行
 - CI では Flutter のテストに加え、Cloud Functions のテストと Firestore Security Rules のテストを Firebase Emulator で実行
-- すべてのテストを通ったコミットだけを、main への push で dev → prod の順に自動デプロイ（`.github/workflows/ci-cd.yml`）
+- すべてのテストを通ったコミットだけを、develop への push で dev に、release・hotfix・main への push で prod に（承認つきで）自動デプロイ（`.github/workflows/ci-cd.yml`）
 - 依存パッケージの脆弱性（OSV-Scanner）・ワークフローの穴（zizmor）・鍵の誤コミット（Gitleaks）を別のワークフローで検査し（`.github/workflows/security.yml`）、依存パッケージの更新は Dependabot が届ける
 - 個人開発においてもチーム開発を想定したインフラ構成を採用
 
@@ -103,6 +103,12 @@ Flutter での設計力・実装力・インフラ構築力を証明する目的
 | chore | ビルド設定・ツール関連の変更 |
 
 参考：[コミットメッセージの書き方](https://times.hrbrain.co.jp/entry/how-to-write-commit-message-type)
+
+## ブランチ運用
+
+`main` はストアに出しているコード、`develop` は開発中のコードです。作業ブランチは `develop` から切り、`develop` 向けに PR を出します。
+リリースは `release/x.y.z` ブランチ経由で `main` にマージし、`v1.2.0` のようなタグを付けます。
+詳しくは [docs/development/git_workflow.md](docs/development/git_workflow.md) を参照してください。
 
 ## コード自動生成（Freezed / Riverpod）
 
