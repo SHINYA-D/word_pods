@@ -8,11 +8,11 @@
 
 - 背景: `ios/fastlane/Fastfile` の `beta` lane は、手元の Mac から `bundle exec fastlane beta` で実行する形でしか動かない。`.github/workflows/ci-cd.yml` は Firebase のデプロイだけで、iOS のビルドとアップロードは入っていない
 - やること
-  - `ci-cd.yml` に TestFlight 用のジョブを追加する（main への push で起動し、テストが通ったときだけ。`deploy-prod` と同じく Environment の承認を挟む）
+  - `ci-cd.yml` に TestFlight 用のジョブを追加する（main への push で起動し、テストが通ったときだけ。無料プランの非公開リポジトリでは Environment の承認者を使えないため、承認を挟むなら GitHub Pro が要る）
   - `runs-on` を macOS の runner にする（iOS のビルドは Mac でしかできないため）
   - 署名の仕組みを用意する（手元では Xcode にログイン済みのアカウントで自動署名しているが、CI のマシンにはアカウントが無い。`match` を使うか、API キーで署名できるようにする）
   - Secrets を登録する（App Store Connect API キーの `ASC_KEY_ID`・`ASC_ISSUER_ID`・.p8 の中身、prod の `GoogleService-Info.plist`・`firebase_options_prod.dart`）
-- 完了条件: main へのマージ（と承認）で、TestFlight の内部テストに新しいビルドが届く
+- 完了条件: main へのマージで、TestFlight の内部テストに新しいビルドが届く
 - 補足: 非公開リポジトリでは、macOS の runner は無料枠の消費が Linux の 10 倍になる
 
 ### TODO-002 Info.plist の暗号化の申告が効くかを確かめる
@@ -41,7 +41,7 @@
 
 - 背景
   - TestFlight に配る版は `--flavor prod` でビルドされ、prod の Firebase につながる。関数・ルールを変えたリリースを TestFlight で確かめるには、配る前に prod へ出しておく必要がある
-  - そのため、CI は `release/*`・`hotfix/*` への push でも（承認つきで）prod にデプロイする。承認した時点から、ストアの古いアプリが新しい関数・ルールにつながる。審査が通るまで、また更新しない利用者はその後もずっと「古いアプリ × 新しい関数・ルール」になる
+  - そのため、CI は `release/*`・`hotfix/*` への push でも prod にデプロイする（無料プランの非公開リポジトリでは Environment の承認者を使えないため、承認は挟まない）。push した時点から、ストアの古いアプリが新しい関数・ルールにつながる。審査が通るまで、また更新しない利用者はその後もずっと「古いアプリ × 新しい関数・ルール」になる
 - 暫定の方針（`docs/development/git_workflow.md` の「リリース手順」に書いた）
   - 関数とルールは、古いアプリでも壊れないように変える（後方互換）
   - 関数・ルールを変えたリリースだけ、release ブランチの段階で prod に出し、TestFlight（prod 版）で確かめる
@@ -62,5 +62,5 @@
 - やること
   - Android: `flutter build apk --debug --flavor dev` などのビルドだけのジョブを追加する（ubuntu で動くので費用は小さい。署名は不要）
   - iOS: `flutter build ios --no-codesign` のジョブを追加するか決める（macOS の runner は無料枠の消費が Linux の 10 倍。TODO-001 で macOS のジョブを作るなら、そこに相乗りできる）
-  - 追加したジョブを、ブランチ保護の必須チェックに加える
+  - （GitHub Pro にしてブランチ保護が使えるようになったら）追加したジョブを必須チェックに加える
 - 完了条件: ビルドが壊れる変更を push すると CI が赤になる
