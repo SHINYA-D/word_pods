@@ -54,6 +54,20 @@
   - 後方互換を CI やテストで確かめる方法はあるか
 - 完了条件: 方針を決めて `docs/development/git_workflow.md` に書き、必要な仕組みのチケットを切る
 
+### TODO-006 Sign in with Apple を追加し、Google ログインを戻す
+
+- 背景: 初回の iOS 審査で Guideline 4.8（Login Services）により却下された。Google などの第三者ログインを置くアプリは、メールアドレスを隠して登録できるログイン（事実上 Sign in with Apple）も同等に用意しなければならない。リリースを優先し、ログイン画面の「Google でログイン」ボタンだけを外した（2026-11-15）
+- 残してあるもの（使われていないが消していない）: `LoginViewModel.signInWithGoogle`、`SignInWithGoogleUseCase`、`AuthRepository.signInWithGoogle`、`ReauthenticationRepository.reauthenticateWithGoogle`、アカウント画面・退会の Google ユーザー向け分岐、それぞれのテスト、Firebase の Google ログイン設定、Info.plist の URL スキーム
+- やること
+  - Apple Developer の App ID で Sign in with Apple を有効にし、Xcode の Runner に Capability を追加する
+  - Firebase（dev・prod）で Apple のログインを有効にし、Apple の Private Email Relay Service にメール送信元のドメインを登録する
+  - `sign_in_with_apple` を入れ、Google と同じ形（UseCase → Repository → Firebase）でログインと退会前の再認証を作る
+  - 退会時に Apple のトークンを無効にする（Guideline 5.1.1(v)。`FirebaseAuth.revokeTokenWithAuthorizationCode`）
+  - ログイン画面に Apple と Google のボタンを同じ大きさ・同じ目立ち方で置く（`login_page_test.dart` の `findsNothing` を戻す）
+  - メールアドレスを隠したユーザーの表示を見直す（`account_page.md` の ACI-Q01）。プライバシーポリシーにログイン方法を加える
+- 完了条件: Apple と Google の両方でログイン・退会ができ、iOS の審査を通る
+- 注意: Google だけを先に戻すと、同じ理由でまた却下される。必ず Apple と同じリリースで戻す
+
 ## CI/CD
 
 ### TODO-005 CI で Android（と iOS）のビルドを確かめる

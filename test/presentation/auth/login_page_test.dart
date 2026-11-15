@@ -17,7 +17,8 @@ void main() {
       expect(find.byIcon(Icons.email_outlined), findsOneWidget);
       expect(find.byIcon(Icons.lock_outlined), findsOneWidget);
       expect(find.text('ログイン'), findsOneWidget);
-      expect(find.text('Google でログイン'), findsOneWidget);
+      // Google ログインは App Store 審査対応で一時的に画面から外している（TODO-006）
+      expect(find.text('Google でログイン'), findsNothing);
       expect(find.text('新規登録'), findsOneWidget);
       expect(find.text('パスワードを忘れた方'), findsOneWidget);
     });
