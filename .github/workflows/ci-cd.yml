@@ -1,6 +1,7 @@
 name: CI/CD
 
-# テスト（Flutter・Cloud Functions・Firestore ルール）がすべて通ったときだけ、main への push で dev → prod の順にデプロイする。
+# テスト（Flutter・Cloud Functions・Firestore ルール）がすべて通ったときだけデプロイする。
+# develop への push で dev に、release/*・hotfix/*・main への push で prod に出す（docs/development/git_workflow.md）。
 # デプロイを同じワークフローの後続ジョブにして、テストしたコミットそのものを出す
 # （別ワークフローの workflow_run で起動すると、起動元の取り違えで未テストのコードを出すおそれがあるため）
 on:
@@ -112,11 +113,11 @@ jobs:
       - name: Run Cloud Functions and Firestore rules tests
         run: npm --prefix functions run test:emulator
 
-  # テスト環境（dev）: Repository secrets を使う
+  # テスト環境（dev）: develop への push で出す。Repository secrets を使う
   deploy-dev:
     name: デプロイ（dev）
     needs: [flutter, functions]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # デプロイを重ねて走らせない（後から来たものは前のものが終わるのを待つ）
@@ -161,10 +162,19 @@ jobs:
         run: firebase deploy --only functions --project "$FIREBASE_PROJECT_ID"
 
   # 本番環境（prod）: Environment「prod」の secrets（同名で本番の値）を使う
-  # dev へのデプロイが成功したときだけ実行する。承認者は GitHub の Settings → Environments → prod で設定する
+  # release/*・hotfix/* への push でも出す。TestFlight に配る版は prod の Firebase につながるため、
+  # main へのマージより前に関数・ルールを prod に出しておかないと「新しいアプリ × 古い関数」で確かめることになる。
+  # 承認は挟まない（無料プランの非公開リポジトリでは Environment の承認者を使えないため）。テストが通れば出る。
+  # 古いアプリでも壊れない変更（後方互換）であることが前提。リリースを取りやめたら main の deploy-prod を Re-run して戻す
   deploy-prod:
     name: デプロイ（prod）
-    needs: deploy-dev
+    needs: [flutter, functions]
+    if: >-
+      github.event_name == 'push' && (
+        github.ref == 'refs/heads/main' ||
+        startsWith(github.ref, 'refs/heads/release/') ||
+        startsWith(github.ref, 'refs/heads/hotfix/')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: prod
