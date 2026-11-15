@@ -160,12 +160,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               )
                             : const Text('ログイン'),
                       ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: isLoading ? null : vm.signInWithGoogle,
-                        icon: const Icon(Icons.g_mobiledata, size: 24),
-                        label: const Text('Google でログイン'),
-                      ),
+                      // Google ログインのボタンは一時的に外している（App Store 審査 Guideline 4.8。
+                      // 第三者ログインを置くなら Sign in with Apple も必要なため）。
+                      // ViewModel の signInWithGoogle 以下のコードは残してあり、Sign in with Apple と同時に戻す
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
