@@ -1,38 +1,62 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
+# 使い方: cd android && bundle exec fastlane beta
 #
-# For a list of all available actions, check out
+# Google Play の API キー（サービスアカウントの JSON キー）は環境変数で渡す（キーの中身をリポジトリに置かないため）
+#   PLAY_JSON_KEY_PATH … JSON キーの絶対パス（リポジトリの外に置く）
 #
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
+# 初回だけは API でアップロードできない（Play Console にまだ aab が1つも無いと、API がアプリを見つけられない）。
+# 初回は `bundle exec fastlane build` で aab を作り、Play Console の内部テストに手でアップロードする
 
 default_platform(:android)
 
+# リポジトリのルート（この Fastfile は android/fastlane/ にある）
+ROOT_DIR = File.expand_path("../..", __dir__)
+AAB_PATH = File.join(ROOT_DIR, "build/app/outputs/bundle/prodRelease/app-prod-release.aab")
+
 platform :android do
-  desc "Runs all the tests"
-  lane :test do
-    gradle(task: "test")
+  desc "prod の aab をビルドするだけ（初回の手動アップロード用。バージョンコードは pubspec.yaml の値）"
+  lane :build do |options|
+    build_aab(options[:build_number])
+    UI.success("aab: #{AAB_PATH}")
   end
 
-  desc "Submit a new Beta Build to Crashlytics Beta"
-  lane :beta do
-    gradle(task: "clean assembleRelease")
-    crashlytics
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
-  end
+  desc "prod の aab をビルドし、Google Play の内部テストにアップロードする"
+  lane :beta do |options|
+    json_key = ENV.fetch("PLAY_JSON_KEY_PATH")
 
-  desc "Deploy a new version to the Google Play"
-  lane :deploy do
-    gradle(task: "clean assembleRelease")
-    upload_to_play_store
+    # 同じバージョンコードは二度アップロードできない（どのトラックに出したものとも重複不可）ため、
+    # 全トラックの最大値 + 1 にする（バージョン名 1.0.0 は pubspec.yaml の version をそのまま使う）。
+    # alpha はクローズドテスト、beta はオープンテスト
+    version_codes = %w[internal alpha beta production].flat_map do |track|
+      google_play_track_version_codes(track: track, json_key: json_key)
+    end
+    build_number = (version_codes.max || 0) + 1
+
+    build_aab(build_number)
+
+    upload_to_play_store(
+      json_key: json_key,
+      track: "internal",
+      aab: AAB_PATH,
+      # アプリが一度も公開されていない（下書き）間は、API で作れるリリースは draft だけ。
+      # そのときは `bundle exec fastlane beta release_status:draft` で出し、Play Console で公開する
+      release_status: options[:release_status] || "completed",
+      # ストアの掲載情報・画像は Play Console で管理する（リポジトリに置いていないため、上書きしない）
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
   end
+end
+
+# prod の aab をビルドする。build_number が nil なら pubspec.yaml の値を使う。
+# 古い aab をアップロードしないよう、先に消しておく（ビルドに失敗したら sh が止める）
+def build_aab(build_number)
+  File.delete(AAB_PATH) if File.exist?(AAB_PATH)
+
+  args = ["fvm", "flutter", "build", "appbundle", "--release", "--flavor", "prod"]
+  args << "--build-number=#{build_number}" if build_number
+  Dir.chdir(ROOT_DIR) { sh(*args) }
+
+  UI.user_error!("aab が見つかりません（#{AAB_PATH}）") unless File.exist?(AAB_PATH)
 end
