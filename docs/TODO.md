@@ -24,16 +24,10 @@
 
 ### TODO-003 Android の fastlane を動くようにする
 
-- 背景: `android/fastlane/` は `fastlane init` の雛形のままで動かない
-  - `beta` lane が、提供の終わった Crashlytics Beta にアップロードする内容になっている
-  - flavor（prod）を指定していない
-  - `Appfile` の `json_key_file`（Google Play の API キー）が空
-- 前提: Google Play Console のデベロッパー登録が完了していること（現在は登録が失敗していて、Play Console に入れない）
-- やること
-  - iOS の `beta` lane と同じ形にする（`fvm flutter build appbundle --flavor prod` → 内部テストのトラックにアップロード。バージョンコードは自動で増やす）
-  - Play Console でサービスアカウントの JSON キーを発行し、環境変数で渡す（リポジトリには置かない）
-  - 初回の aab は Play Console から手でアップロードする（API でアップロードできるのは2回目以降のため）
-- 完了条件: `bundle exec fastlane beta` で、Play Console の内部テストに新しいビルドが届く
+- 済み: `android/fastlane/Fastfile` に `build`（aab を作るだけ）と `beta`（ビルド → 内部テストへアップロード。バージョンコードは自動で増やす）を作った。Play Console のデベロッパー登録も済んだ（2026-11-15）
+- 済み（2026-11-15）: 初回の aab の手動アップロード、サービスアカウント（`fastlane-play-upload@word-pods-prod.iam.gserviceaccount.com`。Play Console のアプリの権限に「テストトラックにアプリをリリース」が要る）の招待、Play Integrity API への `word-pods-prod` のリンク、アプリ署名鍵の SHA-256・SHA-1 の Firebase（prod）への登録、App Check への Play Integrity の登録。`bundle exec fastlane beta` でバージョンコード 2 が内部テストに届いた
+- 残り: 内部テストのビルドを実機に入れ、退会まで動くかを確かめる（`enforceAppCheck: true` の関数を Play Integrity で通せるかの確認）
+- 完了条件: 内部テストのビルドで退会まで動く
 
 ## リリース
 

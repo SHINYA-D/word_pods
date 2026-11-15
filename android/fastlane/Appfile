@@ -1,2 +1,3 @@
-json_key_file("") # Path to the json secret file - Follow https://docs.fastlane.tools/actions/supply/#setup to get one
-package_name("jp.co.shinya.word.pods") # e.g. com.krausefx.app
+# 本番（prod）のアプリ。dev（jp.co.shinya.word.pods.dev）はストアに出さない
+# API キー（JSON キー）のパスは Fastfile で環境変数 PLAY_JSON_KEY_PATH から読む
+package_name("jp.co.shinya.word.pods")

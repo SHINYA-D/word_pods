@@ -59,13 +59,13 @@ prod へのデプロイに**承認はない**。GitHub の無料プランの非�
 develop ──▶ release/1.2.0 を切る
               │ 1. pubspec.yaml の version を 1.2.0 に上げて push
               │ 2. CI が関数・ルールを prod に自動でデプロイする            ← prod に出るのはここ
-              │ 3. fastlane で prod 版を配布し、TestFlight で確かめる
+              │ 3. fastlane で prod 版を配布し、TestFlight・Google Play の内部テストで確かめる
               │    （不具合はこのブランチで直して push → 2 → 3 をやり直す）
               ▼ 4. main にマージ（prod へのデプロイがもう一度走るが中身は同じ）
             main ──▶ 5. タグ v1.2.0 ──▶ 6. 審査に提出 ──▶ 7. main を develop に戻す
 ```
 
-TestFlight に配る版は `--flavor prod` でビルドされ、**prod の Firebase につながる**（`ios/fastlane/Fastfile` の `beta` lane。
+TestFlight・Google Play の内部テストに配る版は `--flavor prod` でビルドされ、**prod の Firebase につながる**（`ios/fastlane/Fastfile`・`android/fastlane/Fastfile` の `beta` lane。
 接続先はビルドモードやブランチではなくフレーバーで決まる。`lib/main.dart` の `_firebaseOptions`）。
 そのため、release ブランチへの push で関数・ルールを prod に出し、「新しいアプリ × 新しい関数」で確かめられるようにしている。
 
@@ -93,7 +93,7 @@ version: 1.2.0+1   # x.y.z が表示上のバージョン、+ の後ろがビル
 | | 表示上のバージョン | ビルド番号 |
 |---|---|---|
 | iOS | `pubspec.yaml` の値 | `fastlane beta` が「TestFlight の最新の番号 + 1」を自動で付ける（`pubspec.yaml` の値は使われない） |
-| Android | `pubspec.yaml` の値 | `pubspec.yaml` の値。アップロードのたびに手で増やす（`docs/TODO.md` の TODO-003 で自動化予定） |
+| Android | `pubspec.yaml` の値 | `fastlane beta` が「Google Play の全トラックの最大の番号 + 1」を自動で付ける（`pubspec.yaml` の値は使われない） |
 
 ### 2. 関数・ルールが prod に出たことを確かめる
 
@@ -112,9 +112,10 @@ git diff --stat v1.1.0 -- functions/src firebase/firestore.rules
 
 ```bash
 cd ios && bundle exec fastlane beta
+cd android && bundle exec fastlane beta   # 環境変数 PLAY_JSON_KEY_PATH が要る（android/fastlane/Fastfile の先頭）
 ```
 
-TestFlight で実機の動作を確かめる。不具合や審査で指摘された点はこのブランチで直して push し、
+TestFlight・Google Play の内部テストで実機の動作を確かめる。不具合や審査で指摘された点はこのブランチで直して push し、
 関数・ルールを直したなら手順 2 でデプロイの成功を確かめてから、配布し直す。
 
 **最後に配った版と、`main` にマージするコードを同じにする**（タグのコードとストアのアプリを一致させるため）。
