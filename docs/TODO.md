@@ -63,7 +63,7 @@
   - Firebase（dev・prod）で Apple のログインを有効にし、Apple の Private Email Relay Service にメール送信元のドメインを登録する
   - `sign_in_with_apple` を入れ、Google と同じ形（UseCase → Repository → Firebase）でログインと退会前の再認証を作る
   - 退会時に Apple のトークンを無効にする（Guideline 5.1.1(v)。`FirebaseAuth.revokeTokenWithAuthorizationCode`）
-  - ログイン画面に Apple と Google のボタンを同じ大きさ・同じ目立ち方で置く（`login_page_test.dart` の `findsNothing` を戻す）
+  - ログイン画面に Apple と Google のボタンを同じ大きさ・同じ目立ち方で置く（`login_page_test.dart` の `findsNothing` を戻す。`legal_document_page_test.dart` の `_signInWithGoogle` を、ボタンをタップする形に戻す）
   - メールアドレスを隠したユーザーの表示を見直す（`account_page.md` の ACI-Q01）。プライバシーポリシーにログイン方法を加える
 - 完了条件: Apple と Google の両方でログイン・退会ができ、iOS の審査を通る
 - 注意: Google だけを先に戻すと、同じ理由でまた却下される。必ず Apple と同じリリースで戻す

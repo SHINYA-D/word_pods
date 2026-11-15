@@ -24,6 +24,8 @@ import 'package:word_pods/infrastructure/repositories/mock/mock_folder_repositor
 import 'package:word_pods/infrastructure/repositories/mock/mock_settings_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_word_repository.dart';
 import 'package:word_pods/infrastructure/repositories/mock/mock_reauthentication_repository.dart';
+import 'package:word_pods/presentation/auth/login/login_page.dart';
+import 'package:word_pods/presentation/auth/login/login_view_model.dart';
 import 'package:word_pods/presentation/legal/legal_consent_gate.dart';
 import 'package:word_pods/presentation/legal/legal_consent_view_model.dart';
 import 'package:word_pods/presentation/legal/legal_document_page.dart';
@@ -477,6 +479,16 @@ Future<void> _loginWithEmail(WidgetTester t) async {
   await _tap(t, find.widgetWithText(FilledButton, 'ログイン'));
 }
 
+/// ログイン画面から Google でログインする。
+/// 「Google でログイン」ボタンは App Store 審査対応（Guideline 4.8）で一時的に画面から外しているため
+/// （docs/TODO.md の TODO-006）、ボタンが押されたときと同じく ViewModel の signInWithGoogle を呼ぶ。
+/// ボタンを戻したら、`_tap(t, find.text('Google でログイン'))` に戻す。
+Future<void> _signInWithGoogle(WidgetTester t) async {
+  final container = ProviderScope.containerOf(t.element(find.byType(LoginPage)));
+  unawaited(container.read(loginViewModelProvider.notifier).signInWithGoogle());
+  await _settle(t);
+}
+
 /// 戻る操作（Android の戻るボタン相当）。
 Future<void> _back(WidgetTester tester) async {
   await tester.binding.handlePopRoute();
@@ -765,7 +777,7 @@ void _judgeTests() {
         (t) async {
       final env = await _launch(t, user: null);
       expect(env.path, '/login');
-      await _tap(t, find.text('Google でログイン'));
+      await _signInWithGoogle(t);
 
       expect(env.path, '/home');
       expect(_title, findsOneWidget);
@@ -1393,7 +1405,7 @@ void _judgeTests() {
       final env = await _launch(t, user: null, configure: (e) => e.sync.syncGate = Completer());
       expect(env.path, '/login');
 
-      await _tap(t, find.text('Google でログイン'));
+      await _signInWithGoogle(t);
 
       expect(_title, findsNothing);
       expect(env.legal.fetchConfigCalls, 0);
