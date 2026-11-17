@@ -561,7 +561,8 @@ abstract class Folder with _$Folder {
 
 | ケース | 挙動 |
 |--------|------|
-| テスト中にバックボタン / 中断操作 | テスト前の画面（テスト設定画面）に戻る |
+| テスト中に戻る操作（バックボタン） | 確認ダイアログ「テストを中断しますか？」の後、テスト設定画面に戻る |
+| テスト中に「×」を押下 | 確認ダイアログ「テストを途中終了しますか？」の後、ホーム画面に戻る |
 | 中断時の成績 | 保存しない（成績結果に一切反映しない） |
 | 再開機能 | なし（最初からやり直し） |
 
@@ -578,6 +579,8 @@ abstract class FlashcardModeState with _$FlashcardModeState {
     required int total,
     required bool isFlipped,
     required int correctCount,
+    @Default(false) bool isSubmitting, // 成績の保存中
+    String? errorMessage,              // 成績の保存に失敗したときの文言
   }) = _FlashcardModeState;
 }
 ```
@@ -638,13 +641,14 @@ abstract class UserSettings with _$UserSettings {
 
 ### ボトムナビゲーションバー
 
-テスト画面・テスト結果画面を除く全画面にボトムナビゲーションバーを表示する。
+ホーム画面・単語一覧画面・成績表画面・サンプル画面・設定画面にだけボトムナビゲーションバーを表示する（詳細は `presentation/shell/high_shell_page.md`）。
 実装は `presentation/shell/shell_page.dart` の `ShellRoute` で管理。
 
 | タブ | 画面 | アイコン |
 |------|------|----------|
 | ホーム | フォルダ一覧画面 | Icons.home |
 | 成績 | 成績表画面 | Icons.bar_chart |
+| テスト | サンプル画面（開発者のときだけ表示） | Icons.science |
 | 設定 | 設定画面 | Icons.settings |
 
 ### 画面一覧
@@ -655,13 +659,18 @@ abstract class UserSettings with _$UserSettings {
 | ログイン画面 | なし | `presentation/auth/login/login_page.dart` |
 | 新規登録画面 | なし | `presentation/auth/sign_up/sign_up_page.dart` |
 | パスワードリセット画面 | なし | `presentation/auth/password_reset/password_reset_page.dart` |
+| メールアドレスの確認待ち画面 | なし | `presentation/auth/verify_email/verify_email_page.dart` |
 | ホーム画面（フォルダ一覧） | あり | `presentation/home/home_page.dart` |
 | 単語一覧画面 | あり | `presentation/word/word_list_page.dart` |
-| テスト設定画面 | あり | `presentation/flashcard_mode/flashcard_mode_settings_page.dart` |
+| 単語追加画面 | なし | `presentation/word/word_create_page.dart` |
+| 単語編集画面 | なし | `presentation/word/word_edit_page.dart` |
+| テスト設定画面 | なし | `presentation/flashcard_mode/flashcard_mode_settings_page.dart` |
 | テスト画面 | **なし** | `presentation/flashcard_mode/flashcard_mode_page.dart` |
 | テスト結果画面 | **なし** | `presentation/flashcard_mode/flashcard_mode_result_page.dart` |
 | 成績表画面 | あり | `presentation/result/result_page.dart` |
 | 設定画面 | あり | `presentation/settings/settings_page.dart` |
+| アカウント情報画面 | なし | `presentation/account/account_page.dart` |
+| サンプル画面（開発者のみ） | あり | `presentation/sample/sample_page.dart` |
 
 ### ルーティング（go_router）
 
@@ -671,6 +680,10 @@ abstract class UserSettings with _$UserSettings {
 | LoginRoute | `/login` | 未ログイン時のデフォルト |
 | SignUpRoute | `/sign-up` | |
 | PasswordResetRoute | `/password-reset` | |
+| VerifyEmailRoute | `/verify-email` | メールアドレスが未確認のときの確認待ち画面 |
+| AccountRoute | `/account` | 設定画面から開く |
+| WordCreateRoute | `/word-create/:folderId` | |
+| WordEditRoute | `/word-edit/:folderId` | |
 | FlashcardModeSettingsRoute | `/test-settings/:folderId` | |
 | FlashcardModeRoute | `/test/:folderId` | |
 | FlashcardModeResultRoute | `/flashcard-result` | |
@@ -678,6 +691,7 @@ abstract class UserSettings with _$UserSettings {
 | HomeRoute | `/home` | ShellRoute 内 |
 | FolderRoute | `/folder/:folderId` | ShellRoute 内（単語一覧画面） |
 | ResultsRoute | `/results` | ShellRoute 内 |
+| SampleRoute | `/sample` | ShellRoute 内（開発者のみ） |
 | SettingsRoute | `/settings` | ShellRoute 内 |
 
 ---
