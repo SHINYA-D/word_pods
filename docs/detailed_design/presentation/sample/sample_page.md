@@ -52,15 +52,15 @@ updated: 2026-10-04
 |----|------|----------------|------|--------|
 | SMP-D01 | 「A」の1件がある状態で画面を開いた | AppBar に「サンプル」と表示される | 概要 §画面構成 | 確定 |
 | SMP-D02 | 「A」の1件がある状態で画面を開いた | ボトムナビゲーションバーが表示され、「テスト」タブが選択状態になっている | 概要 §画面構成 | 確定 |
-| SMP-D03 | 「A」の1件がある状態で画面を開いた | 画面の右下に FloatingActionButton が表示され、アイコンは `Icons.add` | 概要 §画面構成、現行UI（アイコン） | 推測 |
-| SMP-D04 | 0件の状態で画面を開いた | 画面の右下に FloatingActionButton が表示され、アイコンは `Icons.add` | 概要 §画面構成、現行UI（アイコン） | 推測 |
+| SMP-D03 | 「A」の1件がある状態で画面を開いた | 画面の右下に FloatingActionButton が表示され、アイコンは `Icons.add` | 概要 §画面構成、現行UI（アイコン） | 確定 |
+| SMP-D04 | 0件の状態で画面を開いた | 画面の右下に FloatingActionButton が表示され、アイコンは `Icons.add` | 概要 §画面構成、現行UI（アイコン） | 確定 |
 | SMP-D05 | 「A」「B」の2件がある状態で画面を開いた | 「A」「B」の各行の右端に `Icons.more_vert` が1つずつ（計2つ）表示される | 概要 §画面構成 | 確定 |
-| SMP-D06 | 0件の状態で画面を開いた | 上から順に `Icons.science_outlined`、「サンプルがありません」、`Icons.add` と「サンプルを作成」を持つボタンが表示される。一覧の行は表示されない | 概要 §初期表示、現行UI（アイコン） | 推測 |
+| SMP-D06 | 0件の状態で画面を開いた | 上から順に `Icons.science_outlined`、「サンプルがありません」、`Icons.add` と「サンプルを作成」を持つボタンが表示される。一覧の行は表示されない | 概要 §初期表示、現行UI（アイコン） | 確定 |
 | SMP-D07 | 「A」「B」の2件がある状態で画面を開いた | 一覧に「A」「B」が表示される。「サンプルがありません」は表示されない | 概要 §初期表示 | 確定 |
 | SMP-D08 | 作成日時が古い順に「A」「B」「C」の3件がある状態で画面を開いた | 一覧に上から「A」「B」「C」の順で表示される | 概要 §初期表示 | 確定 |
 | SMP-D09 | 作成日時が古い順に「S01」〜「S30」の30件がある状態で画面を開いた | 一覧を下へスクロールすると「S30」が表示される | 概要 §初期表示 | 確定 |
-| SMP-D10 | 「あいうえおかきくけこ」（幅20）の1件がある状態で画面を開いた | 一覧に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 推測 |
-| SMP-D11 | 画面を開き、初期読み込みが完了していない | `CircularProgressIndicator` が表示される。一覧の行・「サンプルがありません」は表示されない | 原則-5、現行UI（インジケーターの種類） | 推測 |
+| SMP-D10 | 「あいうえおかきくけこ」（幅20）の1件がある状態で画面を開いた | 一覧に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 確定 |
+| SMP-D11 | 画面を開き、初期読み込みが完了していない | `CircularProgressIndicator` が表示される。一覧の行・「サンプルがありません」は表示されない | 原則-5、現行UI（インジケーターの種類） | 確定 |
 | SMP-D12 | 画面を開き、初期読み込みが完了していない | FloatingActionButton は表示されない | 概要 §画面構成（読み込み中の定めなし） | 確定 |
 | SMP-D13 | 画面を開き、初期読み込みが `UnknownFailure` で失敗した | `ErrorScreen` が表示され、「サンプルの読み込みに失敗しました」と「再試行」ボタンが表示される | 概要 §操作が失敗したとき（初期読み込み・再試行の失敗はエラー画面。文言）、CLAUDE.md（エラーハンドリングパターン） | 確定 |
 | SMP-D14 | 画面を開き、初期読み込みが `UnknownFailure` で失敗した | FloatingActionButton は表示されない | 概要 §画面構成（ErrorScreen 表示中の定めなし） | 確定 |
@@ -69,8 +69,8 @@ updated: 2026-10-04
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
-| SMP-D15 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で、Repository が「A」の1件を返すようにして「再試行」をタップした | 一覧に「A」が表示される。`ErrorScreen` は表示されない | 要件 §エラーUIの種類（エラーメッセージ＋再試行ボタン） | 推測 |
-| SMP-D16 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で「再試行」をタップし、読み込みが完了していない | `CircularProgressIndicator` が表示される。「再試行」ボタンは表示されない | 原則-5、原則-4 | 推測 |
+| SMP-D15 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で、Repository が「A」の1件を返すようにして「再試行」をタップした | 一覧に「A」が表示される。`ErrorScreen` は表示されない | 要件 §エラーUIの種類（エラーメッセージ＋再試行ボタン） | 確定 |
+| SMP-D16 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で「再試行」をタップし、読み込みが完了していない | `CircularProgressIndicator` が表示される。「再試行」ボタンは表示されない | 原則-5、原則-4 | 確定 |
 | SMP-D17 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で「再試行」をタップし、読み込みが再び `UnknownFailure` で失敗した | `ErrorScreen` が表示され、「サンプルの読み込みに失敗しました」と「再試行」ボタンが表示される | 概要 §操作が失敗したとき（初期読み込み・再試行の失敗はエラー画面。文言）、CLAUDE.md（エラーハンドリングパターン） | 確定 |
 
 ### 3.3 プルして更新
@@ -78,9 +78,9 @@ updated: 2026-10-04
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
 | SMP-D18 | 一覧に「A」の1件が表示され、Repository には「A」「B」（作成日時が古い順）がある状態で、一覧を下に引っ張って離した | 一覧に上から「A」「B」の順で表示される | 概要 §初期表示 | 確定 |
-| SMP-D19 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが完了していない | `RefreshIndicator` の読み込み表示が出る。一覧には「A」が表示されたまま | 原則-5、原則-1、現行UI（インジケーターの種類） | 推測 |
-| SMP-D20 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `UnknownFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま。`ErrorScreen` は表示されない | 概要 §操作が失敗したとき、原則-1、原則-2、現行UI（スナックバー） | 推測 |
-| SMP-D21 | 一覧に「A」の1件が表示されている状態で、プルして更新を2回続けて行い、2回とも `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 推測 |
+| SMP-D19 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが完了していない | `RefreshIndicator` の読み込み表示が出る。一覧には「A」が表示されたまま | 原則-5、原則-1、現行UI（インジケーターの種類） | 確定 |
+| SMP-D20 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `UnknownFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま。`ErrorScreen` は表示されない | 概要 §操作が失敗したとき、原則-1、原則-2、現行UI（スナックバー） | 確定 |
+| SMP-D21 | 一覧に「A」の1件が表示されている状態で、プルして更新を2回続けて行い、2回とも `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 確定 |
 | SMP-D22 | 0件の状態（「サンプルがありません」表示中）で、Repository に「A」が追加された状態にして、画面を下に引っ張って離した | 一覧に「A」が表示される。「サンプルがありません」は表示されない | 概要 §初期表示（0件時の定めなし） | 確定 |
 
 ### 3.4 メニュー（`Icons.more_vert`）
@@ -89,9 +89,9 @@ updated: 2026-10-04
 |----|------|----------------|------|--------|
 | SMP-D23 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップした | 「編集」「削除」が表示される | 概要 §各ボタンの処理内容 | 確定 |
 | SMP-D24 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップした | 上から「編集」「削除」の順で表示される | 概要 §各ボタンの処理内容（並び順の定めなし）、現行UI | 確定 |
-| SMP-D25 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、メニューの外側をタップした | 「編集」「削除」は表示されない。一覧は「A」の1件のまま | 原則-7、現行追認 | 推測 |
-| SMP-D26 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、端末の戻る操作をした | 「編集」「削除」は表示されない。一覧は「A」の1件のまま。パスは `/sample` のまま | 原則-7、現行追認（戻る操作でメニューが閉じる） | 推測 |
-| SMP-D27 | 「A」「B」の2件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、続けて「B」の `Icons.more_vert` をタップした | 「A」のメニューが閉じ、「編集」「削除」は表示されない（「B」のメニューは開かない）。一覧は「A」「B」の2件のまま | 原則-7（メニューの外側のタップとして扱う）、現行追認 | 推測 |
+| SMP-D25 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、メニューの外側をタップした | 「編集」「削除」は表示されない。一覧は「A」の1件のまま | 原則-7、現行追認 | 確定 |
+| SMP-D26 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、端末の戻る操作をした | 「編集」「削除」は表示されない。一覧は「A」の1件のまま。パスは `/sample` のまま | 原則-7、現行追認（戻る操作でメニューが閉じる） | 確定 |
+| SMP-D27 | 「A」「B」の2件がある状態で、「A」の `Icons.more_vert` をタップしてメニューを開き、続けて「B」の `Icons.more_vert` をタップした | 「A」のメニューが閉じ、「編集」「削除」は表示されない（「B」のメニューは開かない）。一覧は「A」「B」の2件のまま | 原則-7（メニューの外側のタップとして扱う）、現行追認 | 確定 |
 
 ### 3.5 作成
 
@@ -105,19 +105,19 @@ updated: 2026-10-04
 | SMP-C06 | 「A」の1件がある状態で FloatingActionButton をタップし、「 B 」（前後に半角スペース）を入力して「作成」をタップした | ダイアログが閉じる。一覧に上から「A」「B」の順で表示される（「B」の前後に空白はない） | 概要 §作成ダイアログ（前後の空白） | 確定 |
 | SMP-C07 | 「A」の1件がある状態で FloatingActionButton をタップし、「　B　」（前後に全角スペース）を入力して「作成」をタップした | ダイアログが閉じる。一覧に上から「A」「B」の順で表示される（「B」の前後に空白はない） | 概要 §作成ダイアログ（前後の空白） | 確定 |
 | SMP-C08 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「キャンセル」をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 概要 §作成ダイアログ、原則-7 | 確定 |
-| SMP-C09 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力してダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（外側タップで閉じる） | 推測 |
-| SMP-C10 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して端末の戻る操作をした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（戻る操作で閉じる） | 推測 |
-| SMP-C11 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が完了していない | 「作成」が無効になる | 原則-4 | 推測 |
-| SMP-C12 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して、作成の完了前に「作成」を2回続けてタップした | ダイアログが閉じる。一覧に「A」「B」の2件が表示される（「B」は1件だけ） | 原則-4 | 推測 |
+| SMP-C09 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力してダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（外側タップで閉じる） | 確定 |
+| SMP-C10 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して端末の戻る操作をした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（戻る操作で閉じる） | 確定 |
+| SMP-C11 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が完了していない | 「作成」が無効になる | 原則-4 | 確定 |
+| SMP-C12 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して、作成の完了前に「作成」を2回続けてタップした | ダイアログが閉じる。一覧に「A」「B」の2件が表示される（「B」は1件だけ） | 原則-4 | 確定 |
 | SMP-C13 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が完了していない | ダイアログ内に `CircularProgressIndicator` は表示されない | 概要 §作成ダイアログ（作成の処理中：押せないようにするだけ）、原則-5、ユーザー決定 2026-09-22 | 確定 |
 | SMP-C14 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が完了していない | 「キャンセル」が無効になる | 原則-7、原則-4 | 確定 |
 | SMP-C15 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成の完了前にダイアログの外側をタップした | ダイアログは閉じない | 原則-7、原則-4 | 確定 |
 | SMP-C16 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成の完了前に端末の戻る操作をした | ダイアログは閉じない | 原則-7、原則-4 | 確定 |
-| SMP-C17 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「B」が残り、「作成」は有効。スナックバーに「操作が失敗しました。」と表示される。一覧は「A」の1件のまま | 概要 §操作が失敗したとき、原則-1、原則-2、原則-3、現行UI（スナックバー） | 推測 |
-| SMP-C18 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、`UnknownFailure` で失敗した後、もう一度「作成」をタップして再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 推測 |
+| SMP-C17 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「B」が残り、「作成」は有効。スナックバーに「操作が失敗しました。」と表示される。一覧は「A」の1件のまま | 概要 §操作が失敗したとき、原則-1、原則-2、原則-3、現行UI（スナックバー） | 確定 |
+| SMP-C18 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、`UnknownFailure` で失敗した後、もう一度「作成」をタップして再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 確定 |
 | SMP-C19 | 0件の状態で「サンプルを作成」ボタンをタップし、「B」を入力して「キャンセル」をタップした | ダイアログが閉じる。「サンプルがありません」と「サンプルを作成」ボタンが表示されたまま | 概要 §作成ダイアログ、概要 §各ボタンの処理内容（処理内容は FloatingActionButton と同じ）、原則-7 | 確定 |
-| SMP-C20 | 0件の状態で「サンプルを作成」ボタンをタップし、「B」を入力して「作成」をタップし、作成が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「B」が残り、「作成」は有効。スナックバーに「操作が失敗しました。」と表示される。ダイアログの背後には「サンプルがありません」が表示されたまま | 概要 §操作が失敗したとき、概要 §各ボタンの処理内容（処理内容は FloatingActionButton と同じ）、原則-1、原則-2、原則-3 | 推測 |
-| SMP-C21 | 「A」の1件がある状態で FloatingActionButton をタップし、「あいうえおかきくけこ」（幅20）を入力した | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 推測 |
+| SMP-C20 | 0件の状態で「サンプルを作成」ボタンをタップし、「B」を入力して「作成」をタップし、作成が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「B」が残り、「作成」は有効。スナックバーに「操作が失敗しました。」と表示される。ダイアログの背後には「サンプルがありません」が表示されたまま | 概要 §操作が失敗したとき、概要 §各ボタンの処理内容（処理内容は FloatingActionButton と同じ）、原則-1、原則-2、原則-3 | 確定 |
+| SMP-C21 | 「A」の1件がある状態で FloatingActionButton をタップし、「あいうえおかきくけこ」（幅20）を入力した | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 確定 |
 | SMP-C22 | 作成日時が古い順に「S01」〜「S30」の30件があり、一覧の先頭（「S01」）が表示されている状態で、FloatingActionButton をタップし、「S31」を入力して「作成」をタップした | ダイアログが閉じる。スクロール操作をしなくても、画面内に「S31」が表示される | 概要 §作成ダイアログ（そのフォルダを表示する） | 確定 |
 
 ### 3.6 編集
@@ -125,54 +125,54 @@ updated: 2026-10-04
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
 | SMP-U01 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップして「編集」をタップした | ダイアログが表示され、上から順にタイトル「サンプルを編集」、入力項目タイトル「サンプル名」、「A」が入った入力欄、注意書「半角20文字（全角10文字）まで」、横並びの「キャンセル」（左）と「保存」（右）が表示される。「保存」は有効 | 概要 §各ボタンの処理内容、概要 §編集ダイアログ（作成ダイアログと同じ構成） | 確定 |
-| SMP-U02 | 「あいうえおかきくけこ」（幅20）の1件がある状態で、その `Icons.more_vert` をタップして「編集」をタップした | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 推測 |
+| SMP-U02 | 「あいうえおかきくけこ」（幅20）の1件がある状態で、その `Icons.more_vert` をタップして「編集」をタップした | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 確定 |
 | SMP-U03 | 作成日時が古い順に「A」「B」「C」の3件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップした | ダイアログが閉じる。一覧に上から「A」「X」「C」の順で表示される | 概要 §編集ダイアログ、概要 §初期表示（作成順） | 確定 |
 | SMP-U04 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「A」に変えて「保存」をタップした | ダイアログが閉じる。一覧に「A」「A」の2件が表示される | 概要 §編集ダイアログ（同じ名前を許す） | 確定 |
-| SMP-U05 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を変えずに「保存」をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 現行追認 | 推測 |
+| SMP-U05 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を変えずに「保存」をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 現行追認 | 確定 |
 | SMP-U06 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「 X 」（前後に半角スペース）に変えて「保存」をタップした | ダイアログが閉じる。一覧に上から「A」「X」の順で表示される（「X」の前後に空白はない） | 概要 §編集ダイアログ（前後の空白は作成ダイアログと同じ） | 確定 |
 | SMP-U07 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「　X　」（前後に全角スペース）に変えて「保存」をタップした | ダイアログが閉じる。一覧に上から「A」「X」の順で表示される（「X」の前後に空白はない） | 概要 §編集ダイアログ（前後の空白は作成ダイアログと同じ） | 確定 |
 | SMP-U08 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「キャンセル」をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 概要 §編集ダイアログ、原則-7 | 確定 |
-| SMP-U09 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えてダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（外側タップで閉じる） | 推測 |
-| SMP-U10 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて端末の戻る操作をした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（戻る操作で閉じる） | 推測 |
-| SMP-U11 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が完了していない | 「保存」が無効になる | 原則-4 | 推測 |
-| SMP-U12 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて、変更の完了前に「保存」を2回続けてタップした | ダイアログが閉じる。一覧に上から「A」「X」の2件が表示される | 原則-4 | 推測 |
+| SMP-U09 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えてダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（外側タップで閉じる） | 確定 |
+| SMP-U10 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて端末の戻る操作をした | ダイアログが閉じる。一覧は「A」の1件のまま | 原則-7、現行追認（戻る操作で閉じる） | 確定 |
+| SMP-U11 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が完了していない | 「保存」が無効になる | 原則-4 | 確定 |
+| SMP-U12 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて、変更の完了前に「保存」を2回続けてタップした | ダイアログが閉じる。一覧に上から「A」「X」の2件が表示される | 原則-4 | 確定 |
 | SMP-U13 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が完了していない | ダイアログ内に `CircularProgressIndicator` は表示されない | 概要 §編集ダイアログ（処理中の扱いは作成ダイアログと同じ）、原則-5、ユーザー決定 2026-09-22 | 確定 |
 | SMP-U14 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が完了していない | 「キャンセル」が無効になる | 原則-7、原則-4 | 確定 |
 | SMP-U15 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更の完了前にダイアログの外側をタップした | ダイアログは閉じない | 原則-7、原則-4 | 確定 |
 | SMP-U16 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更の完了前に端末の戻る操作をした | ダイアログは閉じない | 原則-7、原則-4 | 確定 |
-| SMP-U17 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「X」が残り、「保存」は有効。スナックバーに「操作が失敗しました。」と表示される。一覧は上から「A」「B」のまま | 概要 §操作が失敗したとき、原則-1、原則-2、原則-3、現行UI（スナックバー） | 推測 |
-| SMP-U18 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、`UnknownFailure` で失敗した後、もう一度「保存」をタップして再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 推測 |
-| SMP-U19 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を空にしてから「あいうえおかきくけこ」（幅20）を入力した | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10、概要 §編集ダイアログ（作成ダイアログと同じ構成）、SMP-C21 | 推測 |
+| SMP-U17 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、変更が `UnknownFailure` で失敗した | ダイアログは閉じず、入力欄に「X」が残り、「保存」は有効。スナックバーに「操作が失敗しました。」と表示される。一覧は上から「A」「B」のまま | 概要 §操作が失敗したとき、原則-1、原則-2、原則-3、現行UI（スナックバー） | 確定 |
+| SMP-U18 | 「A」「B」の2件がある状態で、「B」の編集ダイアログを開き、入力欄を「X」に変えて「保存」をタップし、`UnknownFailure` で失敗した後、もう一度「保存」をタップして再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 確定 |
+| SMP-U19 | 「A」の1件がある状態で、「A」の編集ダイアログを開き、入力欄を空にしてから「あいうえおかきくけこ」（幅20）を入力した | 入力欄に「あいうえおかきくけこ」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10、概要 §編集ダイアログ（作成ダイアログと同じ構成）、SMP-C21 | 確定 |
 
 ### 3.7 削除
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
 | SMP-X01 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップして「削除」をタップした | ダイアログが表示され、上から順にタイトル「サンプルを削除」、注記「※「A」を削除しますか？」、横並びの「キャンセル」（左）と「削除」（右）が表示される | 概要 §各ボタンの処理内容、概要 §削除ダイアログ、原則-6 | 確定 |
-| SMP-X02 | 「あいうえおかきくけこ」（幅20）の1件がある状態で、その `Icons.more_vert` をタップして「削除」をタップした | 注記「※「あいうえおかきくけこ」を削除しますか？」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 推測 |
+| SMP-X02 | 「あいうえおかきくけこ」（幅20）の1件がある状態で、その `Icons.more_vert` をタップして「削除」をタップした | 注記「※「あいうえおかきくけこ」を削除しますか？」が表示され、描画のはみ出し（オーバーフロー）のエラーが発生しない | 原則-10 | 確定 |
 | SMP-X03 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップした | ダイアログが閉じる。一覧に「B」の1件だけが表示される | 概要 §削除ダイアログ | 確定 |
 | SMP-X04 | 作成日時が古い順に「A」「B」「C」の3件がある状態で、「B」の削除ダイアログを開いて「削除」をタップした | ダイアログが閉じる。一覧に上から「A」「C」の順で表示される | 概要 §削除ダイアログ、概要 §初期表示（作成順） | 確定 |
-| SMP-X05 | 「A」の1件がある状態で、「A」の削除ダイアログを開いて「削除」をタップした | ダイアログが閉じる。「サンプルがありません」と「サンプルを作成」ボタンが表示される | 概要 §削除ダイアログ、概要 §初期表示、現行追認（削除後に0件表示へ切り替わる） | 推測 |
+| SMP-X05 | 「A」の1件がある状態で、「A」の削除ダイアログを開いて「削除」をタップした | ダイアログが閉じる。「サンプルがありません」と「サンプルを作成」ボタンが表示される | 概要 §削除ダイアログ、概要 §初期表示、現行追認（削除後に0件表示へ切り替わる） | 確定 |
 | SMP-X06 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「キャンセル」をタップした | ダイアログが閉じる。一覧は「A」「B」の2件のまま | 概要 §削除ダイアログ、原則-6、原則-7 | 確定 |
-| SMP-X07 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いてダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」「B」の2件のまま | 原則-7、現行追認（外側タップで閉じる） | 推測 |
-| SMP-X08 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて端末の戻る操作をした | ダイアログが閉じる。一覧は「A」「B」の2件のまま | 原則-7、現行追認（戻る操作で閉じる） | 推測 |
-| SMP-X09 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除が完了していない | 削除ダイアログ（「サンプルを削除」）は表示されていない | 概要 §削除ダイアログ（ダイアログを閉じて削除する）、原則-4 | 推測 |
+| SMP-X07 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いてダイアログの外側をタップした | ダイアログが閉じる。一覧は「A」「B」の2件のまま | 原則-7、現行追認（外側タップで閉じる） | 確定 |
+| SMP-X08 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて端末の戻る操作をした | ダイアログが閉じる。一覧は「A」「B」の2件のまま | 原則-7、現行追認（戻る操作で閉じる） | 確定 |
+| SMP-X09 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除が完了していない | 削除ダイアログ（「サンプルを削除」）は表示されていない | 概要 §削除ダイアログ（ダイアログを閉じて削除する）、原則-4 | 確定 |
 | SMP-X10 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除が完了していない | 画面に `CircularProgressIndicator` は表示されない | 原則-5（処理中表示の要否） | 確定 |
-| SMP-X11 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除が `UnknownFailure` で失敗した | 削除ダイアログは表示されていない。スナックバーに「操作が失敗しました。」と表示される。一覧は「A」「B」の2件のまま | 概要 §削除ダイアログ、概要 §操作が失敗したとき、原則-1、原則-2、現行UI（スナックバー） | 推測 |
-| SMP-X12 | 「A」「B」の2件がある状態で、「A」を削除して `UnknownFailure` で失敗した後、もう一度「A」の削除ダイアログを開いて「削除」をタップし、再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 推測 |
+| SMP-X11 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除が `UnknownFailure` で失敗した | 削除ダイアログは表示されていない。スナックバーに「操作が失敗しました。」と表示される。一覧は「A」「B」の2件のまま | 概要 §削除ダイアログ、概要 §操作が失敗したとき、原則-1、原則-2、現行UI（スナックバー） | 確定 |
+| SMP-X12 | 「A」「B」の2件がある状態で、「A」を削除して `UnknownFailure` で失敗した後、もう一度「A」の削除ダイアログを開いて「削除」をタップし、再び `UnknownFailure` で失敗した | 「操作が失敗しました。」のスナックバーが2回表示される | 概要 §操作が失敗したとき、原則-2 | 確定 |
 | SMP-X13 | 一覧に「A」「B」が表示され、Repository 上では「A」が既に削除されている状態で、「A」の削除ダイアログを開いて「削除」をタップした | ダイアログが閉じる。一覧に「B」の1件だけが表示される。「操作が失敗しました。」は表示されない | 現行追認（対象が無い削除は成功として扱う。変更は SMP-R09 で失敗として扱う） | 確定 |
 | SMP-X14 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に「A」の `Icons.more_vert` をタップした | 「編集」「削除」のメニューは表示されない（「A」の `Icons.more_vert` は無効） | 原則-4、概要 §削除ダイアログ（削除の完了前にダイアログが閉じる） | 確定 |
-| SMP-X15 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に FloatingActionButton から「C」を作成して、作成と削除の両方が成功した | 両方の完了後、一覧に上から「B」「C」の順で表示される。「A」は表示されない | 概要 §削除ダイアログ、概要 §作成ダイアログ、原則-1 | 推測 |
+| SMP-X15 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に FloatingActionButton から「C」を作成して、作成と削除の両方が成功した | 両方の完了後、一覧に上から「B」「C」の順で表示される。「A」は表示されない | 概要 §削除ダイアログ、概要 §作成ダイアログ、原則-1 | 確定 |
 | SMP-X16 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に一覧を下に引っ張って離し、プルして更新の読み込みが削除前の「A」「B」を返して削除の完了より後に終わった | 両方の完了後、一覧に「B」の1件だけが表示される。「A」は表示されない | 概要 §削除ダイアログ、概要 §初期表示（プルして更新） | 確定 |
-| SMP-X17 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に一覧の「B」をタップした | 遷移先のパスが `/folder/<B の id>` になり、遷移先に渡される `$extra` が「B」 | 概要 §画面遷移 | 推測 |
-| SMP-X18 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に「B」の `Icons.more_vert` をタップした | 「編集」「削除」が表示される | 概要 §各ボタンの処理内容 | 推測 |
+| SMP-X17 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に一覧の「B」をタップした | 遷移先のパスが `/folder/<B の id>` になり、遷移先に渡される `$extra` が「B」 | 概要 §画面遷移 | 確定 |
+| SMP-X18 | 「A」「B」の2件がある状態で、「A」の削除ダイアログを開いて「削除」をタップし、削除の完了前に「B」の `Icons.more_vert` をタップした | 「編集」「削除」が表示される | 概要 §各ボタンの処理内容 | 確定 |
 
 ### 3.8 画面遷移
 
 | ID | 条件 | 期待される動作 | 根拠 | 確定度 |
 |----|------|----------------|------|--------|
 | SMP-T01 | id が `sample-1`、名前が「A」の1件がある状態で、一覧の「A」をタップした | 遷移先のパスが `/folder/sample-1` になり、遷移先に渡される `$extra` が「A」 | 概要 §画面遷移 | 確定 |
-| SMP-T02 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップした | 遷移しない（パスは `/sample` のまま）。「編集」「削除」が表示される | 概要 §各ボタンの処理内容、概要 §画面遷移 | 推測 |
+| SMP-T02 | 「A」の1件がある状態で、「A」の `Icons.more_vert` をタップした | 遷移しない（パスは `/sample` のまま）。「編集」「削除」が表示される | 概要 §各ボタンの処理内容、概要 §画面遷移 | 確定 |
 
 ### 3.9 エラー種別ごとの扱い
 
@@ -191,7 +191,7 @@ updated: 2026-10-04
 | SMP-E08 | 「再試行」後の読み込みが `NetworkFailure` で失敗して `NetworkErrorDialog` が表示された状態で「OK」をタップした | 遷移先のパスが `/login` になる | 概要 §操作が失敗したとき（初期読み込み・再試行の通信エラー・認証エラー）、CLAUDE.md（エラーハンドリングパターン）、原則-11 | 確定 |
 | SMP-E09 | 初期読み込みが `UnknownFailure` で失敗して `ErrorScreen` が表示された状態で「再試行」をタップし、読み込みが `AuthFailure` で失敗した | `NetworkErrorDialog` が表示される | 概要 §操作が失敗したとき（初期読み込み・再試行の通信エラー・認証エラー）、CLAUDE.md（エラーハンドリングパターン）、原則-11 | 確定 |
 | SMP-E10 | 「再試行」後の読み込みが `AuthFailure` で失敗して `NetworkErrorDialog` が表示された状態で「OK」をタップした | 遷移先のパスが `/login` になる | 概要 §操作が失敗したとき（初期読み込み・再試行の通信エラー・認証エラー）、CLAUDE.md（エラーハンドリングパターン）、原則-11 | 確定 |
-| SMP-E11 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `NotFoundFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま | 概要 §操作が失敗したとき、原則-1、原則-2 | 推測 |
+| SMP-E11 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `NotFoundFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま | 概要 §操作が失敗したとき、原則-1、原則-2 | 確定 |
 | SMP-E12 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `NetworkFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま。`NetworkErrorDialog` は表示されない | 概要 §操作が失敗したとき（通信エラー・認証エラーもスナックバー）、原則-1、ユーザー決定 2026-09-22 | 確定 |
 | SMP-E13 | 一覧に「A」の1件が表示されている状態で一覧を下に引っ張って離し、読み込みが `AuthFailure` で失敗した | スナックバーに「操作が失敗しました。」と表示される。一覧には「A」が表示されたまま。`NetworkErrorDialog` は表示されない | 概要 §操作が失敗したとき（通信エラー・認証エラーもスナックバー）、原則-1、ユーザー決定 2026-09-22 | 確定 |
 | SMP-E14 | 「A」の1件がある状態で FloatingActionButton をタップし、「B」を入力して「作成」をタップし、作成が `NetworkFailure` で失敗した | ダイアログは閉じず、入力欄に「B」が残る。スナックバーに「操作が失敗しました。」と表示される。一覧は「A」の1件のまま。`NetworkErrorDialog` は表示されない | 概要 §操作が失敗したとき（通信エラー・認証エラーもスナックバー。作成・編集はダイアログを閉じずに入力を残す）、原則-1、原則-3、ユーザー決定 2026-09-22 | 確定 |
@@ -219,49 +219,49 @@ State の項目は `samples`（`AsyncValue<List<Sample>>`）と `operationFailur
 
 | ID | 条件 | 期待される状態 | 対応する画面仕様 | 根拠 | 確定度 |
 |----|------|----------------|------------------|------|--------|
-| SMP-V01 | ViewModel を生成し、初期読み込みが完了していない | `samples` は `AsyncLoading` | SMP-D11 | 原則-5 | 推測 |
+| SMP-V01 | ViewModel を生成し、初期読み込みが完了していない | `samples` は `AsyncLoading` | SMP-D11 | 原則-5 | 確定 |
 | SMP-V02 | ViewModel を生成し、getSamples が「A」「B」（作成日時が古い順）を返した | `samples` は `AsyncData([A, B])`。Repository の getSamples が userId `u1` で1回呼ばれる | SMP-D07, SMP-D08, SMP-D09, SMP-D10 | 概要 §初期表示、原則-9 | 確定 |
 | SMP-V03 | ViewModel を生成し、getSamples が空の一覧を返した | `samples` は `AsyncData([])` | SMP-D06 | 概要 §初期表示 | 確定 |
 | SMP-V04 | ViewModel を生成し、getSamples が `UnknownFailure` を返した | `samples` は `AsyncError(UnknownFailure)` | SMP-D13 | CLAUDE.md（エラーハンドリングパターン） | 確定 |
 | SMP-V05 | ViewModel を生成し、getSamples が `NotFoundFailure` を返した | `samples` は `AsyncError(NotFoundFailure)` | SMP-E01 | CLAUDE.md（エラーハンドリングパターン） | 確定 |
-| SMP-V06 | ViewModel を生成し、getSamples が `NetworkFailure` を返した | `operationFailure` は `NetworkFailure`。`samples` は `AsyncData([])` | SMP-E02 | 原則-11、現行追認（State での表し方） | 推測 |
-| SMP-V07 | ViewModel を生成し、getSamples が `AuthFailure` を返した | `operationFailure` は `AuthFailure`。`samples` は `AsyncData([])` | SMP-E04 | 原則-11、現行追認（State での表し方） | 推測 |
-| SMP-V08 | 初期読み込みが `UnknownFailure` で失敗した状態で、getSamples が「A」を返すようにして refresh を呼んだ | `samples` は `AsyncData([A])`。Repository の getSamples が2回目の呼び出しでも userId `u1` で呼ばれる | SMP-D15 | 要件 §エラーUIの種類、原則-9 | 推測 |
-| SMP-V09 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、読み込みが完了していない | `samples` は `AsyncLoading` | SMP-D16 | 原則-5 | 推測 |
+| SMP-V06 | ViewModel を生成し、getSamples が `NetworkFailure` を返した | `operationFailure` は `NetworkFailure`。`samples` は `AsyncData([])` | SMP-E02 | 原則-11、現行追認（State での表し方） | 確定 |
+| SMP-V07 | ViewModel を生成し、getSamples が `AuthFailure` を返した | `operationFailure` は `AuthFailure`。`samples` は `AsyncData([])` | SMP-E04 | 原則-11、現行追認（State での表し方） | 確定 |
+| SMP-V08 | 初期読み込みが `UnknownFailure` で失敗した状態で、getSamples が「A」を返すようにして refresh を呼んだ | `samples` は `AsyncData([A])`。Repository の getSamples が2回目の呼び出しでも userId `u1` で呼ばれる | SMP-D15 | 要件 §エラーUIの種類、原則-9 | 確定 |
+| SMP-V09 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、読み込みが完了していない | `samples` は `AsyncLoading` | SMP-D16 | 原則-5 | 確定 |
 | SMP-V10 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が再び `UnknownFailure` を返した | `samples` は `AsyncError(UnknownFailure)` | SMP-D17 | CLAUDE.md（エラーハンドリングパターン） | 確定 |
 | SMP-V11 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が `NotFoundFailure` を返した | `samples` は `AsyncError(NotFoundFailure)` | SMP-E06 | CLAUDE.md（エラーハンドリングパターン） | 確定 |
-| SMP-V12 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が `NetworkFailure` を返した | `operationFailure` は `NetworkFailure` | SMP-E07 | 原則-11、SMP-V06 | 推測 |
-| SMP-V13 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が `AuthFailure` を返した | `operationFailure` は `AuthFailure` | SMP-E09 | 原則-11、SMP-V07 | 推測 |
+| SMP-V12 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が `NetworkFailure` を返した | `operationFailure` は `NetworkFailure` | SMP-E07 | 原則-11、SMP-V06 | 確定 |
+| SMP-V13 | 初期読み込みが `UnknownFailure` で失敗した状態で refresh を呼び、getSamples が `AuthFailure` を返した | `operationFailure` は `AuthFailure` | SMP-E09 | 原則-11、SMP-V07 | 確定 |
 | SMP-V14 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が「A」「B」を返した | `samples` は `AsyncData([A, B])`。Repository の getSamples が userId `u1` で呼ばれる | SMP-D18 | 概要 §初期表示、原則-9 | 確定 |
-| SMP-V15 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `UnknownFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `UnknownFailure` | SMP-D20, SMP-D21 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V16 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `NotFoundFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E11 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V17 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `NetworkFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NetworkFailure` | SMP-E12 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V18 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `AuthFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `AuthFailure` | SMP-E13 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V19 | `samples` が `AsyncData([])` の状態で refresh を呼び、getSamples が「A」を返した | `samples` は `AsyncData([A])` | SMP-D22 | 概要 §初期表示 | 推測 |
+| SMP-V15 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `UnknownFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `UnknownFailure` | SMP-D20, SMP-D21 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V16 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `NotFoundFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E11 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V17 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `NetworkFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NetworkFailure` | SMP-E12 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V18 | `samples` が `AsyncData([A])` の状態で refresh を呼び、getSamples が `AuthFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `AuthFailure` | SMP-E13 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V19 | `samples` が `AsyncData([])` の状態で refresh を呼び、getSamples が「A」を返した | `samples` は `AsyncData([A])` | SMP-D22 | 概要 §初期表示 | 確定 |
 | SMP-V20 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が「B」を返した | `samples` は `AsyncData([A, B])`。Repository の createSample が userId `u1`、name 「B」で1回呼ばれる | SMP-C03, SMP-C06, SMP-C07, SMP-C12 | 概要 §作成ダイアログ、概要 §初期表示（作成順）、原則-9 | 確定 |
 | SMP-V21 | `samples` が `AsyncData([])` の状態で createSample（name: 「B」）を呼び、createSample が「B」を返した | `samples` は `AsyncData([B])`。Repository の createSample が userId `u1`、name 「B」で1回呼ばれる | SMP-C04 | 概要 §各ボタンの処理内容、概要 §作成ダイアログ、原則-9 | 確定 |
 | SMP-V22 | `samples` が `AsyncData([A])` の状態で createSample（name: 「A」）を呼び、createSample が「A」と別の id を持つ新しいサンプル「A」を返した | `samples` は2件で、どちらの name も「A」、id は互いに異なる | SMP-C05 | 概要 §作成ダイアログ（同じ名前を許す） | 確定 |
-| SMP-V23 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `UnknownFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `UnknownFailure` | SMP-C17, SMP-C18 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V24 | `samples` が `AsyncData([])` の状態で createSample（name: 「B」）を呼び、createSample が `UnknownFailure` を返した | `samples` は `AsyncData([])` のまま。`operationFailure` は `UnknownFailure` | SMP-C20 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V25 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `NetworkFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NetworkFailure` | SMP-E14 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V26 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `AuthFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `AuthFailure` | SMP-E15 | 概要 §操作が失敗したとき、原則-1 | 推測 |
+| SMP-V23 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `UnknownFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `UnknownFailure` | SMP-C17, SMP-C18 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V24 | `samples` が `AsyncData([])` の状態で createSample（name: 「B」）を呼び、createSample が `UnknownFailure` を返した | `samples` は `AsyncData([])` のまま。`operationFailure` は `UnknownFailure` | SMP-C20 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V25 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `NetworkFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `NetworkFailure` | SMP-E14 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V26 | `samples` が `AsyncData([A])` の状態で createSample（name: 「B」）を呼び、createSample が `AuthFailure` を返した | `samples` は `AsyncData([A])` のまま。`operationFailure` は `AuthFailure` | SMP-E15 | 概要 §操作が失敗したとき、原則-1 | 確定 |
 | SMP-V27 | `samples` が `AsyncData([A, B, C])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が B の id を持つ「X」を返した | `samples` は `AsyncData([A, X, C])`。Repository の updateSample が userId `u1`、sampleId B の id、name 「X」で1回呼ばれる | SMP-U03, SMP-U06, SMP-U07, SMP-U12 | 概要 §編集ダイアログ、概要 §初期表示（作成順）、原則-9 | 確定 |
 | SMP-V28 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「A」）を呼び、updateSample が B の id を持つ「A」を返した | `samples` は2件で、上から A の id の「A」、B の id の「A」 | SMP-U04 | 概要 §編集ダイアログ（同じ名前を許す） | 確定 |
-| SMP-V29 | `samples` が `AsyncData([A])` の状態で updateSample（sampleId: A の id、name: 「A」）を呼び、updateSample が A の id を持つ「A」を返した | `samples` は1件で、A の id の「A」 | SMP-U05 | 現行追認 | 推測 |
-| SMP-V30 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `UnknownFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `UnknownFailure` | SMP-U17, SMP-U18 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V31 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `NotFoundFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E16 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V32 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `NetworkFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NetworkFailure` | SMP-E17 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V33 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `AuthFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `AuthFailure` | SMP-E18 | 概要 §操作が失敗したとき、原則-1 | 推測 |
+| SMP-V29 | `samples` が `AsyncData([A])` の状態で updateSample（sampleId: A の id、name: 「A」）を呼び、updateSample が A の id を持つ「A」を返した | `samples` は1件で、A の id の「A」 | SMP-U05 | 現行追認 | 確定 |
+| SMP-V30 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `UnknownFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `UnknownFailure` | SMP-U17, SMP-U18 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V31 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `NotFoundFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E16 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V32 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `NetworkFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NetworkFailure` | SMP-E17 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V33 | `samples` が `AsyncData([A, B])` の状態で updateSample（sampleId: B の id、name: 「X」）を呼び、updateSample が `AuthFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `AuthFailure` | SMP-E18 | 概要 §操作が失敗したとき、原則-1 | 確定 |
 | SMP-V34 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が成功し、その後の getSamples が「B」を返した | `samples` は `AsyncData([B])`。Repository の deleteSample が userId `u1`、sampleId A の id で1回呼ばれる | SMP-X03 | 概要 §削除ダイアログ、原則-9 | 確定 |
 | SMP-V35 | `samples` が `AsyncData([A, B, C])` の状態で deleteSample（sampleId: B の id）を呼び、deleteSample が成功し、その後の getSamples が「A」「C」を返した | `samples` は `AsyncData([A, C])` | SMP-X04 | 概要 §削除ダイアログ、概要 §初期表示（作成順） | 確定 |
-| SMP-V36 | `samples` が `AsyncData([A])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が成功し、その後の getSamples が空の一覧を返した | `samples` は `AsyncData([])` | SMP-X05 | 概要 §削除ダイアログ、現行追認 | 推測 |
+| SMP-V36 | `samples` が `AsyncData([A])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が成功し、その後の getSamples が空の一覧を返した | `samples` は `AsyncData([])` | SMP-X05 | 概要 §削除ダイアログ、現行追認 | 確定 |
 | SMP-V37 | `samples` が `AsyncData([A, B])` で、Repository 上では A が既に削除されている状態で deleteSample（sampleId: A の id）を呼び、deleteSample が成功し、その後の getSamples が「B」を返した | `samples` は `AsyncData([B])`。`operationFailure` は null | SMP-X13 | 現行追認 | 確定 |
-| SMP-V38 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `UnknownFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `UnknownFailure` | SMP-X11, SMP-X12 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V39 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `NotFoundFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E19 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V40 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `NetworkFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NetworkFailure` | SMP-E20 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V41 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `AuthFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `AuthFailure` | SMP-E21 | 概要 §操作が失敗したとき、原則-1 | 推測 |
-| SMP-V42 | `samples` が `AsyncData([A])` の状態で refresh を呼び、読み込みが完了していない | `samples` は `AsyncData([A])` のまま | SMP-D19 | 原則-1、原則-5 | 推測 |
-| SMP-V43 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、その完了前に createSample（name: 「C」）を呼んで、createSample が「C」を返し、deleteSample が成功し、削除後の getSamples が「B」「C」を返した | 両方の完了後、`samples` は `AsyncData([B, C])` | SMP-X15 | 概要 §削除ダイアログ、概要 §作成ダイアログ | 推測 |
+| SMP-V38 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `UnknownFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `UnknownFailure` | SMP-X11, SMP-X12 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V39 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `NotFoundFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NotFoundFailure` | SMP-E19 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V40 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `NetworkFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `NetworkFailure` | SMP-E20 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V41 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、deleteSample が `AuthFailure` を返した | `samples` は `AsyncData([A, B])` のまま。`operationFailure` は `AuthFailure` | SMP-E21 | 概要 §操作が失敗したとき、原則-1 | 確定 |
+| SMP-V42 | `samples` が `AsyncData([A])` の状態で refresh を呼び、読み込みが完了していない | `samples` は `AsyncData([A])` のまま | SMP-D19 | 原則-1、原則-5 | 確定 |
+| SMP-V43 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、その完了前に createSample（name: 「C」）を呼んで、createSample が「C」を返し、deleteSample が成功し、削除後の getSamples が「B」「C」を返した | 両方の完了後、`samples` は `AsyncData([B, C])` | SMP-X15 | 概要 §削除ダイアログ、概要 §作成ダイアログ | 確定 |
 | SMP-V44 | `samples` が `AsyncData([A, B])` の状態で deleteSample（sampleId: A の id）を呼び、その完了前に refresh を呼んで、refresh の getSamples が「A」「B」を、削除後の getSamples が「B」を返し、refresh の方が後に完了した | 両方の完了後、`samples` は `AsyncData([B])` | SMP-X16 | 概要 §削除ダイアログ | 確定 |
 
 ---
@@ -270,16 +270,16 @@ State の項目は `samples`（`AsyncValue<List<Sample>>`）と `operationFailur
 
 | ID | メソッド | 条件 | 期待される結果 | 根拠 | 確定度 |
 |----|----------|------|----------------|------|--------|
-| SMP-R01 | getSamples | ユーザー `u1` で「A」「B」「C」をこの順に createSample した | `getSamples(userId: u1)` は `Right([A, B, C])`（作成日時が古い順） | 概要 §初期表示（作成順） | 推測 |
-| SMP-R02 | getSamples | ユーザー `u9` のサンプルが1件もない | `getSamples(userId: u9)` は `Right([])` | 概要 §初期表示（アイテムがない場合）、現行追認 | 推測 |
+| SMP-R01 | getSamples | ユーザー `u1` で「A」「B」「C」をこの順に createSample した | `getSamples(userId: u1)` は `Right([A, B, C])`（作成日時が古い順） | 概要 §初期表示（作成順） | 確定 |
+| SMP-R02 | getSamples | ユーザー `u9` のサンプルが1件もない | `getSamples(userId: u9)` は `Right([])` | 概要 §初期表示（アイテムがない場合）、現行追認 | 確定 |
 | SMP-R03 | getSamples | ユーザー `u2` で「Z」を createSample し、ユーザー `u1` には「A」がある | `getSamples(userId: u1)` の結果に「Z」は含まれない | 原則-9 | 確定 |
-| SMP-R04 | createSample | ユーザー `u1` に「A」がある状態で `createSample(userId: u1, name: 「B」)` を呼んだ | `Right(Sample)` で、name は「B」、id は A の id と異なり、createdAt と updatedAt が等しい。その後の `getSamples(userId: u1)` は `Right([A, B])` | 概要 §作成ダイアログ、現行追認（createdAt と updatedAt が等しい） | 推測 |
+| SMP-R04 | createSample | ユーザー `u1` に「A」がある状態で `createSample(userId: u1, name: 「B」)` を呼んだ | `Right(Sample)` で、name は「B」、id は A の id と異なり、createdAt と updatedAt が等しい。その後の `getSamples(userId: u1)` は `Right([A, B])` | 概要 §作成ダイアログ、現行追認（createdAt と updatedAt が等しい） | 確定 |
 | SMP-R05 | createSample | ユーザー `u1` に「A」がある状態で `createSample(userId: u1, name: 「A」)` を呼んだ | `Right(Sample)` で、name は「A」、id は既存の A の id と異なる。その後の `getSamples(userId: u1)` は name が「A」の2件を返す | 概要 §作成ダイアログ（同じ名前を許す） | 確定 |
 | SMP-R06 | createSample | ユーザー `u1` で `createSample(userId: u1, name: 「B」)` を呼んだ | その後の `getSamples(userId: u2)` の結果に「B」は含まれない | 原則-9 | 確定 |
-| SMP-R07 | updateSample | ユーザー `u1` に「A」「B」「C」がある状態で `updateSample(userId: u1, sampleId: B の id, name: 「X」)` を呼んだ | `Right(Sample)` で、id は B の id、name は「X」、createdAt は変更前の createdAt と等しく、updatedAt は変更前の updatedAt より後。その後の `getSamples(userId: u1)` は `Right([A, X, C])` | 概要 §編集ダイアログ、概要 §初期表示（作成順）、現行追認（updatedAt の更新） | 推測 |
-| SMP-R08 | updateSample | ユーザー `u1` に「A」がある状態で `updateSample(userId: u1, sampleId: A の id, name: 「A」)` を呼んだ | `Right(Sample)` で、name は「A」、updatedAt は変更前の updatedAt より後 | 現行追認 | 推測 |
-| SMP-R09 | updateSample | ユーザー `u1` に「A」がある状態で、存在しない sampleId `missing` を指定して `updateSample(userId: u1, sampleId: missing, name: 「X」)` を呼んだ | `Left(NotFoundFailure)`。その後の `getSamples(userId: u1)` は `Right([A])` | 現行追認 | 推測 |
-| SMP-R10 | updateSample | ユーザー `u2` に「Z」がある状態で、`updateSample(userId: u1, sampleId: Z の id, name: 「X」)` を呼んだ | `Left(NotFoundFailure)`。その後の `getSamples(userId: u2)` は name が「Z」の1件を返す | 原則-9、現行追認（戻り値） | 推測 |
+| SMP-R07 | updateSample | ユーザー `u1` に「A」「B」「C」がある状態で `updateSample(userId: u1, sampleId: B の id, name: 「X」)` を呼んだ | `Right(Sample)` で、id は B の id、name は「X」、createdAt は変更前の createdAt と等しく、updatedAt は変更前の updatedAt より後。その後の `getSamples(userId: u1)` は `Right([A, X, C])` | 概要 §編集ダイアログ、概要 §初期表示（作成順）、現行追認（updatedAt の更新） | 確定 |
+| SMP-R08 | updateSample | ユーザー `u1` に「A」がある状態で `updateSample(userId: u1, sampleId: A の id, name: 「A」)` を呼んだ | `Right(Sample)` で、name は「A」、updatedAt は変更前の updatedAt より後 | 現行追認 | 確定 |
+| SMP-R09 | updateSample | ユーザー `u1` に「A」がある状態で、存在しない sampleId `missing` を指定して `updateSample(userId: u1, sampleId: missing, name: 「X」)` を呼んだ | `Left(NotFoundFailure)`。その後の `getSamples(userId: u1)` は `Right([A])` | 現行追認 | 確定 |
+| SMP-R10 | updateSample | ユーザー `u2` に「Z」がある状態で、`updateSample(userId: u1, sampleId: Z の id, name: 「X」)` を呼んだ | `Left(NotFoundFailure)`。その後の `getSamples(userId: u2)` は name が「Z」の1件を返す | 原則-9、現行追認（戻り値） | 確定 |
 | SMP-R11 | deleteSample | ユーザー `u1` に「A」「B」がある状態で `deleteSample(userId: u1, sampleId: A の id)` を呼んだ | `Right(unit)`。その後の `getSamples(userId: u1)` は `Right([B])` | 概要 §削除ダイアログ | 確定 |
 | SMP-R12 | deleteSample | ユーザー `u1` に「B」だけがある状態で、存在しない sampleId `missing` を指定して `deleteSample(userId: u1, sampleId: missing)` を呼んだ | `Right(unit)`。その後の `getSamples(userId: u1)` は `Right([B])` | 現行追認 | 確定 |
 | SMP-R13 | deleteSample | ユーザー `u2` に「Z」がある状態で、`deleteSample(userId: u1, sampleId: Z の id)` を呼んだ | `Right(unit)`。その後の `getSamples(userId: u2)` は name が「Z」の1件を返す | 原則-9、現行追認（戻り値） | 確定 |
